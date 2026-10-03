@@ -1,0 +1,1 @@
+enum AccessType { load, store }
