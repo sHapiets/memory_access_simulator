@@ -38,7 +38,7 @@ class Runtime {
       config.pageSizeBytes,
     );
 
-    _getData(physicalAddress, currentAccess.type);
+    _getData(physicalAddress, vpn, currentAccess.type);
 
     accSequence.pointer += 1;
     accessNumber += 1;
@@ -48,7 +48,6 @@ class Runtime {
     final tlb = TLB.singleton;
     final cache = Cache.singleton;
     final mem = Memory.singleton;
-    final config = Configuration.singleton;
 
     // Find translation in TLB
     final ppnFromTLB = tlb.getPPN(vpn);
@@ -70,28 +69,53 @@ class Runtime {
     }
 
     // Page Fault
-    // TODO: Page Fault Stats / Delay
-    int vpnForPageLoad = mem.omitLoadablePage();
-    tlb.invalidateEntry(vpnForPageLoad);
+    int ppnForPageLoad = mem.findFreePage();
+    if (ppnForPageLoad == -1) {
+      int invalidatedVPN = mem.omitLoadablePage();
+      bool isReplacedPageAlreadyDirty = mem.isDirtyVPN(invalidatedVPN);
+      ppnForPageLoad = mem.getPPNFromPageTable(invalidatedVPN);
 
-    int ppnFromPageLoad = mem.loadPageFromDisk(vpn, vpnForPageLoad);
-    cache.invalidateCacheLineFromPageNumber(ppnFromPageLoad);
-    tlb.addEntry(vpn, ppnFromPageLoad, accessNumber);
-    mem.updatePageAccess(ppnFromPageLoad, accessNumber);
-    return ppnFromPageLoad;
+      tlb.invalidateEntry(invalidatedVPN);
+      bool isReplacedPageDirtyFromCache = cache.invalidateCacheLineFromPPN(
+        ppnForPageLoad,
+      );
+      if (isReplacedPageDirtyFromCache) {
+        // TODO: Cache Writeback Stats / Delay
+        mem.dirtyVPNEntry(invalidatedVPN);
+        // TODO: Page Writeback Stats / Delay
+      } else if (isReplacedPageAlreadyDirty) {
+        // TODO: Page Writeback Stats / Delay
+      }
+    }
+
+    // TODO: Page Load Stats / Delay
+    mem.loadPageFromDisk(vpn, ppnForPageLoad);
+    tlb.addEntry(vpn, ppnForPageLoad, accessNumber);
+    mem.updatePageAccess(ppnForPageLoad, accessNumber);
+    return ppnForPageLoad;
   }
 
-  void _getData(int address, AccessType accessType) {
+  void _getData(int address, int vpn, AccessType accessType) {
     final cache = Cache.singleton;
+    final mem = Memory.singleton;
+
     int cacheLine = cache.getCacheLine(address);
 
     if (cacheLine != -1) {
-      // TODO: Cache Hit Stats / Delay
+      // TODO: Cache Hit
     } else {
       // TODO: Cache Miss Stats / Delay
-      cacheLine = cache.loadBlockFromMemory(address);
+      cacheLine = cache.findFreeCacheLine(address);
+      if (cacheLine == -1) cacheLine = cache.findReplaceCacheLine(address);
+
+      int replacedLinePPN = cache.loadBlockFromMemory(cacheLine, address);
+      if (replacedLinePPN != -1) {
+        // TODO: Cache Writeback Delay / Stats
+        mem.dirtyVPNEntryFromPPN(replacedLinePPN);
+      }
     }
 
+    // TODO: Cache Access Delay / Stats
     cache.accessCacheLine(cacheLine, accessType, accessNumber);
   }
 }

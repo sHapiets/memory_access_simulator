@@ -15,6 +15,7 @@ class Memory {
 
   List<PageTableEntry> pageTable = [];
   bool _isValidVPN(int vpn) => pageTable.length > vpn && vpn >= 0;
+  bool isDirtyVPN(int vpn) => pageTable[vpn].dirty;
 
   int getPPNFromPageTable(int vpn) {
     if (!_isValidVPN(vpn)) {
@@ -39,28 +40,21 @@ class Memory {
   }
 
   int omitLoadablePage() {
-    int ppn = _findFreePage();
-
-    if (ppn == -1) {
-      ppn = _findReplacePage();
-      for (int vpn = 0; vpn < pageTable.length; vpn++) {
-        final pageTableEntry = pageTable[vpn];
-        if (pageTableEntry.ppn == ppn) {
-          _invalidateVPNEntry(vpn);
-          return vpn;
-        }
+    int ppn = _findReplacePage();
+    for (int vpn = 0; vpn < pageTable.length; vpn++) {
+      final pageTableEntry = pageTable[vpn];
+      if (pageTableEntry.valid && pageTableEntry.ppn == ppn) {
+        _invalidateVPNEntry(vpn);
+        return vpn;
       }
     }
 
     return -1;
   }
 
-  int loadPageFromDisk(int newVPN, int invalidatedVPN) {
-    int ppn = pageTable[invalidatedVPN].ppn;
-
-    _changePPN(vpn: newVPN, ppn: ppn);
+  void loadPageFromDisk(int newVPN, int ppn) {
+    _replacePageTableEntry(vpn: newVPN, ppn: ppn);
     dynamic[ppn].used = true;
-    return ppn;
   }
 
   void updatePageAccess(int ppn, int accessNumber) {
@@ -85,7 +79,17 @@ class Memory {
     pageTable[vpn].dirty = true;
   }
 
-  int _findFreePage() {
+  void dirtyVPNEntryFromPPN(int ppn) {
+    for (int i = 0; i < pageTable.length; i++) {
+      final entry = pageTable[i];
+
+      if (entry.valid && entry.ppn == ppn) {
+        entry.dirty = true;
+      }
+    }
+  }
+
+  int findFreePage() {
     for (int i = 0; i < dynamic.length; i++) {
       if (!dynamic[i].used) {
         return i;
@@ -107,7 +111,7 @@ class Memory {
     return selectedReplacePage;
   }
 
-  void _changePPN({required int vpn, required int ppn}) {
+  void _replacePageTableEntry({required int vpn, required int ppn}) {
     if (!_isValidVPN(vpn)) {
       debugPrint(
         "VPN ERROR: Attempt to access invalid PAGE TABLE ENTRY (VPN): [$vpn]",
@@ -117,6 +121,7 @@ class Memory {
 
     pageTable[vpn].ppn = ppn;
     pageTable[vpn].valid = true;
+    pageTable[vpn].dirty = false;
   }
 
   void _invalidateVPNEntry(int vpn) {

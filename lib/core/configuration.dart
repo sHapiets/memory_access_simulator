@@ -17,6 +17,7 @@ class Configuration {
   int cacheSizeBlocks = 4;
   int cacheSets = 2;
   int get cacheSetSizeBlocks => (cacheSizeBlocks / cacheSets) as int;
+  int get cacheIndexBits => log(cacheSets) / ln2 as int;
 
   // TLB
   int tlbSize = 4;

@@ -49,13 +49,30 @@ class Cache {
     return -1;
   }
 
-  int loadBlockFromMemory(int address) {
+  int findFreeCacheLine(int address) {
     final config = Configuration.singleton;
-    int tag = Parser.cacheTagFromAddress(
+    int index = Parser.cacheIndexFromAddress(
       address,
       config.blockSizeBytes,
       config.cacheSets,
     );
+
+    int startLine = index * config.cacheSetSizeBlocks;
+    int endLine = startLine + config.cacheSetSizeBlocks - 1;
+
+    for (int i = startLine; i <= endLine; i++) {
+      final cacheLine = blocks[i];
+
+      if (!cacheLine.valid) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  int findReplaceCacheLine(int address) {
+    final config = Configuration.singleton;
     int index = Parser.cacheIndexFromAddress(
       address,
       config.blockSizeBytes,
@@ -68,16 +85,8 @@ class Cache {
     int selectedCacheLine = startLine;
     int selectedLatestAccess = blocks[startLine].latestAccess;
 
-    bool isValidLineReplaced = true;
-
     for (int i = startLine; i <= endLine; i++) {
       final cacheLine = blocks[i];
-
-      if (!cacheLine.valid) {
-        selectedCacheLine = i;
-        isValidLineReplaced = false;
-        break;
-      }
 
       if (selectedLatestAccess > cacheLine.latestAccess) {
         selectedCacheLine = i;
@@ -85,21 +94,32 @@ class Cache {
       }
     }
 
-    if (!_isCacheLineOutOfBounds(selectedCacheLine)) {
-      debugPrint(
-        "CACHE ERROR: Attempt to access invalid CACHE LINE: Line [$selectedCacheLine]",
-      );
-      return -1;
-    }
-
-    if (isValidLineReplaced && blocks[selectedCacheLine].dirty) {
-      // TODO: Writeback to DRAM Stats / Delay
-    }
-
-    blocks[selectedCacheLine].tag = tag;
-    blocks[selectedCacheLine].valid = true;
-
     return selectedCacheLine;
+  }
+
+  int loadBlockFromMemory(int lineNumber, int address) {
+    final config = Configuration.singleton;
+    int tag = Parser.cacheTagFromAddress(
+      address,
+      config.blockSizeBytes,
+      config.cacheSets,
+    );
+
+    int replacedLinePPN = -1;
+
+    if (blocks[lineNumber].dirty && blocks[lineNumber].valid) {
+      // TODO: Writeback to DRAM Stats / Delay
+      final int replacedLineIndex = lineNumber ~/ config.cacheSetSizeBlocks;
+      int replacedLineBlockAddress =
+          (blocks[lineNumber].tag << config.cacheIndexBits) + replacedLineIndex;
+      replacedLinePPN = replacedLineBlockAddress >> config.pageBlockOffsetBits;
+    }
+
+    blocks[lineNumber].tag = tag;
+    blocks[lineNumber].valid = true;
+    blocks[lineNumber].dirty = false;
+
+    return replacedLinePPN;
   }
 
   void accessCacheLine(
@@ -118,18 +138,29 @@ class Cache {
     blocks[lineNumber].latestAccess = accessNumber;
   }
 
-  void invalidateCacheLineFromPageNumber(int ppn) {
+  bool invalidateCacheLineFromPPN(int ppn) {
+    bool dirty = false;
+
     final config = Configuration.singleton;
 
-    for (int i = 0; i <= blocks.length; i++) {
+    for (int i = 0; i < blocks.length; i++) {
       final cacheLine = blocks[i];
 
-      final int cacheLinePPN = cacheLine.tag >> config.pageBlockOffsetBits;
+      if (!cacheLine.valid) continue;
+
+      final int cacheIndex = i ~/ config.cacheSetSizeBlocks;
+      int blockAddress = (cacheLine.tag << config.cacheIndexBits) + cacheIndex;
+      final int cacheLinePPN = blockAddress >> config.pageBlockOffsetBits;
       if (cacheLinePPN == ppn) {
-        // TODO: If dirty, writeback delay (?>
+        if (blocks[i].dirty) {
+          // TODO: If dirty, writeback delay (?>
+          dirty = true;
+        }
         blocks[i].valid = false;
       }
     }
+
+    return dirty;
   }
 
   void _dirtyCacheLine(int lineNumber) {

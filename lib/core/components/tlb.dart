@@ -17,7 +17,7 @@ class TLB {
   int getPPN(int vpn) {
     for (int i = 0; i < entries.length; i++) {
       final entry = entries[i];
-      if (entry.vpn == vpn) {
+      if (entry.valid && entry.vpn == vpn) {
         return entry.ppn;
       }
     }
@@ -28,7 +28,7 @@ class TLB {
   void invalidateEntry(int vpn) {
     for (int i = 0; i < entries.length; i++) {
       final entry = entries[i];
-      if (entry.vpn == vpn) {
+      if (entry.valid && entry.vpn == vpn) {
         entries[i].valid = false;
       }
     }
@@ -37,7 +37,7 @@ class TLB {
   void accessEntry(int vpn, int accessNumber) {
     for (int i = 0; i < entries.length; i++) {
       final entry = entries[i];
-      if (entry.vpn == vpn) {
+      if (entry.valid && entry.vpn == vpn) {
         entries[i].lastAccess = accessNumber;
       }
     }
