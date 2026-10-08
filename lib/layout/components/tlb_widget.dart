@@ -6,7 +6,7 @@ import 'package:memory_access_simulator/foundation/tlb_entry.dart';
 class TLBWidget extends StatefulWidget {
   const TLBWidget({super.key});
 
-  static const double width = 360;
+  static const double width = 300;
   static const double height = 240;
 
   @override
@@ -88,9 +88,9 @@ class _TLBWidgetState extends State<TLBWidget> {
 
                     // Scrollable entries
                     Expanded(
-                      child: ValueListenableBuilder<int>(
-                        valueListenable: Runtime.singleton.accessNumber,
-                        builder: (context, _, __) {
+                      child: ListenableBuilder(
+                        listenable: Runtime.singleton,
+                        builder: (context, _) {
                           return Scrollbar(
                             controller: _scrollController,
                             thumbVisibility: true,

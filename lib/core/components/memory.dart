@@ -140,12 +140,12 @@ class Memory {
 
     dynamic = List.generate(
       config.dynamicSizePages,
-      (index) => DynamicMemoryPage.newPage,
+      (index) => DynamicMemoryPage.newPage(),
     );
 
     pageTable = List.generate(
       config.pageTableSizeEntries,
-      (index) => PageTableEntry.newEntry,
+      (index) => PageTableEntry.newEntry(),
     );
   }
 }

@@ -26,8 +26,8 @@ class _CacheWidgetState extends State<CacheWidget> {
     final theme = Theme.of(context);
 
     return Container(
-      width: 360,
-      height: 420,
+      width: 300,
+      height: 360,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -104,18 +104,23 @@ class _CacheWidgetState extends State<CacheWidget> {
       thumbVisibility: true,
       thickness: 6,
       radius: const Radius.circular(10),
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(12),
-        itemCount: setCount,
-        itemBuilder: (context, setIndex) {
-          final startLine = setIndex * linesPerSet;
+      child: ListenableBuilder(
+        listenable: Runtime.singleton,
+        builder: (context, child) {
+          return ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            itemCount: setCount,
+            itemBuilder: (context, setIndex) {
+              final startLine = setIndex * linesPerSet;
 
-          return _buildSet(
-            context,
-            setIndex: setIndex,
-            startLine: startLine,
-            linesPerSet: linesPerSet,
+              return _buildSet(
+                context,
+                setIndex: setIndex,
+                startLine: startLine,
+                linesPerSet: linesPerSet,
+              );
+            },
           );
         },
       ),

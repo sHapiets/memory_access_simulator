@@ -6,7 +6,7 @@ import 'package:memory_access_simulator/core/components/memory.dart';
 class DynamicMemoryWidget extends StatelessWidget {
   const DynamicMemoryWidget({super.key});
 
-  static const double width = 520;
+  static const double width = 480;
   static const double height = 420;
 
   @override
@@ -58,9 +58,9 @@ class DynamicMemoryWidget extends StatelessWidget {
             // Physical pages
             // ============================================================
             Expanded(
-              child: ValueListenableBuilder<int>(
-                valueListenable: Runtime.singleton.accessNumber,
-                builder: (context, _, __) {
+              child: ListenableBuilder(
+                listenable: Runtime.singleton,
+                builder: (context, _) {
                   return GridView.builder(
                     padding: EdgeInsets.zero,
                     gridDelegate:

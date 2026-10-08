@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/components/access_sequence.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
+import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/foundation/access.dart';
 import 'package:memory_access_simulator/foundation/access_type.dart';
 
@@ -193,15 +194,12 @@ class _AccessSequenceModifierDialogState
     if (_hasErrors) {
       return;
     }
-
     final sequence = parsedAccesses
         .where((entry) => entry.access != null)
         .map((entry) => entry.access!)
         .toList();
-
-    accessSequence.sequence = sequence;
-    accessSequence.pointer = 0;
-
+    accessSequence.setSequence(sequence);
+    Runtime.singleton.reset();
     Navigator.pop(context);
   }
 

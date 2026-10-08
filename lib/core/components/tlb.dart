@@ -11,7 +11,7 @@ class TLB {
 
   void resetTLB() {
     final config = Configuration.singleton;
-    entries = List.generate(config.tlbSize, (index) => TLBEntry.newEntry);
+    entries = List.generate(config.tlbSize, (index) => TLBEntry.newEntry());
   }
 
   int getPPN(int vpn) {

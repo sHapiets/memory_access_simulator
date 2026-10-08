@@ -4,27 +4,18 @@ import 'package:memory_access_simulator/core/components/cache.dart';
 import 'package:memory_access_simulator/core/components/memory.dart';
 import 'package:memory_access_simulator/core/components/tlb.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
+import 'package:memory_access_simulator/core/controller/micro_step.dart';
 import 'package:memory_access_simulator/foundation/access.dart';
 import 'package:memory_access_simulator/foundation/access_type.dart';
 import 'package:memory_access_simulator/foundation/parser.dart';
 
-enum MicroStep {
-  tlb,
-  pageTable,
-  pageFaultEviction,
-  pageFaultLoad,
-  cache,
-  dram,
-  complete,
-}
-
-class Runtime {
+class Runtime extends ChangeNotifier {
   Runtime._();
   static final singleton = Runtime._();
 
   ValueNotifier<int> accessNumber = ValueNotifier(0);
 
-  MicroStep microStep = MicroStep.tlb;
+  MicroStep microStep = MicroStep.initialize;
 
   int _vpn = -1;
   int _pageOffset = -1;
@@ -38,8 +29,21 @@ class Runtime {
   int _invalidatedVPN = -1;
   int _replacedPagePPN = -1;
 
+  int get getVPN => _vpn;
+  int get getPPN => _ppn;
+  int get getPageOffset => _pageOffset;
+  int get getPhysicalAddress => _physicalAddress;
+
   void runAccess() {
-    _prepareAccess();
+    if (microStep == MicroStep.complete) {
+      final sequence = AccessSequence.singleton;
+
+      if (sequence.pointer >= sequence.sequence.length) {
+        return;
+      }
+
+      microStep = MicroStep.initialize;
+    }
 
     while (microStep != MicroStep.complete) {
       microRun();
@@ -47,7 +51,21 @@ class Runtime {
   }
 
   void microRun() {
+    if (microStep == MicroStep.complete) {
+      final accSequence = AccessSequence.singleton;
+
+      if (accSequence.pointer >= accSequence.sequence.length) {
+        return;
+      }
+
+      microStep = MicroStep.initialize;
+    }
+
     switch (microStep) {
+      case MicroStep.initialize:
+        _microInitialize();
+        break;
+
       case MicroStep.tlb:
         _microTLB();
         break;
@@ -75,9 +93,11 @@ class Runtime {
       case MicroStep.complete:
         break;
     }
+
+    notifyListeners();
   }
 
-  void _prepareAccess() {
+  void _microInitialize() {
     final config = Configuration.singleton;
     final accSequence = AccessSequence.singleton;
 
@@ -121,14 +141,11 @@ class Runtime {
 
       _finishTranslation();
 
-      // Translation succeeded.
-      // Skip all other 1.X stages.
       microStep = MicroStep.cache;
       return;
     }
 
     // TLB MISS.
-    // Continue to page table.
     microStep = MicroStep.pageTable;
   }
 
@@ -146,23 +163,17 @@ class Runtime {
 
       _finishTranslation();
 
-      // Translation succeeded.
-      // Skip page-fault stages.
       microStep = MicroStep.cache;
       return;
     }
 
     // PAGE FAULT.
-    //
-    // We need to determine whether an eviction is necessary.
     final ppnForPageLoad = mem.findFreePage();
 
     if (ppnForPageLoad == -1) {
-      // DRAM is full.
       microStep = MicroStep.pageFaultEviction;
     } else {
       // There is already a free page.
-      // No eviction/writeback is required.
       _ppn = ppnForPageLoad;
       microStep = MicroStep.pageFaultLoad;
     }
@@ -179,65 +190,40 @@ class Runtime {
 
     _replacedPagePPN = mem.getPPNFromPageTable(_invalidatedVPN);
 
-    // Invalidate old translation.
     tlb.invalidateEntry(_invalidatedVPN);
 
-    // Invalidate cache lines belonging to the replaced physical page.
     final bool isReplacedPageDirtyFromCache = cache.invalidateCacheLineFromPPN(
       _replacedPagePPN,
     );
 
     if (isReplacedPageDirtyFromCache) {
-      // Cache contained dirty data for the page being evicted.
-      //
-      // TODO:
-      // Cache writeback stats / delay.
-      //
+      // TODO: Cache writeback stats / delay.
       mem.dirtyVPNEntry(_invalidatedVPN);
 
-      // TODO:
-      // Page writeback stats / delay.
+      // TODO: Page writeback stats / delay.
     } else if (isReplacedPageAlreadyDirty) {
-      // Page table already says that this page is dirty.
-      //
-      // TODO:
-      // Page writeback stats / delay.
+      // TODO: Page writeback stats / delay.
     }
 
-    // The physical page previously belonging to the evicted VPN
-    // will now be reused.
     _ppn = _replacedPagePPN;
 
     microStep = MicroStep.pageFaultLoad;
   }
 
-  // ---------------------------------------------------------------------------
-  // 1.4 Page Fault - load
-  // ---------------------------------------------------------------------------
-
   void _microPageFaultLoad() {
     final tlb = TLB.singleton;
     final mem = Memory.singleton;
 
-    // Load requested page into the selected physical page.
-    //
-    // This also creates/updates the page-table entry.
     mem.loadPageFromDisk(_vpn, _ppn);
 
-    // Add the newly established translation to the TLB.
     tlb.addEntry(_vpn, _ppn, accessNumber.value);
 
     mem.updatePageAccess(_ppn, accessNumber.value);
 
-    // Translation is now complete.
     _finishTranslation();
 
     microStep = MicroStep.cache;
   }
-
-  // ---------------------------------------------------------------------------
-  // Finish virtual -> physical translation
-  // ---------------------------------------------------------------------------
 
   void _finishTranslation() {
     final config = Configuration.singleton;
@@ -249,10 +235,6 @@ class Runtime {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // 2.1 Cache
-  // ---------------------------------------------------------------------------
-
   void _microCache() {
     final cache = Cache.singleton;
 
@@ -260,9 +242,6 @@ class Runtime {
 
     if (_cacheLine != -1) {
       // CACHE HIT.
-      //
-      // The data is already in the cache.
-      // No DRAM access is required.
       microStep = MicroStep.complete;
       _completeAccess();
       return;
@@ -288,10 +267,7 @@ class Runtime {
     );
 
     if (replacedLinePPN != -1) {
-      // Cache replacement evicted a dirty block.
-      //
-      // TODO:
-      // Cache writeback delay / stats.
+      // TODO: Cache writeback delay / stats.
       mem.dirtyVPNEntryFromPPN(replacedLinePPN);
     }
 
@@ -302,19 +278,19 @@ class Runtime {
 
   void _completeAccess() {
     final cache = Cache.singleton;
+    final accSequence = AccessSequence.singleton;
 
     cache.accessCacheLine(_cacheLine, _accessType!, accessNumber.value);
-
-    final accSequence = AccessSequence.singleton;
 
     accSequence.pointer += 1;
     accessNumber.value += 1;
 
+    // The current access is finished.
     microStep = MicroStep.complete;
   }
 
   void reset() {
-    microStep = MicroStep.tlb;
+    microStep = MicroStep.initialize;
 
     _vpn = -1;
     _pageOffset = -1;
@@ -326,5 +302,7 @@ class Runtime {
 
     _invalidatedVPN = -1;
     _replacedPagePPN = -1;
+
+    // TODO: Add resets of all other components
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:memory_access_simulator/layout/components/address/physical_address_widget.dart';
+import 'package:memory_access_simulator/layout/components/address/virtual_address_widget.dart';
 import 'package:memory_access_simulator/layout/components/cache_widget.dart';
 import 'package:memory_access_simulator/layout/components/dynamic_memory_widget.dart';
 import 'package:memory_access_simulator/layout/components/page_table_widget.dart';
@@ -224,24 +226,38 @@ class _ComponentsAreaState extends State<ComponentsArea> {
                         ),
 
                         Positioned(
-                          left: 300,
-                          top: 80,
+                          left: 40,
+                          top: 760,
+                          width: 300,
+                          child: VirtualAddressWidget(),
+                        ),
+
+                        Positioned(
+                          left: 40,
+                          top: 320,
+                          width: 300,
+                          child: PhysicalAddressWidget(),
+                        ),
+
+                        Positioned(
+                          left: 450,
+                          top: 110,
                           child: const CacheWidget(),
                         ),
 
                         Positioned(
-                          left: 300,
-                          top: 600,
+                          left: 450,
+                          top: 630,
                           child: const TLBWidget(),
                         ),
 
                         Positioned(
-                          left: 850,
+                          left: 880,
                           top: 600,
                           child: const PageTableWidget(),
                         ),
                         Positioned(
-                          left: 850,
+                          left: 880,
                           top: 80,
                           child: const DynamicMemoryWidget(),
                         ),

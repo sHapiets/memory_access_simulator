@@ -4,8 +4,7 @@ class DynamicMemoryPage {
 
   DynamicMemoryPage({required this.used, required this.lastAccess});
 
-  static DynamicMemoryPage newPage = DynamicMemoryPage(
-    used: false,
-    lastAccess: 0,
-  );
+  static DynamicMemoryPage newPage() {
+    return DynamicMemoryPage(used: false, lastAccess: 0);
+  }
 }

@@ -5,7 +5,7 @@ import 'package:memory_access_simulator/core/controller/runtime.dart';
 class PageTableWidget extends StatefulWidget {
   const PageTableWidget({super.key});
 
-  static const double width = 520;
+  static const double width = 480;
   static const double height = 300;
 
   @override
@@ -58,9 +58,9 @@ class _PageTableWidgetState extends State<PageTableWidget> {
 
           // Table
           Expanded(
-            child: ValueListenableBuilder<int>(
-              valueListenable: Runtime.singleton.accessNumber,
-              builder: (context, _, __) {
+            child: ListenableBuilder(
+              listenable: Runtime.singleton,
+              builder: (context, _) {
                 final entries = Memory.singleton.pageTable;
 
                 return Column(

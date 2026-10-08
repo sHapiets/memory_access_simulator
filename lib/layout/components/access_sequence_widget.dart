@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/components/access_sequence.dart';
+import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/foundation/access.dart';
 import 'package:memory_access_simulator/foundation/access_type.dart';
 
@@ -14,6 +15,7 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
   final ScrollController _scrollController = ScrollController();
 
   AccessSequence get accessSequence => AccessSequence.singleton;
+  Runtime get runtime => Runtime.singleton;
 
   @override
   void dispose() {
@@ -21,23 +23,29 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     super.dispose();
   }
 
-  void scrollToPointer() {
-    final pointer = accessSequence.pointer;
+  void scrollToPointer(int pointer) {
+    final sequence = accessSequence.sequence;
 
-    if (accessSequence.sequence.isEmpty) {
+    if (sequence.isEmpty) {
       return;
     }
 
-    if (pointer < 0 || pointer >= accessSequence.sequence.length) {
+    if (pointer < 0 || pointer >= sequence.length) {
       return;
     }
 
-    const itemHeight = 64.0;
+    const itemHeight = 62.0;
 
     final targetOffset = pointer * itemHeight;
 
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    final maxScroll = _scrollController.position.maxScrollExtent;
+
     _scrollController.animateTo(
-      targetOffset,
+      targetOffset.clamp(0.0, maxScroll),
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
@@ -46,23 +54,35 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final sequence = accessSequence.sequence;
-    final pointer = accessSequence.pointer;
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.colorScheme.outline),
       ),
-      child: Column(
-        children: [
-          _buildHeader(context, sequence.length),
-          const Divider(height: 1),
-          ListenableBuilder(
-            listenable: accessSequence,
-            builder: (context, child) {
-              return Expanded(
+      child: ListenableBuilder(
+        listenable: Listenable.merge([accessSequence, runtime]),
+        builder: (context, child) {
+          // IMPORTANT:
+          // These must be read INSIDE the builder.
+          final sequence = accessSequence.sequence;
+
+          // Runtime.accessNumber represents the access currently
+          // being processed / completed by the runtime.
+          final accessNumber = runtime.accessNumber.value;
+
+          // The sequence pointer is still the authoritative sequence
+          // position.
+          final pointer = accessSequence.pointer;
+
+          return Column(
+            children: [
+              _buildHeader(context, sequence.length),
+
+              const Divider(height: 1),
+
+              Expanded(
                 child: sequence.isEmpty
                     ? _buildEmptyState(context)
                     : ListView.builder(
@@ -77,20 +97,21 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
                             access: sequence[index],
                             index: index,
                             isActive: index == pointer,
+                            accessNumber: accessNumber,
                           );
                         },
                       ),
-              );
-            },
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context, int count) {
     final theme = Theme.of(context);
-    final textTheme = Theme.of(context).textTheme;
+    final textTheme = theme.textTheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -113,7 +134,9 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
               color: theme.colorScheme.onSurface,
             ),
           ),
+
           const Spacer(),
+
           Text(
             '$count accesses',
             style: textTheme.bodySmall?.copyWith(
@@ -142,11 +165,13 @@ class _AccessItem extends StatelessWidget {
   final Access access;
   final int index;
   final bool isActive;
+  final int accessNumber;
 
   const _AccessItem({
     required this.access,
     required this.index,
     required this.isActive,
+    required this.accessNumber,
   });
 
   @override

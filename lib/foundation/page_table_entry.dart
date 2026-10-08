@@ -5,9 +5,7 @@ class PageTableEntry {
 
   PageTableEntry({required this.valid, required this.dirty, required this.ppn});
 
-  static PageTableEntry newEntry = PageTableEntry(
-    valid: false,
-    dirty: false,
-    ppn: 0,
-  );
+  static PageTableEntry newEntry() {
+    return PageTableEntry(valid: false, dirty: false, ppn: 0);
+  }
 }

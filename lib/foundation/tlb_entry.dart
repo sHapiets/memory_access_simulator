@@ -11,10 +11,7 @@ class TLBEntry {
     required this.lastAccess,
   });
 
-  static TLBEntry newEntry = TLBEntry(
-    vpn: 0,
-    valid: false,
-    ppn: 0,
-    lastAccess: 0,
-  );
+  static TLBEntry newEntry() {
+    return TLBEntry(vpn: 0, valid: false, ppn: 0, lastAccess: 0);
+  }
 }

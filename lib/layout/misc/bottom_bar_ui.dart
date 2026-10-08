@@ -13,7 +13,7 @@ class BottomBarUI extends StatelessWidget {
   // =====================================
 
   void _runCycle() {
-    runtime.runAccess();
+    runtime.microRun();
   }
 
   void _reset() {
