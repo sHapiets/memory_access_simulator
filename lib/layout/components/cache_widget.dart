@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/components/cache.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
+import 'package:memory_access_simulator/foundation/cache_block.dart';
 
 class CacheWidget extends StatefulWidget {
   const CacheWidget({super.key});
@@ -37,14 +38,7 @@ class _CacheWidgetState extends State<CacheWidget> {
         children: [
           _buildHeader(context),
 
-          Expanded(
-            child: ValueListenableBuilder<int>(
-              valueListenable: Runtime.singleton.accessNumber,
-              builder: (context, _, child) {
-                return _buildCache(context);
-              },
-            ),
-          ),
+          Expanded(child: _buildCache(context)),
         ],
       ),
     );
@@ -59,7 +53,7 @@ class _CacheWidgetState extends State<CacheWidget> {
       child: Row(
         children: [
           Icon(
-            Icons.memory_rounded,
+            Icons.currency_exchange_rounded,
             size: 20,
             color: theme.colorScheme.primary,
           ),
@@ -139,7 +133,7 @@ class _CacheWidgetState extends State<CacheWidget> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colorScheme.outline),
       ),
@@ -148,19 +142,18 @@ class _CacheWidgetState extends State<CacheWidget> {
           // Set header
           Container(
             width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 5),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(11),
-              ),
+              borderRadius: const BorderRadius.all(Radius.circular(11)),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.layers_rounded,
                   size: 15,
-                  color: colorScheme.primary,
+                  color: colorScheme.secondary,
                 ),
 
                 const SizedBox(width: 6),
@@ -195,7 +188,6 @@ class _CacheWidgetState extends State<CacheWidget> {
             _CacheLine(
               lineNumber: startLine + i,
               block: cache.blocks[startLine + i],
-              isLast: i == linesPerSet - 1,
             ),
         ],
       ),
@@ -205,45 +197,48 @@ class _CacheWidgetState extends State<CacheWidget> {
 
 class _CacheLine extends StatelessWidget {
   final int lineNumber;
-  final dynamic block;
-  final bool isLast;
+  final CacheBlock block;
 
-  const _CacheLine({
-    required this.lineNumber,
-    required this.block,
-    required this.isLast,
-  });
+  const _CacheLine({required this.lineNumber, required this.block});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final runtime = Runtime.singleton;
 
     final bool valid = block.valid;
     final bool dirty = block.dirty;
+    final isLineAccessed =
+        valid &&
+        (lineNumber == runtime.getCacheLine) &&
+        (runtime.connectPAtoCache || runtime.connectDRAMtoCache);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      margin: const EdgeInsets.fromLTRB(5, 0, 5, 5),
       decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : Border(bottom: BorderSide(color: colorScheme.outlineVariant)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isLineAccessed
+              ? colorScheme.primary.withValues(alpha: 0.35)
+              : colorScheme.outline.withValues(alpha: 0.35),
+        ),
+        color: isLineAccessed
+            ? theme.colorScheme.primary.withValues(alpha: 0.06)
+            : theme.colorScheme.surface,
       ),
       child: Row(
         children: [
-          // Line number
-          SizedBox(
-            width: 46,
-            child: Text(
-              'L$lineNumber',
-              style: TextStyle(
-                fontFamily: 'Fredoka',
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
+          // Valid
+          _StatusValue(label: 'V', value: valid ? '1' : '0', active: valid),
+
+          const SizedBox(width: 14),
+
+          // Dirty
+          _StatusValue(label: 'D', value: dirty ? '1' : '0', active: dirty),
+
+          const SizedBox(width: 14),
 
           // Tag
           Expanded(
@@ -268,7 +263,7 @@ class _CacheLine extends StatelessWidget {
                     fontFamily: 'Fredoka',
                     fontSize: 14,
                     color: valid
-                        ? colorScheme.onSurface
+                        ? colorScheme.primary
                         : colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -276,15 +271,49 @@ class _CacheLine extends StatelessWidget {
             ),
           ),
 
-          // Valid
-          _StatusValue(label: 'V', value: valid ? '1' : '0', active: valid),
+          Column(
+            children: [
+              Text(
+                'DATA',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 8,
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Container(
+                width: 60,
+                height: 24,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isLineAccessed
+                      ? theme.colorScheme.tertiary.withValues(alpha: 0.12)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: isLineAccessed
+                        ? theme.colorScheme.tertiary
+                        : theme.colorScheme.outline,
+                  ),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  isLineAccessed ? '[ ${runtime.getBlockOffset} ]' : '--',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isLineAccessed
+                        ? theme.colorScheme.tertiary
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
 
-          const SizedBox(width: 14),
-
-          // Dirty
-          _StatusValue(label: 'D', value: dirty ? '1' : '0', active: dirty),
-
-          const SizedBox(width: 14),
+          const SizedBox(width: 10),
 
           // Latest access
           Column(
@@ -329,7 +358,7 @@ class _StatusValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colors = Theme.of(context).colorScheme;
 
     return Column(
       children: [
@@ -339,17 +368,29 @@ class _StatusValue extends StatelessWidget {
             fontFamily: 'Nunito',
             fontSize: 8,
             fontWeight: FontWeight.w700,
-            color: colorScheme.onSurfaceVariant,
+            color: colors.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 1),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'Fredoka',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: active ? colorScheme.primary : colorScheme.onSurfaceVariant,
+        const SizedBox(height: 3),
+        Container(
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: active
+                ? colors.primary.withValues(alpha: 0.12)
+                : Colors.transparent,
+            border: Border.all(color: active ? colors.primary : colors.outline),
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Text(
+            value,
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: active ? colors.primary : colors.onSurfaceVariant,
+            ),
           ),
         ),
       ],

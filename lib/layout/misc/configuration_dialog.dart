@@ -683,10 +683,10 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
         return colorScheme.primary;
 
       case BitType.indexT:
-        return Colors.purpleAccent;
+        return colorScheme.secondary;
 
       case BitType.offset:
-        return Colors.orangeAccent;
+        return colorScheme.tertiary;
     }
   }
 

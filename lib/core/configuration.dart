@@ -24,6 +24,7 @@ class Configuration {
 
   /// DRAM
   int dynamicSizePages = 16;
+  int get ppnBits => log(dynamicSizePages) / ln2 as int;
 
   /// Page Table
   int vpnBits = 5;

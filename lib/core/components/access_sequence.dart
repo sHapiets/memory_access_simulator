@@ -9,17 +9,17 @@ class AccessSequence extends ChangeNotifier {
   static final singleton = AccessSequence._();
 
   List<Access> sequence = [];
-  int pointer = 0;
+  int pointer = -1;
 
   void reset() {
     sequence = [];
-    pointer = 0;
+    pointer = -1;
     notifyListeners();
   }
 
   void setSequence(List<Access> newSequence) {
     sequence = newSequence;
-    pointer = 0;
+    pointer = -1;
     notifyListeners();
   }
 

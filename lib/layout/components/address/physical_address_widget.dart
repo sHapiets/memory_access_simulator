@@ -32,7 +32,7 @@ class PhysicalAddressWidget extends StatelessWidget {
         // Address configuration
         // ====================================================================
 
-        final int addressBits = config.vpnBits + config.pageOffsetBits;
+        final int addressBits = config.ppnBits + config.pageOffsetBits;
 
         // Physical memory segmentation.
         final int pageOffsetBits = config.pageOffsetBits;
@@ -104,7 +104,7 @@ class PhysicalAddressWidget extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      Icons.memory_rounded,
+                      Icons.square_rounded,
                       size: 20,
                       color: theme.colorScheme.primary,
                     ),
@@ -113,7 +113,7 @@ class PhysicalAddressWidget extends StatelessWidget {
                       'Physical Address',
                       style: TextStyle(
                         fontFamily: 'Nunito',
-                        fontSize: 17,
+                        fontSize: 24,
                         fontWeight: FontWeight.w700,
                         color: theme.colorScheme.onSurface,
                       ),
@@ -126,14 +126,16 @@ class PhysicalAddressWidget extends StatelessWidget {
                 // ============================================================
                 // Hexadecimal physical address
                 // ============================================================
-                Center(
-                  child: Text(
-                    '0x${physicalAddress.toRadixString(16).toUpperCase()}',
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      '0x${physicalAddress.toRadixString(16).toUpperCase()}',
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -176,12 +178,12 @@ class PhysicalAddressWidget extends StatelessWidget {
                     _Segment(
                       label: 'PPN',
                       bits: ppnBinary,
-                      color: theme.colorScheme.primary,
+                      color: Colors.green,
                     ),
                     _Segment(
                       label: 'PAGE OFFSET',
                       bits: pageOffsetBinary,
-                      color: theme.colorScheme.secondary,
+                      color: theme.colorScheme.tertiary,
                     ),
                   ],
                 ),
@@ -242,7 +244,7 @@ class PhysicalAddressWidget extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Icons.memory_rounded,
+                  Icons.square_rounded,
                   size: 20,
                   color: theme.colorScheme.primary,
                 ),

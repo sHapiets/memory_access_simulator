@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/components/memory.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 
-class PageTableWidget extends StatefulWidget {
-  const PageTableWidget({super.key});
+class MMUWidget extends StatefulWidget {
+  const MMUWidget({super.key});
 
-  static const double width = 480;
-  static const double height = 300;
+  static const double width = 150;
+  static const double height = 240;
 
   @override
-  State<PageTableWidget> createState() => _PageTableWidgetState();
+  State<MMUWidget> createState() => _MMUWidgetState();
 }
 
-class _PageTableWidgetState extends State<PageTableWidget> {
+class _MMUWidgetState extends State<MMUWidget> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -25,11 +25,10 @@ class _PageTableWidgetState extends State<PageTableWidget> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final runtime = Runtime.singleton;
 
     return Container(
-      width: PageTableWidget.width,
-      height: PageTableWidget.height,
+      width: MMUWidget.width,
+      height: MMUWidget.height,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colors.surface,
@@ -41,10 +40,10 @@ class _PageTableWidgetState extends State<PageTableWidget> {
           // Header
           Row(
             children: [
-              Icon(Icons.table_rows_rounded, size: 20, color: colors.primary),
+              Icon(Icons.memory_rounded, size: 20, color: colors.primary),
               const SizedBox(width: 8),
               Text(
-                'Page Table',
+                'MMU',
                 style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 16,
@@ -54,35 +53,33 @@ class _PageTableWidgetState extends State<PageTableWidget> {
               ),
             ],
           ),
-
           const SizedBox(height: 10),
 
           // Table
           Expanded(
             child: ListenableBuilder(
-              listenable: runtime,
+              listenable: Runtime.singleton,
               builder: (context, _) {
-                final entries = Memory.singleton.pageTable;
+                final entries = Memory.singleton.dynamic;
 
                 return Column(
                   children: [
                     // Column header
                     Row(
                       children: [
-                        // VPN header - outside table
                         SizedBox(
-                          width: 70,
+                          width: 48,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: 4,
                               vertical: 8,
                             ),
                             child: Center(
                               child: Text(
-                                'VPN',
+                                'PPN',
                                 style: TextStyle(
                                   fontFamily: 'Nunito',
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: colors.onSurfaceVariant,
                                 ),
@@ -90,22 +87,23 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                             ),
                           ),
                         ),
-
-                        // Actual table header
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.55),
+                              color: colors.surfaceContainerHighest.withValues(
+                                alpha: 0.55,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
                               children: [
-                                Expanded(child: _headerCell(context, 'V')),
-                                Expanded(child: _headerCell(context, 'D')),
                                 Expanded(
-                                  flex: 5,
-                                  child: _headerCell(context, 'PPN'),
+                                  flex: 2,
+                                  child: _headerCell(context, 'U'),
+                                ),
+                                Expanded(
+                                  flex: 4,
+                                  child: _headerCell(context, 'LAST'),
                                 ),
                               ],
                             ),
@@ -113,10 +111,9 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 4),
 
-                    // ONE scrollable list for both VPN and table rows.
+                    // Scrollable page entries
                     Expanded(
                       child: Scrollbar(
                         controller: _scrollController,
@@ -128,22 +125,20 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                           itemCount: entries.length,
                           itemBuilder: (context, index) {
                             final entry = entries[index];
-                            final isEntryAccessed =
-                                (runtime.getVPN == index) &&
-                                (runtime.connectVAtoPageTable ||
-                                    runtime.connectMMUtoPageTable);
+                            final runtime = Runtime.singleton;
+                            final bool isPageAccessed =
+                                entry.used && (runtime.getPPN == index);
 
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 2),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // VPN label is OUTSIDE the table.
+                                  // Page number outside the entry.
                                   SizedBox(
-                                    width: 70,
+                                    width: 48,
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
+                                        horizontal: 4,
                                       ),
                                       child: Center(
                                         child: Text(
@@ -159,18 +154,18 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                                     ),
                                   ),
 
-                                  // Stored page-table data.
+                                  // Stored DRAM page data.
                                   Expanded(
                                     child: Container(
                                       height: 34,
                                       decoration: BoxDecoration(
-                                        color: isEntryAccessed
+                                        color: isPageAccessed
                                             ? colors.primary.withValues(
                                                 alpha: 0.06,
                                               )
                                             : Colors.transparent,
                                         border: Border.all(
-                                          color: isEntryAccessed
+                                          color: isPageAccessed
                                               ? colors.primary.withValues(
                                                   alpha: 0.35,
                                                 )
@@ -183,24 +178,17 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                                       child: Row(
                                         children: [
                                           Expanded(
+                                            flex: 2,
                                             child: _stateCell(
                                               context,
-                                              entry.valid,
+                                              entry.used,
                                             ),
                                           ),
                                           Expanded(
-                                            child: _stateCell(
-                                              context,
-                                              entry.dirty,
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 5,
+                                            flex: 4,
                                             child: _dataCell(
                                               context,
-                                              entry.valid
-                                                  ? '${entry.ppn}'
-                                                  : '--',
+                                              '${entry.lastAccess}',
                                             ),
                                           ),
                                         ],
@@ -234,7 +222,7 @@ class _PageTableWidgetState extends State<PageTableWidget> {
           text,
           style: TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w700,
             color: colors.onSurfaceVariant,
           ),

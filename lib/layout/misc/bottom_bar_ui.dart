@@ -215,25 +215,19 @@ class BottomBarUI extends StatelessWidget {
             _arrow(context),
 
             // STEP 2
-            ValueListenableBuilder(
-              valueListenable: runtime.accessNumber,
+            _stepItem(
+              context: context,
 
-              builder: (context, value, child) {
-                return _stepItem(
-                  context: context,
+              step: "2",
 
-                  step: "2",
+              label: "Run",
+              subLabel: "",
 
-                  label: "Run",
-                  subLabel: "Cycle $value",
+              highlighted: true,
 
-                  highlighted: true,
+              icon: Icons.play_arrow_rounded,
 
-                  icon: Icons.play_arrow_rounded,
-
-                  onPressed: _runCycle,
-                );
-              },
+              onPressed: _runCycle,
             ),
 
             _arrow(context),

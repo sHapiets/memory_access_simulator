@@ -33,7 +33,7 @@ class DynamicMemoryWidget extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Icons.memory_rounded,
+                  Icons.grid_on_rounded,
                   size: 20,
                   color: theme.colorScheme.primary,
                 ),
@@ -74,7 +74,7 @@ class DynamicMemoryWidget extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final page = memory.dynamic[index];
 
-                      return _PhysicalPage(ppn: index, used: page.used);
+                      return _PhysicalPage(ppn: index);
                     },
                   );
                 },
@@ -92,26 +92,30 @@ class DynamicMemoryWidget extends StatelessWidget {
 // ======================================================================
 
 class _PhysicalPage extends StatelessWidget {
-  const _PhysicalPage({required this.ppn, required this.used});
+  const _PhysicalPage({required this.ppn});
 
   final int ppn;
-  final bool used;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    final borderColor = used
-        ? theme.colorScheme.primary
-        : theme.colorScheme.outline;
+    final colors = theme.colorScheme;
+    final runtime = Runtime.singleton;
+    final isPageAccessed =
+        (runtime.getPPN == ppn) &&
+        (runtime.connectPAtoDRAM || runtime.connectDiskToDRAM);
 
     return Container(
       decoration: BoxDecoration(
-        color: used
+        color: isPageAccessed
             ? theme.colorScheme.primary.withValues(alpha: 0.08)
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: borderColor, width: used ? 1.5 : 1),
+        border: Border.all(
+          color: isPageAccessed
+              ? colors.primary.withValues(alpha: 0.35)
+              : colors.outline.withValues(alpha: 0.35),
+        ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
       child: Column(
@@ -122,13 +126,7 @@ class _PhysicalPage extends StatelessWidget {
           // ------------------------------------------------------------
           Row(
             children: [
-              Icon(
-                Icons.view_module_rounded,
-                size: 15,
-                color: used
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
+              Icon(Icons.view_module_rounded, size: 15, color: Colors.green),
 
               const SizedBox(width: 5),
 
@@ -145,45 +143,6 @@ class _PhysicalPage extends StatelessWidget {
           ),
 
           const Spacer(),
-
-          // ------------------------------------------------------------
-          // Used state
-          // ------------------------------------------------------------
-          Row(
-            children: [
-              Text(
-                'USED',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-
-              const Spacer(),
-
-              Container(
-                width: 25,
-                height: 20,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Text(
-                  used ? '1' : '0',
-                  style: TextStyle(
-                    fontFamily: 'Fredoka',
-                    fontSize: 11,
-                    color: used
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

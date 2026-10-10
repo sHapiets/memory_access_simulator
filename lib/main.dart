@@ -45,6 +45,9 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: processorPrimary,
       brightness: Brightness.light,
+
+      secondary: const Color(0xFFE9A23B), // Amber
+      tertiary: const Color(0xFF8B7CE8), // Purple
     ),
 
     appBarTheme: const AppBarTheme(
@@ -67,6 +70,9 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: processorPrimary,
       brightness: Brightness.dark,
+
+      secondary: const Color(0xFFE9A23B),
+      tertiary: const Color(0xFF8B7CE8),
     ),
 
     appBarTheme: const AppBarTheme(

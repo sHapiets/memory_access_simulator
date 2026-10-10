@@ -67,13 +67,6 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
           // IMPORTANT:
           // These must be read INSIDE the builder.
           final sequence = accessSequence.sequence;
-
-          // Runtime.accessNumber represents the access currently
-          // being processed / completed by the runtime.
-          final accessNumber = runtime.accessNumber.value;
-
-          // The sequence pointer is still the authoritative sequence
-          // position.
           final pointer = accessSequence.pointer;
 
           return Column(
@@ -97,7 +90,6 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
                             access: sequence[index],
                             index: index,
                             isActive: index == pointer,
-                            accessNumber: accessNumber,
                           );
                         },
                       ),
@@ -165,13 +157,11 @@ class _AccessItem extends StatelessWidget {
   final Access access;
   final int index;
   final bool isActive;
-  final int accessNumber;
 
   const _AccessItem({
     required this.access,
     required this.index,
     required this.isActive,
-    required this.accessNumber,
   });
 
   @override

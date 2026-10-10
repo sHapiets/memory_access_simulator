@@ -74,7 +74,7 @@ class VirtualAddressWidget extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      Icons.language_rounded,
+                      Icons.search_rounded,
                       size: 20,
                       color: theme.colorScheme.primary,
                     ),
@@ -83,7 +83,7 @@ class VirtualAddressWidget extends StatelessWidget {
                       'Virtual Address',
                       style: TextStyle(
                         fontFamily: 'Nunito',
-                        fontSize: 17,
+                        fontSize: 24,
                         fontWeight: FontWeight.w700,
                         color: theme.colorScheme.onSurface,
                       ),
@@ -96,14 +96,16 @@ class VirtualAddressWidget extends StatelessWidget {
                 // ============================================================
                 // Hexadecimal virtual address
                 // ============================================================
-                Center(
-                  child: Text(
-                    '0x${virtualAddress.toRadixString(16).toUpperCase()}',
-                    style: TextStyle(
-                      fontFamily: 'Fredoka',
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      '0x${virtualAddress.toRadixString(16).toUpperCase()}',
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -125,7 +127,7 @@ class VirtualAddressWidget extends StatelessWidget {
                     _Segment(
                       label: 'PAGE OFFSET',
                       bits: pageOffsetBinary,
-                      color: theme.colorScheme.secondary,
+                      color: theme.colorScheme.tertiary,
                     ),
                   ],
                 ),
@@ -177,7 +179,7 @@ class VirtualAddressWidget extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Icons.language_rounded,
+                  Icons.search_rounded,
                   size: 20,
                   color: theme.colorScheme.primary,
                 ),
@@ -186,7 +188,7 @@ class VirtualAddressWidget extends StatelessWidget {
                   'Virtual Address',
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 17,
+                    fontSize: 24,
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.onSurface,
                   ),

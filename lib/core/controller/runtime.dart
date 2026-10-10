@@ -13,15 +13,14 @@ class Runtime extends ChangeNotifier {
   Runtime._();
   static final singleton = Runtime._();
 
-  ValueNotifier<int> accessNumber = ValueNotifier(0);
-
-  MicroStep microStep = MicroStep.initialize;
+  MicroStep microStep = MicroStep.initializeGetTranslation;
 
   int _vpn = -1;
   int _pageOffset = -1;
   int _ppn = -1;
   int _physicalAddress = -1;
 
+  int _tlbEntry = -1;
   int _cacheLine = -1;
   AccessType? _accessType;
 
@@ -33,6 +32,32 @@ class Runtime extends ChangeNotifier {
   int get getPPN => _ppn;
   int get getPageOffset => _pageOffset;
   int get getPhysicalAddress => _physicalAddress;
+  int get getCacheLine => _cacheLine;
+  int get getBlockOffset => Parser.cacheOffsetFromAddress(
+    _physicalAddress,
+    Configuration.singleton.blockSizeBytes,
+  );
+
+  bool connectVAtoTLB = false;
+  bool connectVAtoPageTable = false;
+  bool connectPageTableToTLB = false;
+  bool connectVAtoMMU = false;
+
+  bool connectMMUtoDisk = false;
+  bool connectDiskToDRAM = false;
+  bool connectDRAMtoDisk = false;
+  bool connectMMUtoPageTable = false;
+
+  bool connectTLBtoPA = false;
+  bool connectVAtoPA = false;
+  bool connectPAtoCache = false;
+  bool connectPAtoDRAM = false;
+  bool connectDRAMtoCache = false;
+  bool connectCacheToDRAMFromLineEviction = false;
+  bool connectCacheToDRAMFromPageEviction = false;
+
+  bool connectCacheToAccessRegister = false;
+  bool connectAccessRegisterToCache = false;
 
   void runAccess() {
     if (microStep == MicroStep.complete) {
@@ -41,8 +66,6 @@ class Runtime extends ChangeNotifier {
       if (sequence.pointer >= sequence.sequence.length) {
         return;
       }
-
-      microStep = MicroStep.initialize;
     }
 
     while (microStep != MicroStep.complete) {
@@ -57,13 +80,11 @@ class Runtime extends ChangeNotifier {
       if (accSequence.pointer >= accSequence.sequence.length) {
         return;
       }
-
-      microStep = MicroStep.initialize;
     }
 
     switch (microStep) {
-      case MicroStep.initialize:
-        _microInitialize();
+      case MicroStep.initializeGetTranslation:
+        _microInitializeGetTranslation();
         break;
 
       case MicroStep.tlb:
@@ -82,6 +103,10 @@ class Runtime extends ChangeNotifier {
         _microPageFaultLoad();
         break;
 
+      case MicroStep.intializeGetData:
+        _microInitializeGetData();
+        break;
+
       case MicroStep.cache:
         _microCache();
         break;
@@ -91,15 +116,18 @@ class Runtime extends ChangeNotifier {
         break;
 
       case MicroStep.complete:
+        _microComplete();
         break;
     }
 
     notifyListeners();
   }
 
-  void _microInitialize() {
+  void _microInitializeGetTranslation() {
     final config = Configuration.singleton;
     final accSequence = AccessSequence.singleton;
+
+    accSequence.pointer += 1;
 
     final Access currentAccess = accSequence.sequence[accSequence.pointer];
 
@@ -122,10 +150,15 @@ class Runtime extends ChangeNotifier {
     _invalidatedVPN = -1;
     _replacedPagePPN = -1;
 
+    _resetConnections();
+
+    connectVAtoTLB = true;
+
     microStep = MicroStep.tlb;
   }
 
   void _microTLB() {
+    final accSequence = AccessSequence.singleton;
     final tlb = TLB.singleton;
     final mem = Memory.singleton;
 
@@ -135,21 +168,22 @@ class Runtime extends ChangeNotifier {
       // TLB HIT
       _ppn = ppnFromTLB;
 
-      tlb.accessEntry(_vpn, accessNumber.value);
+      _tlbEntry = tlb.accessEntry(_vpn, accSequence.pointer);
 
-      mem.updatePageAccess(_ppn, accessNumber.value);
+      mem.updatePageAccess(_ppn, accSequence.pointer);
 
-      _finishTranslation();
-
-      microStep = MicroStep.cache;
+      microStep = MicroStep.intializeGetData;
       return;
     }
 
     // TLB MISS.
     microStep = MicroStep.pageTable;
+    connectVAtoTLB = false;
+    connectVAtoPageTable = true;
   }
 
   void _microPageTable() {
+    final accSequence = AccessSequence.singleton;
     final tlb = TLB.singleton;
     final mem = Memory.singleton;
 
@@ -157,17 +191,20 @@ class Runtime extends ChangeNotifier {
       // PAGE TABLE HIT
       _ppn = mem.getPPNFromPageTable(_vpn);
 
-      tlb.addEntry(_vpn, _ppn, accessNumber.value);
+      _tlbEntry = tlb.addEntry(_vpn, _ppn, accSequence.pointer);
+      connectPageTableToTLB = true;
 
-      mem.updatePageAccess(_ppn, accessNumber.value);
+      mem.updatePageAccess(_ppn, accSequence.pointer);
 
-      _finishTranslation();
-
-      microStep = MicroStep.cache;
+      microStep = MicroStep.intializeGetData;
       return;
     }
 
     // PAGE FAULT.
+    connectVAtoPageTable = false;
+    connectVAtoMMU = true;
+    connectMMUtoDisk = true;
+
     final ppnForPageLoad = mem.findFreePage();
 
     if (ppnForPageLoad == -1) {
@@ -197,12 +234,16 @@ class Runtime extends ChangeNotifier {
     );
 
     if (isReplacedPageDirtyFromCache) {
-      // TODO: Cache writeback stats / delay.
       mem.dirtyVPNEntry(_invalidatedVPN);
 
+      // TODO: Cache writeback stats / delay.
+      connectCacheToDRAMFromPageEviction = true;
+
       // TODO: Page writeback stats / delay.
+      connectDRAMtoDisk = true;
     } else if (isReplacedPageAlreadyDirty) {
       // TODO: Page writeback stats / delay.
+      connectDRAMtoDisk = true;
     }
 
     _ppn = _replacedPagePPN;
@@ -211,14 +252,26 @@ class Runtime extends ChangeNotifier {
   }
 
   void _microPageFaultLoad() {
+    final accSequence = AccessSequence.singleton;
     final tlb = TLB.singleton;
     final mem = Memory.singleton;
 
     mem.loadPageFromDisk(_vpn, _ppn);
+    connectDiskToDRAM = true;
+    connectMMUtoPageTable = true;
 
-    tlb.addEntry(_vpn, _ppn, accessNumber.value);
+    _tlbEntry = tlb.addEntry(_vpn, _ppn, accSequence.pointer);
+    connectPageTableToTLB = true;
 
-    mem.updatePageAccess(_ppn, accessNumber.value);
+    mem.updatePageAccess(_ppn, accSequence.pointer);
+
+    microStep = MicroStep.intializeGetData;
+  }
+
+  void _microInitializeGetData() {
+    connectPAtoCache = true;
+    connectTLBtoPA = true;
+    connectVAtoPA = true;
 
     _finishTranslation();
 
@@ -242,13 +295,15 @@ class Runtime extends ChangeNotifier {
 
     if (_cacheLine != -1) {
       // CACHE HIT.
+      _finishData();
       microStep = MicroStep.complete;
-      _completeAccess();
       return;
     }
 
     // CACHE MISS.
     microStep = MicroStep.dram;
+    connectPAtoCache = false;
+    connectPAtoDRAM = true;
   }
 
   void _microDRAM() {
@@ -265,32 +320,34 @@ class Runtime extends ChangeNotifier {
       _cacheLine,
       _physicalAddress,
     );
+    connectDRAMtoCache = true;
 
     if (replacedLinePPN != -1) {
       // TODO: Cache writeback delay / stats.
       mem.dirtyVPNEntryFromPPN(replacedLinePPN);
+      connectCacheToDRAMFromLineEviction = true;
     }
 
-    // The requested block has now been loaded into cache.
+    _finishData();
     microStep = MicroStep.complete;
-    _completeAccess();
   }
 
-  void _completeAccess() {
-    final cache = Cache.singleton;
+  void _finishData() {
     final accSequence = AccessSequence.singleton;
+    final cache = Cache.singleton;
 
-    cache.accessCacheLine(_cacheLine, _accessType!, accessNumber.value);
+    cache.accessCacheLine(_cacheLine, _accessType!, accSequence.pointer);
+    // TODO: ConnectCacheToDataRegister
+  }
 
-    accSequence.pointer += 1;
-    accessNumber.value += 1;
+  void _microComplete() {
+    connectCacheToAccessRegister = true;
 
-    // The current access is finished.
-    microStep = MicroStep.complete;
+    microStep = MicroStep.initializeGetTranslation;
   }
 
   void reset() {
-    microStep = MicroStep.initialize;
+    microStep = MicroStep.initializeGetTranslation;
 
     _vpn = -1;
     _pageOffset = -1;
@@ -303,6 +360,34 @@ class Runtime extends ChangeNotifier {
     _invalidatedVPN = -1;
     _replacedPagePPN = -1;
 
+    _resetConnections();
+
+    final accSequence = AccessSequence.singleton;
+    accSequence.pointer = -1;
+
     // TODO: Add resets of all other components
+  }
+
+  void _resetConnections() {
+    connectVAtoTLB = false;
+    connectVAtoPageTable = false;
+    connectPageTableToTLB = false;
+    connectVAtoMMU = false;
+
+    connectMMUtoDisk = false;
+    connectDiskToDRAM = false;
+    connectDRAMtoDisk = false;
+    connectMMUtoPageTable = false;
+
+    connectTLBtoPA = false;
+    connectVAtoPA = false;
+    connectPAtoCache = false;
+    connectPAtoDRAM = false;
+    connectDRAMtoCache = false;
+    connectCacheToDRAMFromLineEviction = false;
+    connectCacheToDRAMFromPageEviction = false;
+
+    connectCacheToAccessRegister = false;
+    connectAccessRegisterToCache = false;
   }
 }

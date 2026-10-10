@@ -34,16 +34,19 @@ class TLB {
     }
   }
 
-  void accessEntry(int vpn, int accessNumber) {
+  int accessEntry(int vpn, int accessNumber) {
     for (int i = 0; i < entries.length; i++) {
       final entry = entries[i];
       if (entry.valid && entry.vpn == vpn) {
         entries[i].lastAccess = accessNumber;
+        return i;
       }
     }
+
+    return -1;
   }
 
-  void addEntry(int vpn, int ppn, int currentAccessNumber) {
+  int addEntry(int vpn, int ppn, int currentAccessNumber) {
     final newEntry = TLBEntry(
       vpn: vpn,
       valid: true,
@@ -57,7 +60,7 @@ class TLB {
       final entry = entries[i];
       if (!entry.valid) {
         entries[i] = newEntry;
-        return;
+        return i;
       }
 
       if (selectedLatestAccess > entry.lastAccess) {
@@ -67,6 +70,6 @@ class TLB {
     }
 
     entries[selectedEntry] = newEntry;
-    return;
+    return selectedEntry;
   }
 }
