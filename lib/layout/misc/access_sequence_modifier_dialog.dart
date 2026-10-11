@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/components/access_sequence.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
@@ -20,170 +18,214 @@ class _AccessSequenceModifierDialogState
   final configuration = Configuration.singleton;
   final accessSequence = AccessSequence.singleton;
 
-  final List<_AccessDraft> _drafts = [];
+  late TextEditingController sequenceController;
+
+  List<_ParsedAccess> parsedAccesses = [];
 
   @override
   void initState() {
     super.initState();
 
-    for (final access in accessSequence.sequence) {
-      _drafts.add(
-        _AccessDraft(
-          type: access.type,
-          addressController: TextEditingController(
-            text: _formatAddress(access.address),
-          ),
-        ),
-      );
-    }
+    sequenceController = TextEditingController(text: _sequenceToText());
 
-    if (_drafts.isEmpty) {
-      _drafts.add(_AccessDraft());
-    }
+    sequenceController.addListener(_parseSequence);
+
+    _parseSequence();
   }
 
   @override
   void dispose() {
-    for (final draft in _drafts) {
-      draft.dispose();
-    }
+    sequenceController.dispose();
     super.dispose();
   }
 
-  // ============================================================
-  // ADDRESS LIMITS
-  // ============================================================
+  // ========================================================================
+  // Existing sequence -> text
+  // ========================================================================
 
-  int get _addressBits => configuration.vpnBits + configuration.pageOffsetBits;
+  String _sequenceToText() {
+    return accessSequence.sequence
+        .map((access) {
+          final type = access.type == AccessType.load ? 'L' : 'S';
 
-  int get _maxAddress => (1 << _addressBits) - 1;
+          final address = access.address
+              .toRadixString(16)
+              .toUpperCase()
+              .padLeft(4, '0');
 
-  String _formatAddress(int address) {
-    return '0x${address.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+          return '$type 0x$address';
+        })
+        .join('\n');
   }
 
-  int? _parseAddress(String input) {
-    final value = input.trim();
+  // ========================================================================
+  // Address limits
+  // ========================================================================
 
-    if (value.isEmpty) return null;
+  int get _addressBits {
+    return configuration.vpnBits + configuration.pageOffsetBits;
+  }
+
+  int get _maxAddress {
+    return (1 << _addressBits) - 1;
+  }
+
+  // ========================================================================
+  // Parsing
+  // ========================================================================
+
+  void _parseSequence() {
+    final lines = sequenceController.text.split('\n');
+
+    final results = <_ParsedAccess>[];
+
+    for (int i = 0; i < lines.length; i++) {
+      results.add(_parseLine(lines[i], i));
+    }
+
+    setState(() {
+      parsedAccesses = results;
+    });
+  }
+
+  _ParsedAccess _parseLine(String line, int index) {
+    final trimmed = line.trim();
+
+    // Empty lines are allowed.
+    if (trimmed.isEmpty) {
+      return _ParsedAccess.empty(index);
+    }
+
+    final parts = trimmed.split(RegExp(r'\s+'));
+
+    // We expect:
+    //
+    // L 0x0040
+    //
+    // or
+    //
+    // S 64
+
+    if (parts.length != 2) {
+      return _ParsedAccess.invalid(
+        index,
+        'Expected an access type followed by an address.',
+      );
+    }
+
+    // ------------------------------------------------------------
+    // Access type
+    // ------------------------------------------------------------
+
+    final typeCode = parts[0].toUpperCase();
+
+    AccessType? type;
+
+    switch (typeCode) {
+      case 'L':
+        type = AccessType.load;
+        break;
+
+      case 'S':
+        type = AccessType.store;
+        break;
+
+      default:
+        return _ParsedAccess.invalid(
+          index,
+          'Invalid access type "$typeCode". Use L or S.',
+        );
+    }
+
+    // ------------------------------------------------------------
+    // Address
+    // ------------------------------------------------------------
+
+    final addressString = parts[1];
+
+    int? address;
 
     try {
-      if (value.toLowerCase().startsWith('0x')) {
-        final digits = value.substring(2);
-        if (digits.isEmpty) return null;
-        return int.parse(digits, radix: 16);
+      if (addressString.toLowerCase().startsWith('0x')) {
+        address = int.parse(addressString.substring(2), radix: 16);
+      } else {
+        address = int.parse(addressString);
       }
-
-      return int.parse(value);
     } catch (_) {
-      return null;
-    }
-  }
-
-  // ============================================================
-  // VALIDATION
-  // ============================================================
-
-  bool _isBlank(_AccessDraft draft) {
-    return draft.addressController.text.trim().isEmpty;
-  }
-
-  String? _errorFor(_AccessDraft draft) {
-    final input = draft.addressController.text.trim();
-
-    // Empty rows are ignored, allowing the user to add a row
-    // before entering its address.
-    if (input.isEmpty) return null;
-
-    final address = _parseAddress(input);
-
-    if (address == null) {
-      return 'Enter a valid decimal or hexadecimal address.';
+      return _ParsedAccess.invalid(index, 'Invalid address "$addressString".');
     }
 
     if (address < 0) {
-      return 'Address cannot be negative.';
+      return _ParsedAccess.invalid(index, 'Address cannot be negative.');
     }
 
     if (address > _maxAddress) {
-      return 'Address exceeds the configured address space '
-          '(maximum: ${_formatAddress(_maxAddress)}).';
+      return _ParsedAccess.invalid(
+        index,
+        'Address exceeds the configured address space '
+        '(maximum: 0x${_formatAddress(_maxAddress)}).',
+      );
     }
 
-    return null;
+    return _ParsedAccess.valid(index, Access(type: type, address: address));
   }
 
-  bool get _hasErrors =>
-      _drafts.any((draft) => !_isBlank(draft) && _errorFor(draft) != null);
-
-  int get _validCount => _drafts.where((draft) {
-    return !_isBlank(draft) && _errorFor(draft) == null;
-  }).length;
-
-  int get _errorCount => _drafts.where((draft) {
-    return !_isBlank(draft) && _errorFor(draft) != null;
-  }).length;
-
-  // ============================================================
-  // EDITING
-  // ============================================================
-
-  void _addAccess() {
-    setState(() {
-      _drafts.add(_AccessDraft());
-    });
+  String _formatAddress(int address) {
+    return address.toRadixString(16).toUpperCase().padLeft(4, '0');
   }
 
-  void _removeAccess(int index) {
-    setState(() {
-      final removed = _drafts.removeAt(index);
-      removed.dispose();
-    });
+  // ========================================================================
+  // Validation
+  // ========================================================================
+
+  bool get _hasErrors {
+    return parsedAccesses.any((entry) => entry.error != null);
   }
 
-  void _saveSequence() {
-    if (_hasErrors) return;
+  int get _validAccessCount {
+    return parsedAccesses.where((entry) => entry.access != null).length;
+  }
 
-    final sequence = <Access>[];
+  // ========================================================================
+  // Save
+  // ========================================================================
 
-    for (final draft in _drafts) {
-      if (_isBlank(draft)) continue;
-
-      final address = _parseAddress(draft.addressController.text);
-
-      if (address == null || address < 0 || address > _maxAddress) {
-        return;
-      }
-
-      sequence.add(Access(type: draft.type, address: address));
+  void saveSequence() {
+    if (_hasErrors) {
+      return;
     }
-
+    final sequence = parsedAccesses
+        .where((entry) => entry.access != null)
+        .map((entry) => entry.access!)
+        .toList();
     accessSequence.setSequence(sequence);
     Runtime.singleton.reset();
-    Navigator.of(context).pop();
+    Navigator.pop(context);
   }
 
-  // ============================================================
-  // FORMAT HELP
-  // ============================================================
+  // ========================================================================
+  // UI helpers
+  // ========================================================================
 
   Widget _buildFormatHelp(ThemeData theme) {
-    final colors = theme.colorScheme;
-
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.25),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.outlineVariant),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline_rounded, size: 18, color: colors.primary),
+              Icon(
+                Icons.info_outline,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Access Format',
@@ -191,38 +233,46 @@ class _AccessSequenceModifierDialogState
                   fontFamily: 'Nunito',
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
-                  color: colors.onSurface,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+
+          const SizedBox(height: 8),
+
           Text(
-            'Choose LOAD or STORE for each access. '
-            'Addresses can be decimal or hexadecimal.',
+            'Enter one access per line:',
             style: TextStyle(
               fontFamily: 'Nunito',
               fontSize: 12,
-              color: colors.onSurface.withValues(alpha: 0.75),
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
             ),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _exampleChip(theme, '64'),
-              _exampleChip(theme, '0x0040'),
-              _exampleChip(theme, '0x00A4'),
-            ],
-          ),
+
           const SizedBox(height: 6),
+
           Text(
-            'Maximum address: ${_formatAddress(_maxAddress)}',
+            'L 0x0040\n'
+            'S 0x00A4\n'
+            'L 64',
             style: TextStyle(
-              fontFamily: 'Roboto-Mono',
+              fontFamily: 'Fredoka',
+              fontSize: 14,
+              height: 1.5,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            'L = Load    S = Store',
+            style: TextStyle(
+              fontFamily: 'Nunito',
               fontSize: 11,
-              color: colors.outline,
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
         ],
@@ -230,412 +280,216 @@ class _AccessSequenceModifierDialogState
     );
   }
 
-  Widget _exampleChip(ThemeData theme, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Text(
-        value,
-        style: TextStyle(
-          fontFamily: 'Fredoka',
-          fontSize: 12,
-          color: theme.colorScheme.onSurface,
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // STATUS
-  // ============================================================
-
   Widget _buildStatus(ThemeData theme) {
-    final colors = theme.colorScheme;
-
-    final Color statusColor;
-    final IconData statusIcon;
-    final String statusText;
-
     if (_hasErrors) {
-      statusColor = colors.error;
-      statusIcon = Icons.error_outline_rounded;
-      statusText =
-          '$_errorCount invalid ${_errorCount == 1 ? 'entry' : 'entries'}';
-    } else {
-      statusColor = Colors.green.shade600;
-      statusIcon = Icons.check_circle_outline_rounded;
-      statusText =
-          '$_validCount valid '
-          '${_validCount == 1 ? 'access' : 'accesses'}';
+      final errorCount = parsedAccesses
+          .where((entry) => entry.error != null)
+          .length;
+
+      return Row(
+        children: [
+          Icon(Icons.error_outline, size: 17, color: theme.colorScheme.error),
+          const SizedBox(width: 7),
+          Text(
+            '$errorCount invalid '
+            '${errorCount == 1 ? 'entry!' : 'entries!'}',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
+      );
     }
 
     return Row(
       children: [
-        Icon(statusIcon, size: 18, color: statusColor),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            statusText,
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: statusColor,
-            ),
-          ),
+        Icon(
+          Icons.check_circle_outline,
+          size: 17,
+          color: Colors.green.shade600,
         ),
+        const SizedBox(width: 7),
         Text(
-          '${_drafts.length} ${_drafts.length == 1 ? 'row' : 'rows'}',
+          'Valid Sequence',
           style: TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 11,
-            color: colors.outline,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.green.shade600,
           ),
         ),
       ],
     );
   }
 
-  // ============================================================
-  // ACCESS ROW
-  // ============================================================
-
-  Widget _buildAccessRow(BuildContext context, ThemeData theme, int index) {
-    final colors = theme.colorScheme;
-    final draft = _drafts[index];
-    final error = _errorFor(draft);
-    final hasError = error != null;
-
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: hasError
-            ? colors.errorContainer.withValues(alpha: 0.22)
-            : colors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: hasError
-              ? colors.error.withValues(alpha: 0.75)
-              : colors.outlineVariant,
-          width: hasError ? 1.4 : 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // ROW NUMBER
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: hasError
-                      ? colors.error.withValues(alpha: 0.1)
-                      : colors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '${index + 1}',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: hasError ? colors.error : colors.primary,
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              // ACCESS TYPE
-              Expanded(
-                flex: 2,
-                child: DropdownButtonFormField<AccessType>(
-                  initialValue: draft.type,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: 'Access type',
-                    prefixIcon: Icon(
-                      draft.type == AccessType.load
-                          ? Icons.download_rounded
-                          : Icons.upload_rounded,
-                      size: 19,
-                    ),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 11,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: AccessType.load,
-                      child: Text('LOAD', overflow: TextOverflow.ellipsis),
-                    ),
-                    DropdownMenuItem(
-                      value: AccessType.store,
-                      child: Text('STORE', overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value == null) return;
-
-                    setState(() {
-                      draft.type = value;
-                    });
-                  },
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              // ADDRESS
-              Expanded(
-                flex: 3,
-                child: TextField(
-                  controller: draft.addressController,
-                  onChanged: (_) => setState(() {}),
-                  style: TextStyle(
-                    fontFamily: 'Fredoka',
-                    fontSize: 14,
-                    color: colors.onSurface,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Address',
-                    hintText: '0x0040 or 64',
-                    errorText: hasError ? 'Invalid' : null,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 11,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(9),
-                      borderSide: BorderSide(
-                        color: hasError ? colors.error : colors.outlineVariant,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(9),
-                      borderSide: BorderSide(
-                        color: hasError ? colors.error : colors.primary,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 4),
-
-              // REMOVE
-              IconButton(
-                tooltip: 'Remove access',
-                visualDensity: VisualDensity.compact,
-                onPressed: () => _removeAccess(index),
-                icon: const Icon(Icons.close_rounded, size: 20),
-                color: colors.error,
-              ),
-            ],
-          ),
-
-          if (hasError) ...[
-            const SizedBox(height: 7),
-            Padding(
-              padding: const EdgeInsets.only(left: 3),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    size: 15,
-                    color: colors.error,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      error,
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 11,
-                        color: colors.error,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // BUILD
-  // ============================================================
+  // ========================================================================
+  // Build
+  // ========================================================================
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final screenSize = MediaQuery.sizeOf(context);
-
-    final dialogWidth = math.min(screenSize.width - 32, 760.0);
-    final dialogHeight = math.min(screenSize.height * 0.86, 720.0);
+    final isValid = !_hasErrors;
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: theme.colorScheme.surface.withOpacity(0.95),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: SizedBox(
-        width: dialogWidth,
-        height: dialogHeight,
-        child: Padding(
-          padding: EdgeInsets.all(screenSize.width < 600 ? 14 : 22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // HEADER
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.format_list_numbered_rounded,
-                      color: theme.colorScheme.primary,
+      child: Container(
+        width: 520,
+        constraints: const BoxConstraints(maxHeight: 720),
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ==============================================================
+            // Header
+            // ==============================================================
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.format_list_numbered_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Text(
+                    'Access Sequence',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Access Sequence',
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // ==============================================================
+            // Format help
+            // ==============================================================
+            _buildFormatHelp(theme),
+
+            const SizedBox(height: 16),
+
+            // ==============================================================
+            // Text editor
+            // ==============================================================
+            Expanded(
+              child: TextField(
+                controller: sequenceController,
+                expands: true,
+                maxLines: null,
+                minLines: null,
+                keyboardType: TextInputType.multiline,
+                textAlignVertical: TextAlignVertical.top,
+                style: TextStyle(
+                  fontFamily: 'Fredoka',
+                  fontSize: 15,
+                  height: 1.5,
+                  color: theme.colorScheme.onSurface,
+                ),
+                decoration: InputDecoration(
+                  hintText:
+                      'L 0x0040\n'
+                      'S 0x00A4\n'
+                      'L 0x001C',
+                  hintStyle: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 15,
+                    height: 1.5,
+                    color: theme.colorScheme.onSurface.withOpacity(0.3),
+                  ),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerHighest
+                      .withOpacity(0.25),
+
+                  contentPadding: const EdgeInsets.all(14),
+
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: theme.colorScheme.outline.withOpacity(0.3),
                     ),
                   ),
-                  IconButton(
-                    tooltip: 'Close',
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
+
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: _hasErrors
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.primary,
+                      width: 1.5,
+                    ),
                   ),
-                ],
+                ),
               ),
+            ),
 
-              const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-              _buildFormatHelp(theme),
+            // ==============================================================
+            // Status
+            // ==============================================================
+            _buildStatus(theme),
 
-              const SizedBox(height: 14),
+            const SizedBox(height: 16),
 
-              // LIST HEADER
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'MEMORY ACCESSES',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1,
-                        color: theme.colorScheme.outline,
-                      ),
+            // ==============================================================
+            // Buttons
+            // ==============================================================
+
+            // Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  TextButton.icon(
-                    onPressed: _addAccess,
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('Add access'),
-                    style: TextButton.styleFrom(
-                      textStyle: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontWeight: FontWeight.w800,
-                      ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: isValid ? saveSequence : null,
+                  child: const Text(
+                    'Save',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 4),
-
-              // EDITABLE ROWS
-              Expanded(
-                child: _drafts.isEmpty
-                    ? const SizedBox.shrink()
-                    : ListView.separated(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        itemCount: _drafts.length,
-                        padding: const EdgeInsets.only(top: 4, bottom: 8),
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          return _buildAccessRow(context, theme, index);
-                        },
-                      ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // STATUS
-              _buildStatus(theme),
-
-              const SizedBox(height: 14),
-
-              // ACTIONS
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  FilledButton.icon(
-                    onPressed: _hasErrors ? null : _saveSequence,
-                    icon: const Icon(Icons.check_rounded, size: 19),
-                    label: const Text(
-                      'Save Sequence',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -643,19 +497,25 @@ class _AccessSequenceModifierDialogState
 }
 
 // ============================================================================
-// ACCESS DRAFT
+// Parsed Access
 // ============================================================================
 
-class _AccessDraft {
-  AccessType type;
-  final TextEditingController addressController;
+class _ParsedAccess {
+  final int lineNumber;
+  final Access? access;
+  final String? error;
 
-  _AccessDraft({
-    this.type = AccessType.load,
-    TextEditingController? addressController,
-  }) : addressController = addressController ?? TextEditingController();
+  const _ParsedAccess({required this.lineNumber, this.access, this.error});
 
-  void dispose() {
-    addressController.dispose();
+  factory _ParsedAccess.valid(int lineNumber, Access access) {
+    return _ParsedAccess(lineNumber: lineNumber, access: access);
+  }
+
+  factory _ParsedAccess.invalid(int lineNumber, String error) {
+    return _ParsedAccess(lineNumber: lineNumber, error: error);
+  }
+
+  factory _ParsedAccess.empty(int lineNumber) {
+    return _ParsedAccess(lineNumber: lineNumber);
   }
 }
