@@ -49,6 +49,17 @@ class _ComponentsAreaState extends State<ComponentsArea>
 
   bool _initialFitScheduled = false;
 
+  // Zoom is enabled only while the pointer is over empty workspace space.
+  bool _isHoveringComponent = false;
+
+  void _setComponentHover(bool hovering) {
+    if (_isHoveringComponent == hovering) return;
+
+    setState(() {
+      _isHoveringComponent = hovering;
+    });
+  }
+
   late final AnimationController _zoomController;
 
   Animation<Matrix4>? _zoomAnimation;
@@ -232,7 +243,7 @@ class _ComponentsAreaState extends State<ComponentsArea>
                       child: InteractiveViewer(
                         transformationController: _transformationController,
                         panEnabled: true,
-                        scaleEnabled: false,
+                        scaleEnabled: !_isHoveringComponent,
                         minScale: 0.5,
                         maxScale: 2.5,
                         boundaryMargin: const EdgeInsets.all(300),
@@ -532,7 +543,11 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 top: 110,
                                 height: 360,
                                 width: 300,
-                                child: const CacheWidget(),
+                                child: MouseRegion(
+                                  onEnter: (_) => _setComponentHover(true),
+                                  onExit: (_) => _setComponentHover(false),
+                                  child: const CacheWidget(),
+                                ),
                               ),
 
                               Positioned(
@@ -540,20 +555,32 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 top: 630,
                                 width: 300,
                                 height: 240,
-                                child: const TLBWidget(),
+                                child: MouseRegion(
+                                  onEnter: (_) => _setComponentHover(true),
+                                  onExit: (_) => _setComponentHover(false),
+                                  child: const TLBWidget(),
+                                ),
                               ),
 
                               Positioned(
                                 left: 880,
                                 top: 600,
-                                child: const PageTableWidget(),
+                                child: MouseRegion(
+                                  onEnter: (_) => _setComponentHover(true),
+                                  onExit: (_) => _setComponentHover(false),
+                                  child: const PageTableWidget(),
+                                ),
                               ),
                               Positioned(
                                 left: 880,
                                 top: 80,
                                 height: 420,
                                 width: 480,
-                                child: const DynamicMemoryWidget(),
+                                child: MouseRegion(
+                                  onEnter: (_) => _setComponentHover(true),
+                                  onExit: (_) => _setComponentHover(false),
+                                  child: const DynamicMemoryWidget(),
+                                ),
                               ),
 
                               Positioned(
@@ -565,7 +592,11 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned(
                                 left: 1500,
                                 top: 260,
-                                child: const MMUWidget(),
+                                child: MouseRegion(
+                                  onEnter: (_) => _setComponentHover(true),
+                                  onExit: (_) => _setComponentHover(false),
+                                  child: const MMUWidget(),
+                                ),
                               ),
 
                               /// View Dialog of components

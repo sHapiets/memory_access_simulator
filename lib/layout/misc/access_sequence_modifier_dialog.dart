@@ -349,10 +349,19 @@ class _AccessSequenceModifierDialogState
             // ==============================================================
             Row(
               children: [
-                Icon(
-                  Icons.format_list_numbered,
-                  color: theme.colorScheme.primary,
-                  size: 24,
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.format_list_numbered_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
 
                 const SizedBox(width: 12),
@@ -362,7 +371,7 @@ class _AccessSequenceModifierDialogState
                     'Access Sequence',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 24,
+                      fontSize: 21,
                       fontWeight: FontWeight.w800,
                       color: theme.colorScheme.onSurface,
                     ),

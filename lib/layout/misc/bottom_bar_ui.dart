@@ -180,6 +180,8 @@ class _BottomBarUIState extends State<BottomBarUI> {
   // =====================================
 
   Widget _buildSetupBar(BuildContext context) {
+    final screenSize = MediaQuery.sizeOf(context);
+
     return _buildBar(
       key: const ValueKey('setup-bar'),
       child: Row(
@@ -194,7 +196,10 @@ class _BottomBarUIState extends State<BottomBarUI> {
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (_) => const ConfigurationDialog(),
+                builder: (_) => Transform.scale(
+                  scale: (screenSize.height / 720),
+                  child: const ConfigurationDialog(),
+                ),
               );
             },
           ),
@@ -210,7 +215,10 @@ class _BottomBarUIState extends State<BottomBarUI> {
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (_) => const AccessSequenceModifierDialog(),
+                builder: (_) => Transform.scale(
+                  scale: (screenSize.height / 720),
+                  child: const AccessSequenceModifierDialog(),
+                ),
               );
             },
           ),

@@ -16,13 +16,18 @@ class ShowInDialogButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.sizeOf(context);
+
     return IconButton(
       icon: Icon(icon, size: 25),
       onPressed: () {
         showDialog<void>(
           context: context,
           builder: (dialogContext) {
-            return Dialog(child: child);
+            return Transform.scale(
+              scale: (screenSize.height / 720),
+              child: Dialog(child: child),
+            );
           },
         );
       },

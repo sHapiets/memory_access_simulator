@@ -7,6 +7,8 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.sizeOf(context);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -20,6 +22,7 @@ class MainPage extends StatelessWidget {
             child: _FittedPane(
               width: 300,
               height: 700,
+              screenSize: screenSize,
               child: const AccessSequenceWidget(),
             ),
           ),
@@ -35,6 +38,7 @@ class MainPage extends StatelessWidget {
             child: _FittedPane(
               width: 1080,
               height: 720,
+              screenSize: screenSize,
               child: const ComponentsArea(),
             ),
           ),
@@ -50,6 +54,7 @@ class MainPage extends StatelessWidget {
             child: _FittedPane(
               width: 450,
               height: 700,
+              screenSize: screenSize,
               child: Center(child: const Text('Log/Statistics')),
             ),
           ),
@@ -68,18 +73,27 @@ class _FittedPane extends StatelessWidget {
     required this.width,
     required this.height,
     required this.child,
+    required this.screenSize,
   });
 
   final double width;
   final double height;
   final Widget child;
+  final Size screenSize;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: FittedBox(
         fit: BoxFit.contain,
-        child: SizedBox(width: width, height: height, child: child),
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: Transform.scale(
+            scale: (screenSize.height / 720),
+            child: child,
+          ),
+        ),
       ),
     );
   }
