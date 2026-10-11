@@ -565,6 +565,8 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned(
                                 left: 880,
                                 top: 600,
+                                width: 480,
+                                height: 300,
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
@@ -592,6 +594,8 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned(
                                 left: 1500,
                                 top: 260,
+                                width: 150,
+                                height: 240,
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
@@ -634,6 +638,20 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ShowInDialogButton(
                                   child: DynamicMemoryWidget(),
                                 ),
+                              ),
+
+                              Positioned(
+                                left: 1100,
+                                top: 560,
+                                child: ShowInDialogButton(
+                                  child: PageTableWidget(),
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 1605,
+                                top: 260,
+                                child: ShowInDialogButton(child: MMUWidget()),
                               ),
                             ],
                           ),

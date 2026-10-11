@@ -19,6 +19,7 @@ class ShowInDialogButton extends StatelessWidget {
     final screenSize = MediaQuery.sizeOf(context);
 
     return IconButton(
+      tooltip: "View",
       icon: Icon(icon, size: 25),
       onPressed: () {
         showDialog<void>(

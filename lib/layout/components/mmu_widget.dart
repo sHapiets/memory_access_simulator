@@ -5,8 +5,8 @@ import 'package:memory_access_simulator/core/controller/runtime.dart';
 class MMUWidget extends StatefulWidget {
   const MMUWidget({super.key});
 
-  static const double width = 150;
-  static const double height = 240;
+  static const double width = 400;
+  static const double height = 600;
 
   @override
   State<MMUWidget> createState() => _MMUWidgetState();

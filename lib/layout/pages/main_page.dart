@@ -7,56 +7,33 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ============================================================
         // Left — Access sequence
-        // ============================================================
         Expanded(
           flex: 8,
           child: Padding(
             padding: const EdgeInsets.all(8),
-            child: _FittedPane(
-              width: 300,
-              height: 700,
-              screenSize: screenSize,
-              child: const AccessSequenceWidget(),
-            ),
+            child: const AccessSequenceWidget(),
           ),
         ),
 
-        // ============================================================
         // Middle — Interactive components area
-        // ============================================================
         Expanded(
           flex: 25,
           child: Padding(
             padding: const EdgeInsets.all(8),
-            child: _FittedPane(
-              width: 1080,
-              height: 720,
-              screenSize: screenSize,
-              child: const ComponentsArea(),
-            ),
+            child: const ComponentsArea(),
           ),
         ),
 
-        // ============================================================
         // Right — Access log
-        // ============================================================
         Expanded(
           flex: 10,
           child: Padding(
             padding: const EdgeInsets.all(8),
-            child: _FittedPane(
-              width: 450,
-              height: 700,
-              screenSize: screenSize,
-              child: Center(child: const Text('Log/Statistics')),
-            ),
+            child: const Center(child: Text('Log/Statistics')),
           ),
         ),
       ],

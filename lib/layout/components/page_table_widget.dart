@@ -5,8 +5,8 @@ import 'package:memory_access_simulator/core/controller/runtime.dart';
 class PageTableWidget extends StatefulWidget {
   const PageTableWidget({super.key});
 
-  static const double width = 480;
-  static const double height = 300;
+  static const double width = 640;
+  static const double height = 420;
 
   @override
   State<PageTableWidget> createState() => _PageTableWidgetState();

@@ -14,6 +14,7 @@ class BottomBarUI extends StatefulWidget {
 
 class _BottomBarUIState extends State<BottomBarUI> {
   final runtime = Runtime.singleton;
+
   bool get _isRunMode => pageModeNotifier.value == PageMode.run;
 
   // =====================================
@@ -60,17 +61,25 @@ class _BottomBarUIState extends State<BottomBarUI> {
     required IconData icon,
     required VoidCallback onPressed,
     bool highlighted = false,
+    bool compact = false,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    final iconSize = compact
+        ? (highlighted ? 26.0 : 21.0)
+        : (highlighted ? 30.0 : 24.0);
+
+    final buttonSize = compact
+        ? (highlighted ? 48.0 : 42.0)
+        : (highlighted ? 56.0 : 48.0);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // STEP INDICATOR
-        if (step != null)
+        if (step != null) ...[
           Container(
-            width: 22,
-            height: 22,
+            width: compact ? 18 : 22,
+            height: compact ? 18 : 22,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: colorScheme.primary.withValues(alpha: 0.08),
@@ -80,19 +89,19 @@ class _BottomBarUIState extends State<BottomBarUI> {
                 step,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 11,
+                  fontSize: compact ? 9 : 11,
                   color: colorScheme.primary,
                 ),
               ),
             ),
           ),
-
-        const SizedBox(width: 10),
+          SizedBox(width: compact ? 6 : 10),
+        ],
 
         // ICON BUTTON
         Container(
-          width: highlighted ? 64 : 54,
-          height: highlighted ? 64 : 54,
+          width: buttonSize,
+          height: buttonSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: colorScheme.surface,
@@ -108,51 +117,49 @@ class _BottomBarUIState extends State<BottomBarUI> {
                 : [],
           ),
           child: IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.expand(),
             onPressed: onPressed,
-            icon: Icon(icon, size: highlighted ? 34 : 26),
+            icon: Icon(icon, size: iconSize),
             color: colorScheme.primary,
           ),
         ),
 
-        const SizedBox(width: 12),
+        SizedBox(width: compact ? 7 : 12),
 
         // LABELS
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontWeight: FontWeight.bold,
-                fontSize: highlighted ? 15 : 13,
-                color: colorScheme.primary,
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.bold,
+                  fontSize: compact ? 12 : (highlighted ? 15 : 13),
+                  color: colorScheme.primary,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subLabel,
-              style: TextStyle(
-                fontFamily: 'Roboto-Mono',
-                fontSize: 11,
-                color: colorScheme.outline,
+              const SizedBox(height: 2),
+              Text(
+                subLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Roboto-Mono',
+                  fontSize: compact ? 9 : 11,
+                  color: colorScheme.outline,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
-    );
-  }
-
-  Widget _arrow(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: Icon(
-        Icons.arrow_forward_rounded,
-        size: 24,
-        color: Theme.of(context).colorScheme.outline,
-      ),
     );
   }
 
@@ -164,13 +171,10 @@ class _BottomBarUIState extends State<BottomBarUI> {
     return SizedBox(
       key: key,
       height: 90,
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: Container(
-          height: 90,
-          padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 12),
-          child: child,
-        ),
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: child,
       ),
     );
   }
@@ -182,82 +186,113 @@ class _BottomBarUIState extends State<BottomBarUI> {
   Widget _buildSetupBar(BuildContext context) {
     final screenSize = MediaQuery.sizeOf(context);
 
-    return _buildBar(
-      key: const ValueKey('setup-bar'),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _stepItem(
-            context: context,
-            step: '0',
-            label: 'Configure',
-            subLabel: 'set memory parameters',
-            icon: Icons.tune_rounded,
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => Transform.scale(
-                  scale: (screenSize.height / 720),
-                  child: const ConfigurationDialog(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final compact = width < 1150;
+        final tiny = width < 800;
+
+        Widget step({
+          required String number,
+          required String label,
+          required String subLabel,
+          required IconData icon,
+          required VoidCallback onPressed,
+          bool highlighted = false,
+        }) {
+          return Expanded(
+            child: _stepItem(
+              context: context,
+              step: number,
+              label: label,
+              subLabel: subLabel,
+              icon: icon,
+              onPressed: onPressed,
+              highlighted: highlighted,
+              compact: compact,
+            ),
+          );
+        }
+
+        Widget arrow() {
+          return Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: tiny ? 3 : (compact ? 6 : 12),
+            ),
+            child: Icon(
+              Icons.arrow_forward_rounded,
+              size: compact ? 17 : 22,
+              color: Theme.of(context).colorScheme.outline,
+            ),
+          );
+        }
+
+        return _buildBar(
+          key: const ValueKey('setup-bar'),
+          child: Row(
+            children: [
+              step(
+                number: '0',
+                label: 'Configure',
+                subLabel: 'set memory parameters',
+                icon: Icons.tune_rounded,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => Transform.scale(
+                      scale: screenSize.height / 720,
+                      child: const ConfigurationDialog(),
+                    ),
+                  );
+                },
+              ),
+              arrow(),
+              step(
+                number: '1',
+                label: 'Access Sequence',
+                subLabel: 'modify memory instructions',
+                icon: Icons.format_list_numbered,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => Transform.scale(
+                      scale: screenSize.height / 720,
+                      child: const AccessSequenceModifierDialog(),
+                    ),
+                  );
+                },
+              ),
+              arrow(),
+              step(
+                number: '2',
+                label: 'Run',
+                subLabel: 'switch to Run mode',
+                icon: Icons.play_arrow_rounded,
+                highlighted: true,
+                onPressed: _enterRunMode,
+              ),
+              arrow(),
+              step(
+                number: '3',
+                label: 'Reset',
+                subLabel: 'clear all states',
+                icon: Icons.restart_alt_rounded,
+                onPressed: () => runtime.reset(),
+              ),
+              if (!tiny) ...[
+                arrow(),
+                step(
+                  number: '4',
+                  label: 'Download',
+                  subLabel: 'export results [SOON]',
+                  icon: Icons.download_rounded,
+                  onPressed: _download,
                 ),
-              );
-            },
+              ],
+            ],
           ),
-
-          _arrow(context),
-
-          _stepItem(
-            context: context,
-            step: '1',
-            label: 'Access Sequence',
-            subLabel: 'modify memory instructions',
-            icon: Icons.format_list_numbered,
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => Transform.scale(
-                  scale: (screenSize.height / 720),
-                  child: const AccessSequenceModifierDialog(),
-                ),
-              );
-            },
-          ),
-
-          _arrow(context),
-
-          _stepItem(
-            context: context,
-            step: '2',
-            label: 'Run',
-            subLabel: 'switch to Run mode',
-            icon: Icons.play_arrow_rounded,
-            highlighted: true,
-            onPressed: _enterRunMode,
-          ),
-
-          _arrow(context),
-
-          _stepItem(
-            context: context,
-            step: '3',
-            label: 'Reset',
-            subLabel: 'clear all states',
-            icon: Icons.restart_alt_rounded,
-            onPressed: () => runtime.reset(),
-          ),
-
-          _arrow(context),
-
-          _stepItem(
-            context: context,
-            step: '4',
-            label: 'Download',
-            subLabel: 'export results [SOON]',
-            icon: Icons.download_rounded,
-            onPressed: _download,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -266,54 +301,63 @@ class _BottomBarUIState extends State<BottomBarUI> {
   // =====================================
 
   Widget _buildRunBar(BuildContext context) {
-    return _buildBar(
-      key: const ValueKey('run-bar'),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // RETURN
-          _stepItem(
-            context: context,
-            label: 'Return',
-            subLabel: 'back to setup',
-            icon: Icons.arrow_back_rounded,
-            onPressed: _returnToSetup,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 900;
+
+        return _buildBar(
+          key: const ValueKey('run-bar'),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: _stepItem(
+                  context: context,
+                  label: 'Return',
+                  subLabel: 'back to setup',
+                  icon: Icons.arrow_back_rounded,
+                  onPressed: _returnToSetup,
+                  compact: compact,
+                ),
+              ),
+
+              const Spacer(flex: 1),
+
+              Expanded(
+                flex: 3,
+                child: Center(
+                  child: _stepItem(
+                    context: context,
+                    label: 'Run Micro Step',
+                    subLabel: 'advance one micro-step',
+                    highlighted: true,
+                    icon: Icons.skip_next_rounded,
+                    onPressed: _runMicroStep,
+                    compact: compact,
+                  ),
+                ),
+              ),
+
+              const Spacer(flex: 1),
+
+              Expanded(
+                flex: 2,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: _stepItem(
+                    context: context,
+                    label: 'Run Access',
+                    subLabel: 'execute a full access',
+                    icon: Icons.fast_forward_rounded,
+                    onPressed: _runAccess,
+                    compact: compact,
+                  ),
+                ),
+              ),
+            ],
           ),
-
-          SizedBox(width: 450),
-
-          // RUN ONE MICRO-STEP
-          _stepItem(
-            context: context,
-            label: 'Run Micro Step',
-            subLabel: 'advance one micro-step',
-            highlighted: true,
-            icon: Icons.skip_next_rounded,
-            onPressed: _runMicroStep,
-          ),
-
-          SizedBox(width: 450),
-
-          // RUN COMPLETE ACCESS
-          _stepItem(
-            context: context,
-            label: 'Run Access',
-            subLabel: 'execute a full access',
-            icon: Icons.fast_forward_rounded,
-            onPressed: _runAccess,
-          ),
-
-          /* 
-          // STOP
-          _stepItem(
-            context: context,
-            label: 'Stop',
-            subLabel: 'stop the simulation',
-            icon: Icons.stop_rounded,
-            onPressed: _stopSimulation,
-          ), */
-        ],
-      ),
+        );
+      },
     );
   }
 
