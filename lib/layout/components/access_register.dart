@@ -11,6 +11,7 @@ class AccessRegisterWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final runtime = Runtime.singleton;
     final colors = theme.colorScheme;
 
     return SizedBox(
@@ -57,25 +58,30 @@ class AccessRegisterWidget extends StatelessWidget {
                   final sequence = AccessSequence.singleton.sequence;
                   final pointer = AccessSequence.singleton.pointer;
 
-                  final hasCurrentAccess =
-                      pointer >= 0 && pointer < sequence.length;
+                  final accessingCache =
+                      runtime.connectAccessRegisterToCache ||
+                      runtime.connectCacheToAccessRegister;
 
-                  final accessType = hasCurrentAccess
-                      ? sequence[pointer].type.toString().split('.').last
+                  final accessType = accessingCache
+                      ? sequence[pointer].type
+                            .toString()
+                            .toUpperCase()
+                            .split('.')
+                            .last
                       : '--';
 
                   return Container(
                     width: double.infinity,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: hasCurrentAccess
+                      color: accessingCache
                           ? colors.primary.withValues(alpha: 0.08)
                           : colors.surfaceContainerHighest.withValues(
                               alpha: 0.35,
                             ),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: hasCurrentAccess
+                        color: accessingCache
                             ? colors.primary.withValues(alpha: 0.4)
                             : colors.outline.withValues(alpha: 0.35),
                       ),
@@ -86,7 +92,7 @@ class AccessRegisterWidget extends StatelessWidget {
                         fontFamily: 'Fredoka',
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: hasCurrentAccess
+                        color: accessingCache
                             ? colors.primary
                             : colors.onSurfaceVariant,
                       ),

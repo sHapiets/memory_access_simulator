@@ -6,8 +6,8 @@ import 'package:memory_access_simulator/core/components/memory.dart';
 class DynamicMemoryWidget extends StatelessWidget {
   const DynamicMemoryWidget({super.key});
 
-  static const double width = 480;
-  static const double height = 420;
+  static const double width = 540;
+  static const double height = 480;
 
   @override
   Widget build(BuildContext context) {

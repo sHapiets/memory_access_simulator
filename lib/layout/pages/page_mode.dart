@@ -1,0 +1,1 @@
+enum PageMode { run, pause }

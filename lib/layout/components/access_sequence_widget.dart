@@ -57,7 +57,7 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.colorScheme.outline),
       ),
@@ -105,38 +105,41 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Icon(
-            Icons.format_list_numbered_rounded,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
-
-          const SizedBox(width: 8),
-
-          Text(
-            'Access Sequence',
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.onSurface,
+    return SizedBox(
+      height: 48,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Row(
+          children: [
+            Icon(
+              Icons.format_list_numbered_rounded,
+              size: 20,
+              color: theme.colorScheme.primary,
             ),
-          ),
 
-          const Spacer(),
+            const SizedBox(width: 8),
 
-          Text(
-            '$count accesses',
-            style: textTheme.bodySmall?.copyWith(
-              fontFamily: 'Nunito',
-              fontWeight: FontWeight.w600,
+            Text(
+              'Access Sequence',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
-          ),
-        ],
+
+            const Spacer(),
+
+            Text(
+              '$count accesses',
+              style: textTheme.bodySmall?.copyWith(
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

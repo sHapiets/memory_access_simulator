@@ -11,6 +11,11 @@ class AccessSequence extends ChangeNotifier {
   List<Access> sequence = [];
   int pointer = -1;
 
+  void restart() {
+    pointer = -1;
+    notifyListeners();
+  }
+
   void reset() {
     sequence = [];
     pointer = -1;

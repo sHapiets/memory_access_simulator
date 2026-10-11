@@ -3,12 +3,15 @@ import 'package:memory_access_simulator/layout/components/access_sequence_widget
 import 'package:memory_access_simulator/layout/misc/appbar_ui.dart';
 import 'package:memory_access_simulator/layout/misc/bottom_bar_ui.dart';
 import 'package:memory_access_simulator/layout/pages/main_page.dart';
+import 'package:memory_access_simulator/layout/pages/page_mode.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 final themeModeNotifier = ValueNotifier(ThemeMode.dark);
+
+final pageModeNotifier = ValueNotifier(PageMode.pause);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

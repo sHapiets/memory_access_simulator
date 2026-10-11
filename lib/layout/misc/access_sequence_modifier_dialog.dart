@@ -292,7 +292,7 @@ class _AccessSequenceModifierDialogState
           const SizedBox(width: 7),
           Text(
             '$errorCount invalid '
-            '${errorCount == 1 ? 'entry' : 'entries'}',
+            '${errorCount == 1 ? 'entry!' : 'entries!'}',
             style: TextStyle(
               fontFamily: 'Nunito',
               fontSize: 12,
@@ -313,8 +313,7 @@ class _AccessSequenceModifierDialogState
         ),
         const SizedBox(width: 7),
         Text(
-          '$_validAccessCount '
-          '${_validAccessCount == 1 ? 'access' : 'accesses'}',
+          'Valid Sequence',
           style: TextStyle(
             fontFamily: 'Nunito',
             fontSize: 12,
@@ -337,14 +336,7 @@ class _AccessSequenceModifierDialogState
 
     return Dialog(
       backgroundColor: theme.colorScheme.surface.withOpacity(0.95),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(
-          color: isValid
-              ? theme.colorScheme.primary.withOpacity(0.45)
-              : theme.colorScheme.error.withOpacity(0.5),
-        ),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Container(
         width: 520,
         constraints: const BoxConstraints(maxHeight: 720),
@@ -359,9 +351,7 @@ class _AccessSequenceModifierDialogState
               children: [
                 Icon(
                   Icons.format_list_numbered,
-                  color: isValid
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.error,
+                  color: theme.colorScheme.primary,
                   size: 24,
                 ),
 
@@ -460,59 +450,31 @@ class _AccessSequenceModifierDialogState
             // ==============================================================
             // Buttons
             // ==============================================================
+
+            // Buttons
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      side: BorderSide(
-                        color: theme.colorScheme.outline.withOpacity(0.4),
-                      ),
-                    ),
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.onSurface,
-                      ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-
-                const SizedBox(width: 14),
-
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: isValid ? saveSequence : null,
-                    icon: const Icon(Icons.save),
-                    label: const Text(
-                      'Save Sequence',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      disabledBackgroundColor: theme.colorScheme.errorContainer
-                          .withOpacity(0.5),
-                      disabledForegroundColor: theme
-                          .colorScheme
-                          .onErrorContainer
-                          .withOpacity(0.6),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: isValid ? saveSequence : null,
+                  child: const Text(
+                    'Save',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),

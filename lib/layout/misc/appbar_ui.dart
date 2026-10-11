@@ -15,78 +15,84 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       scrolledUnderElevation: 0,
 
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Color(0x22000000), width: 1.2),
+      flexibleSpace: SizedBox(
+        child: Container(
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: Color(0x22000000), width: 1.2),
+            ),
           ),
         ),
       ),
 
       titleSpacing: 24,
 
-      title: Row(
-        children: [
-          // CHIP ICON
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                  color: Color(0x222E6F80),
-                ),
-              ],
-            ),
-
-            child: Icon(
-              Icons.list_alt_rounded,
-              size: 20,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ),
-
-          const SizedBox(width: 14),
-
-          // TITLE SECTION
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
+      title: FittedBox(
+        child: SizedBox(
+          child: Row(
             children: [
-              const Text(
-                "Memory Access Simulator",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                  fontFamily: "Nunito",
+              // CHIP ICON
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.tertiary,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                      color: Color(0x222E6F80),
+                    ),
+                  ],
+                ),
+
+                child: Icon(
+                  Icons.list_alt_rounded,
+                  size: 25,
+                  color: Theme.of(context).colorScheme.surface,
                 ),
               ),
 
-              Text(
-                "Configurable Cache & Virtual Memory Parameters with Access Time Statistics",
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context).disabledColor,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0.4,
-                  fontFamily: "Roboto-Mono",
-                ),
+              const SizedBox(width: 14),
+
+              // TITLE SECTION
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Memory Access Simulator",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                      fontFamily: "Nunito",
+                    ),
+                  ),
+
+                  Text(
+                    "Configurable Cache & Virtual Memory Parameters with Access Time Statistics",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).disabledColor,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.4,
+                      fontFamily: "Roboto-Mono",
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
 
       actions: [

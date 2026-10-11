@@ -10,6 +10,8 @@ class ConnectionWidget extends StatelessWidget {
     required this.onColor,
     this.offColor,
     this.strokeWidth = 3,
+    this.animationDuration = const Duration(milliseconds: 350),
+    this.isDotted = false,
   });
 
   /// Coordinates relative to the components area's top-left corner.
@@ -27,24 +29,38 @@ class ConnectionWidget extends StatelessWidget {
 
   final double strokeWidth;
 
+  /// Duration of the color transition.
+  final Duration animationDuration;
+
+  final bool isDotted;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final inactiveColor =
+        offColor ?? theme.colorScheme.outline.withValues(alpha: 0.1);
 
     return ListenableBuilder(
       listenable: Runtime.singleton,
       builder: (context, _) {
         final active = isOn();
 
-        return CustomPaint(
-          painter: _ConnectionPainter(
-            points: points,
-            color: active
-                ? onColor
-                : offColor ?? theme.colorScheme.outline.withValues(alpha: 0.1),
-            strokeWidth: strokeWidth,
-          ),
-          child: const SizedBox.expand(),
+        return TweenAnimationBuilder<Color?>(
+          tween: ColorTween(end: active ? onColor : inactiveColor),
+          duration: animationDuration,
+          curve: Curves.easeInOut,
+          builder: (context, animatedColor, child) {
+            return CustomPaint(
+              painter: _ConnectionPainter(
+                points: points,
+                color: animatedColor ?? inactiveColor,
+                strokeWidth: strokeWidth,
+                isDotted: isDotted,
+              ),
+              child: const SizedBox.expand(),
+            );
+          },
         );
       },
     );
@@ -57,12 +73,40 @@ class _ConnectionPainter extends CustomPainter {
     required this.color,
     required this.strokeWidth,
     this.cornerRadius = 12,
+    this.isDotted = false,
   });
 
   final List<Offset> points;
   final Color color;
   final double strokeWidth;
   final double cornerRadius;
+  final bool isDotted;
+
+  void _drawDottedPath(Canvas canvas, Path path, Paint paint) {
+    const dotSpacing = 8.0;
+    const dotRadius = 1.5;
+
+    final metrics = path.computeMetrics();
+
+    for (final metric in metrics) {
+      for (
+        double distance = 0;
+        distance < metric.length;
+        distance += dotSpacing
+      ) {
+        final tangent = metric.getTangentForOffset(distance);
+        if (tangent == null) continue;
+
+        canvas.drawCircle(
+          tangent.position,
+          dotRadius,
+          Paint()
+            ..color = paint.color
+            ..style = PaintingStyle.fill,
+        );
+      }
+    }
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -118,7 +162,11 @@ class _ConnectionPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    canvas.drawPath(path, paint);
+    if (isDotted) {
+      _drawDottedPath(canvas, path, paint);
+    } else {
+      canvas.drawPath(path, paint);
+    }
 
     _drawArrowhead(canvas, paint);
   }
@@ -170,6 +218,7 @@ class _ConnectionPainter extends CustomPainter {
     return oldDelegate.points != points ||
         oldDelegate.color != color ||
         oldDelegate.strokeWidth != strokeWidth ||
-        oldDelegate.cornerRadius != cornerRadius;
+        oldDelegate.cornerRadius != cornerRadius ||
+        oldDelegate.isDotted != isDotted;
   }
 }

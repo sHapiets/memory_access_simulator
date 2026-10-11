@@ -29,6 +29,4 @@ class Configuration {
   /// Page Table
   int vpnBits = 5;
   int get pageTableSizeEntries => pow(2, vpnBits) as int;
-
-  void saveConfig() {}
 }

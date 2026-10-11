@@ -32,7 +32,11 @@ class MainPage extends StatelessWidget {
           flex: 25,
           child: Padding(
             padding: const EdgeInsets.all(8),
-            child: const ComponentsArea(),
+            child: _FittedPane(
+              width: 1080,
+              height: 720,
+              child: const ComponentsArea(),
+            ),
           ),
         ),
 

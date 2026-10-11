@@ -27,19 +27,23 @@ class _CacheWidgetState extends State<CacheWidget> {
     final theme = Theme.of(context);
 
     return Container(
-      width: 300,
-      height: 360,
+      width: 400,
+      height: 640,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.colorScheme.outline),
       ),
-      child: Column(
-        children: [
-          _buildHeader(context),
-
-          Expanded(child: _buildCache(context)),
-        ],
+      child: ListenableBuilder(
+        listenable: Runtime.singleton,
+        builder: (context, child) {
+          return Column(
+            children: [
+              _buildHeader(context),
+              Expanded(child: _buildCache(context)),
+            ],
+          );
+        },
       ),
     );
   }
@@ -98,23 +102,18 @@ class _CacheWidgetState extends State<CacheWidget> {
       thumbVisibility: true,
       thickness: 6,
       radius: const Radius.circular(10),
-      child: ListenableBuilder(
-        listenable: Runtime.singleton,
-        builder: (context, child) {
-          return ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            itemCount: setCount,
-            itemBuilder: (context, setIndex) {
-              final startLine = setIndex * linesPerSet;
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        itemCount: setCount,
+        itemBuilder: (context, setIndex) {
+          final startLine = setIndex * linesPerSet;
 
-              return _buildSet(
-                context,
-                setIndex: setIndex,
-                startLine: startLine,
-                linesPerSet: linesPerSet,
-              );
-            },
+          return _buildSet(
+            context,
+            setIndex: setIndex,
+            startLine: startLine,
+            linesPerSet: linesPerSet,
           );
         },
       ),
@@ -251,7 +250,7 @@ class _CacheLine extends StatelessWidget {
                     fontFamily: 'Nunito',
                     fontSize: 8,
                     fontWeight: FontWeight.w700,
-                    color: colorScheme.onSurfaceVariant,
+                    color: Colors.blueAccent.withAlpha(180),
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -262,9 +261,8 @@ class _CacheLine extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Fredoka',
                     fontSize: 14,
-                    color: valid
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -279,7 +277,7 @@ class _CacheLine extends StatelessWidget {
                   fontFamily: 'Nunito',
                   fontSize: 8,
                   fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: theme.colorScheme.tertiary,
                 ),
               ),
               const SizedBox(height: 3),
@@ -288,25 +286,17 @@ class _CacheLine extends StatelessWidget {
                 height: 24,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isLineAccessed
-                      ? theme.colorScheme.tertiary.withValues(alpha: 0.12)
-                      : Colors.transparent,
-                  border: Border.all(
-                    color: isLineAccessed
-                        ? theme.colorScheme.tertiary
-                        : theme.colorScheme.outline,
-                  ),
+                  color: Colors.transparent,
+                  border: Border.all(color: theme.colorScheme.outline),
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
-                  isLineAccessed ? '[ ${runtime.getBlockOffset} ]' : '--',
+                  isLineAccessed ? '[ ${runtime.getBlockOffset} ]' : '',
                   style: TextStyle(
                     fontFamily: 'Fredoka',
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isLineAccessed
-                        ? theme.colorScheme.tertiary
-                        : theme.colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),

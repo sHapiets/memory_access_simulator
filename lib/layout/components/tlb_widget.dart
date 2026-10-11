@@ -6,8 +6,8 @@ import 'package:memory_access_simulator/foundation/tlb_entry.dart';
 class TLBWidget extends StatefulWidget {
   const TLBWidget({super.key});
 
-  static const double width = 300;
-  static const double height = 240;
+  static const double width = 500;
+  static const double height = 400;
 
   @override
   State<TLBWidget> createState() => _TLBWidgetState();

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
+import 'package:memory_access_simulator/core/controller/runtime.dart';
 
 enum BitType { tag, indexT, offset }
 
@@ -21,7 +22,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
   late final TextEditingController cacheSetsController;
   late final TextEditingController tlbSizeController;
   late final TextEditingController dynamicSizePagesController;
-  late final TextEditingController vpnBitsController;
+  late final TextEditingController virtualPagesController;
 
   @override
   void initState() {
@@ -49,7 +50,9 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
       text: config.dynamicSizePages.toString(),
     );
 
-    vpnBitsController = TextEditingController(text: config.vpnBits.toString());
+    virtualPagesController = TextEditingController(
+      text: (1 << config.vpnBits).toString(),
+    );
 
     for (final controller in [
       blockSizeController,
@@ -58,7 +61,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
       cacheSetsController,
       tlbSizeController,
       dynamicSizePagesController,
-      vpnBitsController,
+      virtualPagesController,
     ]) {
       controller.addListener(_onConfigurationChanged);
     }
@@ -72,7 +75,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     cacheSetsController.dispose();
     tlbSizeController.dispose();
     dynamicSizePagesController.dispose();
-    vpnBitsController.dispose();
+    virtualPagesController.dispose();
 
     super.dispose();
   }
@@ -89,20 +92,48 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     return value > 0 && (value & (value - 1)) == 0;
   }
 
+  int? _bitsForPages(int? pages) {
+    if (pages == null || !_isPowerOfTwo(pages)) return null;
+    return (log(pages) / ln2).round();
+  }
+
+  String? _pageBytesHelper() {
+    final blockSize = _parse(blockSizeController);
+    final pageBlocks = _parse(pageSizeBlocksController);
+    if (_validateBlockSize() != null || _validatePageSizeBlocks() != null) {
+      return null;
+    }
+    return '${blockSize! * pageBlocks!} bytes per page';
+  }
+
+  String? _cacheWaysHelper() {
+    final cacheSize = _parse(cacheSizeBlocksController);
+    final sets = _parse(cacheSetsController);
+    if (_validateCacheSize() != null || _validateCacheSets() != null) {
+      return null;
+    }
+    return '${cacheSize! ~/ sets!}-way set associative';
+  }
+
+  String? _ppnBitsHelper() {
+    final pages = _parse(dynamicSizePagesController);
+    if (_validateDynamicSizePages() != null) return null;
+    return '${_bitsForPages(pages)!} PPN bits';
+  }
+
+  String? _vpnBitsHelper() {
+    final pages = _parse(virtualPagesController);
+    if (_validateVirtualPages() != null) return null;
+    return '${_bitsForPages(pages)!} VPN bits';
+  }
+
   String? _validateBlockSize() {
     final value = _parse(blockSizeController);
 
-    if (value == null) {
-      return 'Enter a valid number.';
-    }
-
-    if (value <= 0) {
-      return 'Block size must be greater than 0.';
-    }
-
-    if (!_isPowerOfTwo(value)) {
-      return 'Block size must be a power of 2.';
-    }
+    if (value == null) return 'Enter a valid number.';
+    if (value <= 0) return 'Block size must be greater than 0.';
+    if (!_isPowerOfTwo(value)) return 'Block size must be a power of 2.';
+    if (value > 128) return 'Block size cannot exceed 128 bytes.';
 
     return null;
   }
@@ -110,17 +141,10 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
   String? _validatePageSizeBlocks() {
     final value = _parse(pageSizeBlocksController);
 
-    if (value == null) {
-      return 'Enter a valid number.';
-    }
-
-    if (value <= 0) {
-      return 'Page size must be greater than 0.';
-    }
-
-    if (!_isPowerOfTwo(value)) {
-      return 'Page size must be a power of 2.';
-    }
+    if (value == null) return 'Enter a valid number.';
+    if (value <= 0) return 'Page size must be greater than 0.';
+    if (!_isPowerOfTwo(value)) return 'Page size must be a power of 2.';
+    if (value > 64) return 'Page size cannot exceed 64 blocks.';
 
     return null;
   }
@@ -128,13 +152,9 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
   String? _validateCacheSize() {
     final value = _parse(cacheSizeBlocksController);
 
-    if (value == null) {
-      return 'Enter a valid number.';
-    }
-
-    if (value <= 0) {
-      return 'Cache size must be greater than 0.';
-    }
+    if (value == null) return 'Enter a valid number.';
+    if (value <= 0) return 'Cache size must be greater than 0.';
+    if (value > 32) return 'Cache size cannot exceed 32 lines.';
 
     return null;
   }
@@ -143,20 +163,14 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     final sets = _parse(cacheSetsController);
     final cacheSize = _parse(cacheSizeBlocksController);
 
-    if (sets == null) {
-      return 'Enter a valid number.';
-    }
-
-    if (sets <= 0) {
-      return 'Cache sets must be greater than 0.';
-    }
-
-    if (!_isPowerOfTwo(sets)) {
-      return 'Cache sets must be a power of 2.';
-    }
-
+    if (sets == null) return 'Enter a valid number.';
+    if (sets <= 0) return 'Cache sets must be greater than 0.';
+    if (!_isPowerOfTwo(sets)) return 'Cache sets must be a power of 2.';
     if (cacheSize != null && cacheSize > 0 && cacheSize % sets != 0) {
       return 'Cache sets must divide the cache size.';
+    }
+    if (cacheSize != null && sets > cacheSize) {
+      return 'Cache sets cannot exceed the cache line count.';
     }
 
     return null;
@@ -165,13 +179,9 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
   String? _validateTlbSize() {
     final value = _parse(tlbSizeController);
 
-    if (value == null) {
-      return 'Enter a valid number.';
-    }
-
-    if (value <= 0) {
-      return 'TLB size must be greater than 0.';
-    }
+    if (value == null) return 'Enter a valid number.';
+    if (value <= 0) return 'TLB size must be greater than 0.';
+    if (value > 32) return 'TLB size cannot exceed 32 entries.';
 
     return null;
   }
@@ -179,30 +189,36 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
   String? _validateDynamicSizePages() {
     final value = _parse(dynamicSizePagesController);
 
-    if (value == null) {
-      return 'Enter a valid number.';
-    }
-
+    if (value == null) return 'Enter a valid number.';
+    if (value <= 0) return 'Physical memory pages must be greater than 0.';
     if (!_isPowerOfTwo(value)) {
       return 'Physical memory pages must be a power of 2.';
     }
+    if (value > 64) return 'Physical memory cannot exceed 64 pages.';
 
-    if (value <= 0) {
-      return 'Physical memory pages must be greater than 0.';
+    final virtualPages = _parse(virtualPagesController);
+    if (virtualPages != null &&
+        virtualPages > 0 &&
+        _isPowerOfTwo(virtualPages) &&
+        virtualPages < value) {
+      return 'Physical pages cannot exceed virtual memory pages.';
     }
 
     return null;
   }
 
-  String? _validateVpnBits() {
-    final value = _parse(vpnBitsController);
+  String? _validateVirtualPages() {
+    final value = _parse(virtualPagesController);
+    final physicalPages = _parse(dynamicSizePagesController);
 
-    if (value == null) {
-      return 'Enter a valid number.';
+    if (value == null) return 'Enter a valid number.';
+    if (value <= 0) return 'Virtual memory pages must be greater than 0.';
+    if (!_isPowerOfTwo(value)) {
+      return 'Virtual memory pages must be a power of 2.';
     }
-
-    if (value <= 0) {
-      return 'VPN bits must be greater than 0.';
+    if (value > 256) return 'Virtual memory cannot exceed 256 pages.';
+    if (physicalPages != null && physicalPages > 0 && value < physicalPages) {
+      return 'Virtual pages must be at least the physical page count.';
     }
 
     return null;
@@ -215,7 +231,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
         _validateCacheSets() == null &&
         _validateTlbSize() == null &&
         _validateDynamicSizePages() == null &&
-        _validateVpnBits() == null;
+        _validateVirtualPages() == null;
   }
 
   void _saveConfiguration() {
@@ -227,9 +243,9 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     config.cacheSets = _parse(cacheSetsController)!;
     config.tlbSize = _parse(tlbSizeController)!;
     config.dynamicSizePages = _parse(dynamicSizePagesController)!;
-    config.vpnBits = _parse(vpnBitsController)!;
+    config.vpnBits = (log(_parse(virtualPagesController)!) / ln2).round();
 
-    config.saveConfig();
+    Runtime.singleton.reset();
 
     Navigator.of(context).pop();
   }
@@ -258,6 +274,8 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     required String label,
     required TextEditingController controller,
     required String? errorText,
+    required String unit,
+    String? helperText,
   }) {
     final hasError = errorText != null;
 
@@ -272,6 +290,19 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
           labelStyle: const TextStyle(fontFamily: 'Nunito'),
           errorText: errorText,
           errorStyle: const TextStyle(fontFamily: 'Nunito'),
+          helperText: helperText,
+          helperStyle: TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          suffixText: unit,
+          suffixStyle: TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           filled: true,
           fillColor: hasError
               ? Colors.red.withValues(alpha: 0.06)
@@ -467,18 +498,18 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
   Widget _buildCacheAddressBreakdown() {
     final blockSize = _parse(blockSizeController);
     final cacheSets = _parse(cacheSetsController);
-    final vpnBits = _parse(vpnBitsController);
+    final virtualPages = _parse(virtualPagesController);
     final dynamicSizePages = _parse(dynamicSizePagesController);
     final pageBlocks = _parse(pageSizeBlocksController);
 
     if (blockSize == null ||
         cacheSets == null ||
-        vpnBits == null ||
+        virtualPages == null ||
         dynamicSizePages == null ||
         pageBlocks == null ||
         _validateBlockSize() != null ||
         _validateCacheSets() != null ||
-        _validateVpnBits() != null ||
+        _validateVirtualPages() != null ||
         _validatePageSizeBlocks() != null ||
         _validateDynamicSizePages() != null) {
       return _buildInvalidVisualization(
@@ -488,9 +519,10 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
 
     final offsetBits = (log(blockSize) / ln2).round();
     final indexBits = (log(cacheSets) / ln2).round();
-    final tagBits = (log(dynamicSizePages) / ln2).round();
-
-    final addressBits = indexBits + offsetBits + tagBits;
+    final ppnBits = _bitsForPages(dynamicSizePages)!;
+    final pageOffsetBits = offsetBits + (log(pageBlocks) / ln2).round();
+    final addressBits = ppnBits + pageOffsetBits;
+    final tagBits = addressBits - (offsetBits + indexBits);
 
     if (tagBits <= 0) {
       return _buildInvalidVisualization(
@@ -808,15 +840,18 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                       ),
 
                       _buildNumberField(
-                        label: 'Block Size [Bytes]',
+                        label: 'Block Size',
                         controller: blockSizeController,
                         errorText: _validateBlockSize(),
+                        unit: 'bytes',
                       ),
 
                       _buildNumberField(
-                        label: 'Page Size [Blocks]',
+                        label: 'Page Size',
                         controller: pageSizeBlocksController,
                         errorText: _validatePageSizeBlocks(),
+                        unit: 'blocks',
+                        helperText: _pageBytesHelper(),
                       ),
 
                       const SizedBox(height: 22),
@@ -825,15 +860,18 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                       _buildSectionTitle('Cache', Icons.cached_outlined),
 
                       _buildNumberField(
-                        label: 'Cache Size (blocks)',
+                        label: 'Cache Size',
                         controller: cacheSizeBlocksController,
                         errorText: _validateCacheSize(),
+                        unit: 'lines',
                       ),
 
                       _buildNumberField(
                         label: 'Cache Sets',
                         controller: cacheSetsController,
                         errorText: _validateCacheSets(),
+                        unit: 'sets',
+                        helperText: _cacheWaysHelper(),
                       ),
 
                       const SizedBox(height: 22),
@@ -845,6 +883,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                         label: 'TLB Entries',
                         controller: tlbSizeController,
                         errorText: _validateTlbSize(),
+                        unit: 'entries',
                       ),
 
                       const SizedBox(height: 10),
@@ -859,6 +898,8 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                         label: 'Physical Memory Pages',
                         controller: dynamicSizePagesController,
                         errorText: _validateDynamicSizePages(),
+                        unit: 'pages',
+                        helperText: _ppnBitsHelper(),
                       ),
 
                       const SizedBox(height: 10),
@@ -870,9 +911,11 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                       ),
 
                       _buildNumberField(
-                        label: 'VPN Bits',
-                        controller: vpnBitsController,
-                        errorText: _validateVpnBits(),
+                        label: 'Virtual Memory Pages',
+                        controller: virtualPagesController,
+                        errorText: _validateVirtualPages(),
+                        unit: 'pages',
+                        helperText: _vpnBitsHelper(),
                       ),
 
                       const SizedBox(height: 20),

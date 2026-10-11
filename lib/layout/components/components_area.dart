@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:memory_access_simulator/core/components/access_sequence.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/layout/components/access_register.dart';
 import 'package:memory_access_simulator/layout/components/address/physical_address_widget.dart';
 import 'package:memory_access_simulator/layout/components/address/virtual_address_widget.dart';
+import 'package:memory_access_simulator/layout/components/button/show_in_dialog_button.dart';
 import 'package:memory_access_simulator/layout/components/cache_widget.dart';
 import 'package:memory_access_simulator/layout/components/connection_widget.dart';
 import 'package:memory_access_simulator/layout/components/disk_widget.dart';
@@ -12,6 +14,8 @@ import 'package:memory_access_simulator/layout/components/dynamic_memory_widget.
 import 'package:memory_access_simulator/layout/components/mmu_widget.dart';
 import 'package:memory_access_simulator/layout/components/page_table_widget.dart';
 import 'package:memory_access_simulator/layout/components/tlb_widget.dart';
+import 'package:memory_access_simulator/layout/pages/page_mode.dart';
+import 'package:memory_access_simulator/main.dart';
 
 class ComponentsArea extends StatefulWidget {
   const ComponentsArea({super.key});
@@ -26,7 +30,8 @@ class ComponentsArea extends StatefulWidget {
   State<ComponentsArea> createState() => _ComponentsAreaState();
 }
 
-class _ComponentsAreaState extends State<ComponentsArea> {
+class _ComponentsAreaState extends State<ComponentsArea>
+    with SingleTickerProviderStateMixin {
   final TransformationController _transformationController =
       TransformationController();
 
@@ -41,6 +46,12 @@ class _ComponentsAreaState extends State<ComponentsArea> {
 
   static const double minScale = 0.5;
   static const double maxScale = 2.5;
+
+  bool _initialFitScheduled = false;
+
+  late final AnimationController _zoomController;
+
+  Animation<Matrix4>? _zoomAnimation;
 
   // ------------------------------------------------------------
   // Zoom
@@ -64,14 +75,13 @@ class _ComponentsAreaState extends State<ComponentsArea> {
 
   void _setScale(double scale) {
     final current = _transformationController.value;
-
     final translation = current.getTranslation();
 
     final matrix = Matrix4.identity()
       ..translate(translation.x, translation.y)
       ..scale(scale);
 
-    _transformationController.value = matrix;
+    _animateTo(matrix);
   }
 
   // ------------------------------------------------------------
@@ -100,11 +110,45 @@ class _ComponentsAreaState extends State<ComponentsArea> {
       ..translate(offsetX, offsetY)
       ..scale(scale);
 
-    _transformationController.value = matrix;
+    _animateTo(matrix);
+  }
+
+  void _animateTo(Matrix4 target) {
+    _zoomController.stop();
+
+    _zoomAnimation =
+        Matrix4Tween(
+          begin: _transformationController.value.clone(),
+          end: target,
+        ).animate(
+          CurvedAnimation(
+            parent: _zoomController,
+            curve: Curves.easeInOutCubic,
+          ),
+        );
+
+    _zoomController.forward(from: 0);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _zoomController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 350),
+        )..addListener(() {
+          final animation = _zoomAnimation;
+          if (animation != null) {
+            _transformationController.value = animation.value;
+          }
+        });
   }
 
   @override
   void dispose() {
+    _zoomController.dispose();
     _transformationController.dispose();
     super.dispose();
   }
@@ -117,13 +161,23 @@ class _ComponentsAreaState extends State<ComponentsArea> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.colorScheme.outline),
-      ),
-      clipBehavior: Clip.antiAlias,
+    return ValueListenableBuilder(
+      valueListenable: pageModeNotifier,
+      builder: (context, value, child) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: (value == PageMode.run)
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        );
+      },
       child: Column(
         children: [
           // Workspace toolbar
@@ -152,43 +206,6 @@ class _ComponentsAreaState extends State<ComponentsArea> {
                   ),
 
                   const Spacer(),
-
-                  // Zoom out
-                  IconButton(
-                    tooltip: 'Zoom out',
-                    onPressed: _zoomOut,
-                    icon: const Icon(Icons.remove_rounded, size: 19),
-                  ),
-
-                  // Fit
-                  IconButton(
-                    tooltip: 'Fit to view',
-                    onPressed: () {
-                      final renderBox =
-                          context.findRenderObject() as RenderBox?;
-
-                      if (renderBox == null) {
-                        return;
-                      }
-
-                      final toolbarHeight = 48.0;
-
-                      final width = renderBox.size.width;
-                      final height = renderBox.size.height - toolbarHeight;
-
-                      _fitToView(
-                        BoxConstraints.tightFor(width: width, height: height),
-                      );
-                    },
-                    icon: const Icon(Icons.fit_screen_rounded, size: 19),
-                  ),
-
-                  // Zoom in
-                  IconButton(
-                    tooltip: 'Zoom in',
-                    onPressed: _zoomIn,
-                    icon: const Icon(Icons.add_rounded, size: 19),
-                  ),
                 ],
               ),
             ),
@@ -196,284 +213,476 @@ class _ComponentsAreaState extends State<ComponentsArea> {
 
           Divider(height: 1, thickness: 1, color: theme.colorScheme.outline),
 
-          // Interactive workspace
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return InteractiveViewer(
-                  transformationController: _transformationController,
-                  panEnabled: true,
-                  scaleEnabled: false,
-                  minScale: 0.5,
-                  maxScale: 2.5,
-                  boundaryMargin: const EdgeInsets.all(300),
-                  constrained: false,
-                  child: SizedBox(
-                    width: ComponentsArea.canvasWidth,
-                    height: ComponentsArea.canvasHeight,
-                    child: Stack(
-                      children: [
-                        // Background grid
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _WorkspaceGridPainter(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.outline.withValues(alpha: 0.4),
-                            ),
-                          ),
-                        ),
+                if (!_initialFitScheduled) {
+                  _initialFitScheduled = true;
 
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(350, 940),
-                              Offset(595, 940),
-                              Offset(595, 885),
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    _fitToView(constraints);
+                  });
+                }
+
+                return Stack(
+                  children: [
+                    // Interactive workspace
+                    Positioned.fill(
+                      child: InteractiveViewer(
+                        transformationController: _transformationController,
+                        panEnabled: true,
+                        scaleEnabled: false,
+                        minScale: 0.5,
+                        maxScale: 2.5,
+                        boundaryMargin: const EdgeInsets.all(300),
+                        constrained: false,
+                        child: SizedBox(
+                          width: ComponentsArea.canvasWidth,
+                          height: ComponentsArea.canvasHeight,
+                          child: Stack(
+                            children: [
+                              // Background grid
+                              Positioned.fill(
+                                child: CustomPaint(
+                                  painter: _WorkspaceGridPainter(
+                                    color: Theme.of(context).colorScheme.outline
+                                        .withValues(alpha: 0.2),
+                                  ),
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(350, 940),
+                                    Offset(595, 940),
+                                    Offset(595, 885),
+                                  ],
+                                  isOn: () => Runtime.singleton.connectVAtoTLB,
+                                  onColor: theme.colorScheme.onSurface,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(350, 940),
+                                    Offset(1120, 940),
+                                    Offset(1120, 910),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectVAtoPageTable,
+                                  onColor: theme.colorScheme.onSurface,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(350, 940),
+                                    Offset(1600, 940),
+                                    Offset(1600, 510),
+                                  ],
+                                  isOn: () => Runtime.singleton.connectVAtoMMU,
+                                  onColor: theme.colorScheme.onSurface,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(1580, 255),
+                                    Offset(1580, 235),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectMMUtoDisk,
+                                  onColor: theme.colorScheme.onSurface,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(1490, 140),
+                                    Offset(1370, 140),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectDiskToDRAM,
+                                  onColor: theme.colorScheme.primary,
+                                  isDotted: true,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(1370, 170),
+                                    Offset(1490, 170),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectDRAMtoDisk,
+                                  onColor: theme.colorScheme.primary,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(1560, 510),
+                                    Offset(1560, 760),
+                                    Offset(1370, 760),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectMMUtoPageTable,
+                                  onColor: Colors.green,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(870, 740),
+                                    Offset(760, 740),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectPageTableToTLB,
+                                  onColor: Colors.green,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(870, 780),
+                                    Offset(760, 780),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectPageTableToTLB,
+                                  onColor: theme.colorScheme.onSurface,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(440, 760),
+                                    Offset(220, 760),
+                                    Offset(220, 685),
+                                  ],
+                                  isOn: () => Runtime.singleton.connectTLBtoPA,
+                                  onColor: Colors.green,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(190, 830),
+                                    Offset(190, 685),
+                                  ],
+                                  isOn: () => Runtime.singleton.connectVAtoPA,
+                                  onColor: Colors.pink.withAlpha(120),
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(350, 540),
+                                    Offset(615, 540),
+                                    Offset(615, 485),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectPAtoCache,
+                                  onColor: theme.colorScheme.tertiary
+                                      .withValues(alpha: 0.8),
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(350, 540),
+                                    Offset(595, 540),
+                                    Offset(595, 485),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectPAtoCache,
+                                  onColor: theme.colorScheme.secondary
+                                      .withValues(alpha: 0.8),
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(350, 540),
+                                    Offset(1120, 540),
+                                    Offset(1120, 510),
+                                  ],
+                                  isOn: () => Runtime.singleton.connectPAtoDRAM,
+                                  onColor: Colors.green,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(350, 540),
+                                    Offset(575, 540),
+                                    Offset(575, 485),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectPAtoCache,
+                                  onColor: Colors.blueAccent.withAlpha(180),
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(870, 200),
+                                    Offset(760, 200),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectDRAMtoCache,
+                                  onColor: theme.colorScheme.primary,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(760, 380),
+                                    Offset(870, 380),
+                                  ],
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectCacheToDRAMFromLineEviction,
+                                  onColor: theme.colorScheme.primary,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(760, 420),
+                                    Offset(870, 420),
+                                  ],
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectCacheToDRAMFromLineEviction,
+                                  onColor: theme.colorScheme.primary,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(440, 280),
+                                    Offset(190, 280),
+                                    Offset(190, 150),
+                                  ],
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectCacheToAccessRegister,
+                                  onColor: theme.colorScheme.primary,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(190, 150),
+                                    Offset(190, 280),
+                                    Offset(440, 280),
+                                  ],
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectAccessRegisterToCache,
+                                  onColor: theme.colorScheme.primary,
+                                ),
+                              ),
+
+                              ////// COMPONENTS ///////
+                              Positioned(
+                                left: 40,
+                                top: 40,
+                                width: 300,
+                                child: AccessRegisterWidget(),
+                              ),
+
+                              Positioned(
+                                left: 40,
+                                top: 420,
+                                width: 300,
+                                child: PhysicalAddressWidget(),
+                              ),
+
+                              Positioned(
+                                left: 40,
+                                top: 840,
+                                width: 300,
+                                child: VirtualAddressWidget(),
+                              ),
+
+                              Positioned(
+                                left: 450,
+                                top: 110,
+                                height: 360,
+                                width: 300,
+                                child: const CacheWidget(),
+                              ),
+
+                              Positioned(
+                                left: 450,
+                                top: 630,
+                                width: 300,
+                                height: 240,
+                                child: const TLBWidget(),
+                              ),
+
+                              Positioned(
+                                left: 880,
+                                top: 600,
+                                child: const PageTableWidget(),
+                              ),
+                              Positioned(
+                                left: 880,
+                                top: 80,
+                                height: 420,
+                                width: 480,
+                                child: const DynamicMemoryWidget(),
+                              ),
+
+                              Positioned(
+                                left: 1500,
+                                top: 80,
+                                child: const DiskWidget(),
+                              ),
+
+                              Positioned(
+                                left: 1500,
+                                top: 260,
+                                child: const MMUWidget(),
+                              ),
+
+                              /// View Dialog of components
+                              Positioned(
+                                left: 300,
+                                top: 420,
+                                child: ShowInDialogButton(
+                                  child: PhysicalAddressWidget(),
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 300,
+                                top: 840,
+                                child: ShowInDialogButton(
+                                  child: VirtualAddressWidget(),
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 575,
+                                top: 590,
+                                child: ShowInDialogButton(child: TLBWidget()),
+                              ),
+
+                              Positioned(
+                                left: 575,
+                                top: 70,
+                                child: ShowInDialogButton(child: CacheWidget()),
+                              ),
+
+                              Positioned(
+                                left: 1100,
+                                top: 40,
+                                child: ShowInDialogButton(
+                                  child: DynamicMemoryWidget(),
+                                ),
+                              ),
                             ],
-                            isOn: () => Runtime.singleton.connectVAtoTLB,
-                            onColor: theme.colorScheme.primary,
                           ),
                         ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(350, 940),
-                              Offset(1120, 940),
-                              Offset(1120, 910),
-                            ],
-                            isOn: () => Runtime.singleton.connectVAtoPageTable,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(350, 940),
-                              Offset(1600, 940),
-                              Offset(1600, 510),
-                            ],
-                            isOn: () => Runtime.singleton.connectVAtoMMU,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(1580, 255),
-                              Offset(1580, 235),
-                            ],
-                            isOn: () => Runtime.singleton.connectMMUtoDisk,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(1490, 140),
-                              Offset(1370, 140),
-                            ],
-                            isOn: () => Runtime.singleton.connectDiskToDRAM,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(1370, 170),
-                              Offset(1490, 170),
-                            ],
-                            isOn: () => Runtime.singleton.connectDRAMtoDisk,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(1560, 510),
-                              Offset(1560, 760),
-                              Offset(1370, 760),
-                            ],
-                            isOn: () => Runtime.singleton.connectMMUtoPageTable,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [Offset(870, 760), Offset(760, 760)],
-                            isOn: () => Runtime.singleton.connectPageTableToTLB,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(440, 760),
-                              Offset(220, 760),
-                              Offset(220, 685),
-                            ],
-                            isOn: () => Runtime.singleton.connectTLBtoPA,
-                            onColor: Colors.green,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [Offset(190, 830), Offset(190, 685)],
-                            isOn: () => Runtime.singleton.connectVAtoPA,
-                            onColor: theme.colorScheme.tertiary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(350, 540),
-                              Offset(595, 540),
-                              Offset(595, 485),
-                            ],
-                            isOn: () => Runtime.singleton.connectPAtoCache,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(350, 540),
-                              Offset(1120, 540),
-                              Offset(1120, 510),
-                            ],
-                            isOn: () => Runtime.singleton.connectPAtoDRAM,
-                            onColor: Colors.green,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [Offset(870, 200), Offset(760, 200)],
-                            isOn: () => Runtime.singleton.connectDRAMtoCache,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [Offset(760, 380), Offset(870, 380)],
-                            isOn: () => Runtime
-                                .singleton
-                                .connectCacheToDRAMFromLineEviction,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [Offset(760, 420), Offset(870, 420)],
-                            isOn: () => Runtime
-                                .singleton
-                                .connectCacheToDRAMFromLineEviction,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(440, 280),
-                              Offset(190, 280),
-                              Offset(190, 150),
-                            ],
-                            isOn: () =>
-                                Runtime.singleton.connectCacheToAccessRegister,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        Positioned.fill(
-                          child: ConnectionWidget(
-                            points: const [
-                              Offset(190, 150),
-                              Offset(190, 280),
-                              Offset(440, 280),
-                            ],
-                            isOn: () =>
-                                Runtime.singleton.connectAccessRegisterToCache,
-                            onColor: theme.colorScheme.primary,
-                          ),
-                        ),
-
-                        ////// COMPONENTS ///////
-                        Positioned(
-                          left: 40,
-                          top: 40,
-                          width: 300,
-                          child: AccessRegisterWidget(),
-                        ),
-
-                        Positioned(
-                          left: 40,
-                          top: 420,
-                          width: 300,
-                          child: PhysicalAddressWidget(),
-                        ),
-
-                        Positioned(
-                          left: 40,
-                          top: 840,
-                          width: 300,
-                          child: VirtualAddressWidget(),
-                        ),
-
-                        Positioned(
-                          left: 450,
-                          top: 110,
-                          child: const CacheWidget(),
-                        ),
-
-                        Positioned(
-                          left: 450,
-                          top: 630,
-                          child: const TLBWidget(),
-                        ),
-
-                        Positioned(
-                          left: 880,
-                          top: 600,
-                          child: const PageTableWidget(),
-                        ),
-                        Positioned(
-                          left: 880,
-                          top: 80,
-                          child: const DynamicMemoryWidget(),
-                        ),
-
-                        Positioned(
-                          left: 1500,
-                          top: 80,
-                          child: const DiskWidget(),
-                        ),
-
-                        Positioned(
-                          left: 1500,
-                          top: 260,
-                          child: const MMUWidget(),
-                        ),
-
-                        // Cache
-                        // Physical Memory
-                        // etc.
-                      ],
+                      ),
                     ),
-                  ),
+
+                    Positioned(right: 12, bottom: 12, child: _Legend()),
+
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: ZoomControls(
+                        onZoomIn: _zoomIn,
+                        onZoomOut: _zoomOut,
+                        onFitToScreen: () {
+                          final renderBox =
+                              context.findRenderObject() as RenderBox?;
+
+                          if (renderBox == null) {
+                            return;
+                          }
+
+                          final toolbarHeight = 48.0;
+
+                          final width = renderBox.size.width;
+                          final height = renderBox.size.height - toolbarHeight;
+                          return _fitToView(
+                            BoxConstraints.tightFor(
+                              width: width,
+                              height: height,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 12,
+                      child: Center(
+                        child: ValueListenableBuilder<PageMode>(
+                          valueListenable: pageModeNotifier,
+                          builder: (context, pageMode, _) {
+                            final isRunning = pageMode == PageMode.run;
+
+                            return IgnorePointer(
+                              ignoring: !isRunning,
+                              child: AnimatedSlide(
+                                offset: isRunning
+                                    ? Offset.zero
+                                    : const Offset(0, 0.15),
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                                child: AnimatedOpacity(
+                                  opacity: isRunning ? 1 : 0,
+                                  duration: const Duration(milliseconds: 250),
+                                  child: ListenableBuilder(
+                                    listenable: Runtime.singleton,
+                                    builder: (context, _) {
+                                      return WorkspaceStatusBar(
+                                        pointer:
+                                            AccessSequence.singleton.pointer,
+                                        cacheHit: Runtime.singleton.cacheHit,
+                                        cacheMiss: Runtime.singleton.cacheMiss,
+                                        tlbHit: Runtime.singleton.tlbHit,
+                                        tlbMiss: Runtime.singleton.tlbMiss,
+                                        pageFault: Runtime.singleton.pageFault,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
@@ -509,5 +718,310 @@ class _WorkspaceGridPainter extends CustomPainter {
   @override
   bool shouldRepaint(_WorkspaceGridPainter oldDelegate) {
     return oldDelegate.color != color;
+  }
+}
+
+class WorkspaceStatusBar extends StatelessWidget {
+  const WorkspaceStatusBar({
+    super.key,
+    required this.pointer,
+    required this.cacheHit,
+    required this.cacheMiss,
+    required this.tlbHit,
+    required this.tlbMiss,
+    required this.pageFault,
+  });
+
+  final int pointer;
+  final bool cacheHit;
+  final bool cacheMiss;
+  final bool tlbHit;
+  final bool tlbMiss;
+  final bool pageFault;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final accessNumber = pointer == -1 ? '--' : '$pointer';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.surface.withAlpha(230),
+        borderRadius: BorderRadius.circular(40),
+        border: Border.all(color: colors.primary.withAlpha(180)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Compact access counter.
+          SizedBox(
+            width: 32,
+            height: 32,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox.expand(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: colors.primary,
+                    backgroundColor: colors.surfaceContainerHighest,
+                  ),
+                ),
+                Text(
+                  accessNumber,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Fredoka',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Running indicator.
+          Text(
+            'Running',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Fredoka',
+            ),
+          ),
+
+          _separator(context),
+
+          _AccessInfo(label: 'Cache', hit: cacheHit, miss: cacheMiss),
+
+          _separator(context),
+
+          _AccessInfo(label: 'TLB', hit: tlbHit, miss: tlbMiss),
+
+          _separator(context),
+
+          // Page fault is a simple text indicator.
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
+            style: theme.textTheme.labelMedium!.copyWith(
+              color: pageFault ? Colors.red : colors.onSurface.withAlpha(130),
+              fontWeight: pageFault ? FontWeight.bold : FontWeight.normal,
+            ),
+            child: const Text('Page Fault'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _separator(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Container(
+        width: 1,
+        height: 22,
+        color: Theme.of(context).colorScheme.outlineVariant,
+      ),
+    );
+  }
+}
+
+class _AccessInfo extends StatelessWidget {
+  const _AccessInfo({
+    required this.label,
+    required this.hit,
+    required this.miss,
+  });
+
+  final String label;
+  final bool hit;
+  final bool miss;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final Color statusColor;
+    final String status;
+
+    if (hit) {
+      statusColor = Colors.green;
+      status = 'HIT';
+    } else if (miss) {
+      statusColor = Colors.red;
+      status = 'MISS';
+    } else {
+      statusColor = colors.onSurface.withAlpha(120);
+      status = '--';
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label:',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: colors.onSurface.withAlpha(180),
+          ),
+        ),
+        const SizedBox(width: 5),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: statusColor),
+        ),
+        const SizedBox(width: 4),
+        AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          style: theme.textTheme.labelMedium!.copyWith(
+            color: statusColor,
+            fontWeight: FontWeight.bold,
+          ),
+          child: Text(status),
+        ),
+      ],
+    );
+  }
+}
+
+class _Legend extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: theme.colorScheme.surface.withAlpha(180),
+      elevation: 8,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Legend', style: Theme.of(context).textTheme.bodySmall),
+            SizedBox(height: 10),
+            _LegendItem(color: theme.colorScheme.onSurface, label: 'VPN'),
+            _LegendItem(
+              color: const Color.fromRGBO(76, 175, 80, 1),
+              label: 'PPN',
+            ),
+            _LegendItem(
+              color: Colors.pink.withAlpha(200),
+              label: 'PAGE OFFSET',
+            ),
+            _LegendItem(color: theme.colorScheme.primary, label: 'DATA'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 18,
+          height: 4,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+class ZoomControls extends StatelessWidget {
+  const ZoomControls({
+    super.key,
+    required this.onZoomIn,
+    required this.onZoomOut,
+    required this.onFitToScreen,
+  });
+
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onFitToScreen;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Material(
+      color: colors.surface,
+      elevation: 5,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(32),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: colors.outlineVariant),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ZoomButton(
+              icon: Icons.add_rounded,
+              tooltip: 'Zoom in',
+              onPressed: onZoomIn,
+            ),
+            _ZoomButton(
+              icon: Icons.fit_screen_rounded,
+              tooltip: 'Fit to screen',
+              onPressed: onFitToScreen,
+            ),
+            _ZoomButton(
+              icon: Icons.remove_rounded,
+              tooltip: 'Zoom out',
+              onPressed: onZoomOut,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ZoomButton extends StatelessWidget {
+  const _ZoomButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Icon(icon, size: 20),
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+    );
   }
 }

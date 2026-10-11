@@ -59,6 +59,13 @@ class Runtime extends ChangeNotifier {
   bool connectCacheToAccessRegister = false;
   bool connectAccessRegisterToCache = false;
 
+  bool get tlbHit =>
+      connectTLBtoPA && (!connectVAtoPageTable && !connectVAtoMMU);
+  bool get tlbMiss => connectVAtoPageTable;
+  bool get cacheHit => connectCacheToAccessRegister && (!connectPAtoDRAM);
+  bool get cacheMiss => connectPAtoDRAM;
+  bool get pageFault => connectVAtoMMU;
+
   void runAccess() {
     if (microStep == MicroStep.complete) {
       final sequence = AccessSequence.singleton;
@@ -68,7 +75,11 @@ class Runtime extends ChangeNotifier {
       }
     }
 
-    while (microStep != MicroStep.complete) {
+    if (microStep == MicroStep.initializeGetTranslation) {
+      microRun();
+    }
+
+    while (microStep != MicroStep.initializeGetTranslation) {
       microRun();
     }
   }
@@ -129,6 +140,11 @@ class Runtime extends ChangeNotifier {
 
     accSequence.pointer += 1;
 
+    if (accSequence.pointer >= accSequence.sequence.length) {
+      accSequence.pointer -= 1;
+      return;
+    }
+
     final Access currentAccess = accSequence.sequence[accSequence.pointer];
 
     _accessType = currentAccess.type;
@@ -172,7 +188,13 @@ class Runtime extends ChangeNotifier {
 
       mem.updatePageAccess(_ppn, accSequence.pointer);
 
-      microStep = MicroStep.intializeGetData;
+      connectPAtoCache = true;
+      connectTLBtoPA = true;
+      connectVAtoPA = true;
+
+      _finishTranslation();
+
+      microStep = MicroStep.cache;
       return;
     }
 
@@ -201,7 +223,6 @@ class Runtime extends ChangeNotifier {
     }
 
     // PAGE FAULT.
-    connectVAtoPageTable = false;
     connectVAtoMMU = true;
     connectMMUtoDisk = true;
 
@@ -296,13 +317,20 @@ class Runtime extends ChangeNotifier {
     if (_cacheLine != -1) {
       // CACHE HIT.
       _finishData();
-      microStep = MicroStep.complete;
+
+      if (_accessType == AccessType.load) {
+        connectCacheToAccessRegister = true;
+      } else if (_accessType == AccessType.store) {
+        connectAccessRegisterToCache = true;
+      }
+
+      microStep = MicroStep.initializeGetTranslation;
+
       return;
     }
 
     // CACHE MISS.
     microStep = MicroStep.dram;
-    connectPAtoCache = false;
     connectPAtoDRAM = true;
   }
 
@@ -341,7 +369,11 @@ class Runtime extends ChangeNotifier {
   }
 
   void _microComplete() {
-    connectCacheToAccessRegister = true;
+    if (_accessType == AccessType.load) {
+      connectCacheToAccessRegister = true;
+    } else if (_accessType == AccessType.store) {
+      connectAccessRegisterToCache = true;
+    }
 
     microStep = MicroStep.initializeGetTranslation;
   }
@@ -354,18 +386,24 @@ class Runtime extends ChangeNotifier {
     _ppn = -1;
     _physicalAddress = -1;
 
+    _tlbEntry = -1;
     _cacheLine = -1;
     _accessType = null;
 
     _invalidatedVPN = -1;
     _replacedPagePPN = -1;
 
+    final accSequence = AccessSequence.singleton;
+    accSequence.restart();
+
     _resetConnections();
 
-    final accSequence = AccessSequence.singleton;
-    accSequence.pointer = -1;
+    // External resets
+    TLB.singleton.resetTLB();
+    Memory.singleton.resetMemory();
+    Cache.singleton.resetCache();
 
-    // TODO: Add resets of all other components
+    notifyListeners();
   }
 
   void _resetConnections() {

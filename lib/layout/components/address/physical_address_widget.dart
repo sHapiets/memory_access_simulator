@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
+import 'package:memory_access_simulator/layout/components/button/show_in_dialog_button.dart';
 
 class PhysicalAddressWidget extends StatelessWidget {
   const PhysicalAddressWidget({super.key});
@@ -20,70 +21,8 @@ class PhysicalAddressWidget extends StatelessWidget {
       listenable: Runtime.singleton,
       builder: (context, _) {
         final runtime = Runtime.singleton;
-
         final physicalAddress = runtime.getPhysicalAddress;
-        final bool hasAddress = physicalAddress >= 0;
-
-        if (!hasAddress) {
-          return _buildEmpty(context);
-        }
-
-        // ====================================================================
-        // Address configuration
-        // ====================================================================
-
-        final int addressBits = config.ppnBits + config.pageOffsetBits;
-
-        // Physical memory segmentation.
-        final int pageOffsetBits = config.pageOffsetBits;
-        final int ppnBits = addressBits - pageOffsetBits;
-
-        // Cache segmentation.
-        final int blockOffsetBits = config.blockOffsetBits;
-        final int indexBits = config.cacheIndexBits;
-        final int tagBits = addressBits - indexBits - blockOffsetBits;
-
-        // ====================================================================
-        // Physical memory bits
-        // ====================================================================
-
-        final String ppnBinary = runtime.getPPN
-            .toRadixString(2)
-            .padLeft(ppnBits, '0');
-
-        final String pageOffsetBinary = runtime.getPageOffset
-            .toRadixString(2)
-            .padLeft(pageOffsetBits, '0');
-
-        // ====================================================================
-        // Cache bits
-        // ====================================================================
-
-        final String binary = physicalAddress
-            .toRadixString(2)
-            .padLeft(addressBits, '0');
-
-        final String tagBitsString = binary.substring(0, tagBits);
-
-        final String indexBitsString = binary.substring(
-          tagBits,
-          tagBits + indexBits,
-        );
-
-        final String blockOffsetBitsString = binary.substring(
-          tagBits + indexBits,
-        );
-
-        // ====================================================================
-        // Decimal values
-        // ====================================================================
-
-        final int tag = int.parse(tagBitsString, radix: 2);
-        final int index = int.parse(indexBitsString, radix: 2);
-        final int blockOffset = int.parse(blockOffsetBitsString, radix: 2);
-
-        final int ppn = int.parse(ppnBinary, radix: 2);
-        final int pageOffset = int.parse(pageOffsetBinary, radix: 2);
+        final hasAddress = physicalAddress >= 0;
 
         return FittedBox(
           child: Container(
@@ -99,123 +38,57 @@ class PhysicalAddressWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // ============================================================
-                // Header
+                // Static header - never animated
                 // ============================================================
-                Row(
-                  children: [
-                    Icon(
-                      Icons.square_rounded,
-                      size: 20,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Physical Address',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
+                _buildHeader(context),
 
                 const SizedBox(height: 6),
 
                 // ============================================================
-                // Hexadecimal physical address
+                // Animated content - only this section changes
                 // ============================================================
                 Expanded(
-                  child: Center(
-                    child: Text(
-                      '0x${physicalAddress.toRadixString(16).toUpperCase()}',
-                      style: TextStyle(
-                        fontFamily: 'Fredoka',
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    switchInCurve: Curves.easeInOut,
+                    switchOutCurve: Curves.easeInOut,
+                    layoutBuilder: (currentChild, previousChildren) {
+                      return Stack(
+                        alignment: Alignment.center,
+                        fit: StackFit.expand,
+                        children: [
+                          ...previousChildren,
+                          if (currentChild != null) currentChild,
+                        ],
+                      );
+                    },
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: Tween<double>(
+                            begin: 0.98,
+                            end: 1.0,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: hasAddress
+                        ? SizedBox.expand(
+                            key: ValueKey(physicalAddress),
+                            child: _buildAddressContent(
+                              context,
+                              runtime,
+                              config,
+                              physicalAddress,
+                            ),
+                          )
+                        : const SizedBox.expand(
+                            key: ValueKey('empty'),
+                            child: Center(child: Text('—')),
+                          ),
                   ),
-                ),
-
-                const Divider(),
-                const SizedBox(height: 10),
-
-                // ============================================================
-                // Cache Segmentation
-                // ============================================================
-                _SegmentationRow(
-                  title: 'CACHE BIT-SEGMENTATION',
-                  segments: [
-                    _Segment(
-                      label: 'TAG',
-                      bits: tagBitsString,
-                      color: theme.colorScheme.primary,
-                    ),
-                    _Segment(
-                      label: 'INDEX',
-                      bits: indexBitsString,
-                      color: theme.colorScheme.secondary,
-                    ),
-                    _Segment(
-                      label: 'BLOCK OFFSET',
-                      bits: blockOffsetBitsString,
-                      color: theme.colorScheme.tertiary,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // ============================================================
-                // Physical Memory Segmentation
-                // ============================================================
-                _SegmentationRow(
-                  title: 'PHYSICAL MEMORY BIT-SEGMENTATION',
-                  segments: [
-                    _Segment(
-                      label: 'PPN',
-                      bits: ppnBinary,
-                      color: Colors.green,
-                    ),
-                    _Segment(
-                      label: 'PAGE OFFSET',
-                      bits: pageOffsetBinary,
-                      color: theme.colorScheme.tertiary,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 6),
-
-                const Divider(),
-
-                const SizedBox(height: 8),
-
-                // ============================================================
-                // Physical memory decimal summary
-                // ============================================================
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _AddressInfo(label: 'PPN', value: ppn.toString()),
-                    const SizedBox(width: 32),
-                    _AddressInfo(
-                      label: 'PAGE OFFSET',
-                      value: pageOffset.toString(),
-                    ),
-                    const SizedBox(width: 32),
-                    _AddressInfo(label: 'TAG', value: tag.toString()),
-                    const SizedBox(width: 32),
-                    _AddressInfo(label: 'INDEX', value: index.toString()),
-                    const SizedBox(width: 32),
-                    _AddressInfo(
-                      label: 'BLOCK OFFSET',
-                      value: blockOffset.toString(),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -225,59 +98,179 @@ class PhysicalAddressWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildEmpty(BuildContext context) {
+  // ==========================================================================
+  // Static Header
+  // ==========================================================================
+
+  Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
 
-    return FittedBox(
-      child: Container(
-        width: _width,
-        height: _height,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
+    return Row(
+      children: [
+        Icon(Icons.square_rounded, size: 20, color: theme.colorScheme.primary),
+
+        const SizedBox(width: 8),
+
+        Text(
+          'Physical Address',
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.square_rounded,
-                  size: 20,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Physical Address',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
+      ],
+    );
+  }
 
-            const Spacer(),
+  // ==========================================================================
+  // Animated Address Content
+  // ==========================================================================
 
-            Center(
-              child: Text(
-                '—',
-                style: TextStyle(
-                  fontFamily: 'Fredoka',
-                  fontSize: 24,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+  Widget _buildAddressContent(
+    BuildContext context,
+    Runtime runtime,
+    Configuration config,
+    int physicalAddress,
+  ) {
+    final theme = Theme.of(context);
+
+    // ========================================================================
+    // Address configuration
+    // ========================================================================
+
+    final int addressBits = config.ppnBits + config.pageOffsetBits;
+
+    final int pageOffsetBits = config.pageOffsetBits;
+    final int ppnBits = addressBits - pageOffsetBits;
+
+    final int blockOffsetBits = config.blockOffsetBits;
+    final int indexBits = config.cacheIndexBits;
+    final int tagBits = addressBits - indexBits - blockOffsetBits;
+
+    // ========================================================================
+    // Physical memory bits
+    // ========================================================================
+
+    final String ppnBinary = runtime.getPPN
+        .toRadixString(2)
+        .padLeft(ppnBits, '0');
+
+    final String pageOffsetBinary = runtime.getPageOffset
+        .toRadixString(2)
+        .padLeft(pageOffsetBits, '0');
+
+    // ========================================================================
+    // Cache bits
+    // ========================================================================
+
+    final String binary = physicalAddress
+        .toRadixString(2)
+        .padLeft(addressBits, '0');
+
+    final String tagBitsString = binary.substring(0, tagBits);
+
+    final String indexBitsString = binary.substring(
+      tagBits,
+      tagBits + indexBits,
+    );
+
+    final String blockOffsetBitsString = binary.substring(tagBits + indexBits);
+
+    // ========================================================================
+    // Decimal values
+    // ========================================================================
+
+    final int tag = int.parse(tagBitsString, radix: 2);
+    final int index = int.parse(indexBitsString, radix: 2);
+    final int blockOffset = int.parse(blockOffsetBitsString, radix: 2);
+
+    final int ppn = int.parse(ppnBinary, radix: 2);
+    final int pageOffset = int.parse(pageOffsetBinary, radix: 2);
+
+    // ========================================================================
+    // Address visualization
+    // ========================================================================
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Physical address value
+        Expanded(
+          child: Center(
+            child: Text(
+              '0x${physicalAddress.toRadixString(16).toUpperCase()}',
+              style: TextStyle(
+                fontFamily: 'Fredoka',
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
               ),
             ),
+          ),
+        ),
 
-            const Spacer(),
+        const Divider(),
+        const SizedBox(height: 10),
+
+        // Cache segmentation
+        _SegmentationRow(
+          title: 'CACHE BIT-SEGMENTATION',
+          segments: [
+            _Segment(
+              label: 'TAG',
+              bits: tagBitsString,
+              color: Colors.blueAccent,
+            ),
+            _Segment(
+              label: 'INDEX',
+              bits: indexBitsString,
+              color: theme.colorScheme.secondary,
+            ),
+            _Segment(
+              label: 'BLOCK OFFSET',
+              bits: blockOffsetBitsString,
+              color: theme.colorScheme.tertiary,
+            ),
           ],
         ),
-      ),
+
+        const SizedBox(height: 24),
+
+        // Physical memory segmentation
+        _SegmentationRow(
+          title: 'PHYSICAL MEMORY BIT-SEGMENTATION',
+          segments: [
+            _Segment(label: 'PPN', bits: ppnBinary, color: Colors.green),
+            _Segment(
+              label: 'PAGE OFFSET',
+              bits: pageOffsetBinary,
+              color: Colors.pink,
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 6),
+        const Divider(),
+        const SizedBox(height: 8),
+
+        // Decimal address components
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _AddressInfo(label: 'PPN', value: ppn.toString()),
+            const SizedBox(width: 32),
+            _AddressInfo(label: 'PAGE OFFSET', value: pageOffset.toString()),
+            const SizedBox(width: 32),
+            _AddressInfo(label: 'TAG', value: tag.toString()),
+            const SizedBox(width: 32),
+            _AddressInfo(label: 'INDEX', value: index.toString()),
+            const SizedBox(width: 32),
+            _AddressInfo(label: 'BLOCK OFFSET', value: blockOffset.toString()),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -313,21 +306,26 @@ class _SegmentationRow extends StatelessWidget {
             ),
           ),
         ),
-
         const SizedBox(height: 10),
-
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (int i = 0; i < segments.length; i++) ...[
-              if (i > 0) const SizedBox(width: 7),
-              _BitSegment(
-                label: segments[i].label,
-                bits: segments[i].bits,
-                color: segments[i].color,
-              ),
-            ],
-          ],
+        SizedBox(
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (int i = 0; i < segments.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 7),
+                  _BitSegment(
+                    label: segments[i].label,
+                    bits: segments[i].bits,
+                    color: segments[i].color,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -412,9 +410,6 @@ class _BitSegment extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // --------------------------------------------------------------
-        // Segment label
-        // --------------------------------------------------------------
         Text(
           label,
           style: TextStyle(
@@ -424,12 +419,7 @@ class _BitSegment extends StatelessWidget {
             color: color,
           ),
         ),
-
         const SizedBox(height: 3),
-
-        // --------------------------------------------------------------
-        // Individual bit boxes
-        // --------------------------------------------------------------
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -441,12 +431,7 @@ class _BitSegment extends StatelessWidget {
               ),
           ],
         ),
-
         const SizedBox(height: 2),
-
-        // --------------------------------------------------------------
-        // Bit count
-        // --------------------------------------------------------------
         Text(
           '${bits.length} bit${bits.length == 1 ? '' : 's'}',
           style: TextStyle(
