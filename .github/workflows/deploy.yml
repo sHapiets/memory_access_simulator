@@ -30,7 +30,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Web
-        run: flutter build web --release --base-href /memory-access-simulator/
+        run: flutter build web --release --base-href /memory_access_simulator/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
