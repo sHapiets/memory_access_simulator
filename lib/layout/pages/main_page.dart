@@ -84,7 +84,7 @@ class _MainPageState extends State<MainPage> {
                     final availableHeight = totalHeight - dividerHeight;
 
                     // Default: 60% sequence, 40% log/statistics.
-                    final initialSequenceHeight = availableHeight * 0.30;
+                    final initialSequenceHeight = availableHeight * 0.42;
 
                     double sequenceHeight =
                         _sequenceHeight ?? initialSequenceHeight;
