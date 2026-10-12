@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/components/access_sequence.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
+import 'package:memory_access_simulator/foundation/access.dart';
+import 'package:memory_access_simulator/foundation/access_type.dart';
 import 'package:memory_access_simulator/layout/components/access_register.dart';
 import 'package:memory_access_simulator/layout/components/address/physical_address_widget.dart';
 import 'package:memory_access_simulator/layout/components/address/virtual_address_widget.dart';
@@ -692,38 +694,29 @@ class _ComponentsAreaState extends State<ComponentsArea>
                       right: 0,
                       bottom: 12,
                       child: Center(
-                        child: ValueListenableBuilder<PageMode>(
-                          valueListenable: pageModeNotifier,
-                          builder: (context, pageMode, _) {
-                            final isRunning = pageMode == PageMode.run;
+                        child: ListenableBuilder(
+                          listenable: Listenable.merge([
+                            Runtime.singleton,
+                            AccessSequence.singleton,
+                          ]),
+                          builder: (context, _) {
+                            final runtime = Runtime.singleton;
+                            final sequence = AccessSequence.singleton.sequence;
+                            final pointer = AccessSequence.singleton.pointer;
 
-                            return IgnorePointer(
-                              ignoring: !isRunning,
-                              child: AnimatedSlide(
-                                offset: isRunning
-                                    ? Offset.zero
-                                    : const Offset(0, 0.15),
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutCubic,
-                                child: AnimatedOpacity(
-                                  opacity: isRunning ? 1 : 0,
-                                  duration: const Duration(milliseconds: 250),
-                                  child: ListenableBuilder(
-                                    listenable: Runtime.singleton,
-                                    builder: (context, _) {
-                                      return WorkspaceStatusBar(
-                                        pointer:
-                                            AccessSequence.singleton.pointer,
-                                        cacheHit: Runtime.singleton.cacheHit,
-                                        cacheMiss: Runtime.singleton.cacheMiss,
-                                        tlbHit: Runtime.singleton.tlbHit,
-                                        tlbMiss: Runtime.singleton.tlbMiss,
-                                        pageFault: Runtime.singleton.pageFault,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
+                            final Access? currentAccess =
+                                pointer >= 0 && pointer < sequence.length
+                                ? sequence[pointer]
+                                : null;
+
+                            return WorkspaceStatusBar(
+                              pointer: pointer,
+                              currentAccess: currentAccess,
+                              cacheHit: runtime.cacheHit,
+                              cacheMiss: runtime.cacheMiss,
+                              tlbHit: runtime.tlbHit,
+                              tlbMiss: runtime.tlbMiss,
+                              pageFault: runtime.pageFault,
                             );
                           },
                         ),
@@ -772,6 +765,7 @@ class WorkspaceStatusBar extends StatelessWidget {
   const WorkspaceStatusBar({
     super.key,
     required this.pointer,
+    required this.currentAccess,
     required this.cacheHit,
     required this.cacheMiss,
     required this.tlbHit,
@@ -780,81 +774,83 @@ class WorkspaceStatusBar extends StatelessWidget {
   });
 
   final int pointer;
+  final Access? currentAccess;
   final bool cacheHit;
   final bool cacheMiss;
   final bool tlbHit;
   final bool tlbMiss;
   final bool pageFault;
 
+  String _formatAddress(int address) {
+    return '0x${address.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final accessNumber = pointer == -1 ? '--' : '$pointer';
+
+    final accessNumber = pointer < 0 ? '--' : '${pointer + 1}';
+
+    final accessType = currentAccess == null
+        ? '--'
+        : currentAccess!.type == AccessType.load
+        ? 'LOAD'
+        : 'STORE';
+
+    final address = currentAccess == null
+        ? '--'
+        : _formatAddress(currentAccess!.address);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
       decoration: BoxDecoration(
-        color: colors.surface.withAlpha(230),
+        color: colors.surface.withAlpha(240),
         borderRadius: BorderRadius.circular(40),
-        border: Border.all(color: colors.primary.withAlpha(180)),
+        border: Border.all(color: colors.outlineVariant),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12,
+        runSpacing: 8,
         children: [
-          // Compact access counter.
-          SizedBox(
-            width: 32,
-            height: 32,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox.expand(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: colors.primary,
-                    backgroundColor: colors.surfaceContainerHighest,
-                  ),
-                ),
-                Text(
-                  accessNumber,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Fredoka',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-
-          // Running indicator.
-          Text(
-            'Running',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Fredoka',
-            ),
-          ),
+          // Access number
+          _StatusLabel(label: 'Access', value: accessNumber),
 
           _separator(context),
 
+          // Current access type
+          _StatusLabel(
+            label: 'Type',
+            value: accessType,
+            valueColor: currentAccess == null
+                ? colors.onSurfaceVariant
+                : currentAccess!.type == AccessType.load
+                ? colors.secondary
+                : colors.tertiary,
+          ),
+
+          // Current virtual address
+          _StatusLabel(label: 'Address', value: address, monospace: true),
+
+          _separator(context),
+
+          // Cache status
           _AccessInfo(label: 'Cache', hit: cacheHit, miss: cacheMiss),
 
           _separator(context),
 
+          // TLB status
           _AccessInfo(label: 'TLB', hit: tlbHit, miss: tlbMiss),
 
           _separator(context),
 
-          // Page fault is a simple text indicator.
-          AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
-            style: theme.textTheme.labelMedium!.copyWith(
-              color: pageFault ? Colors.red : colors.onSurface.withAlpha(130),
-              fontWeight: pageFault ? FontWeight.bold : FontWeight.normal,
-            ),
-            child: const Text('Page Fault'),
+          // Page fault status
+          _StatusLabel(
+            label: 'Page Fault',
+            value: pageFault ? 'YES' : '--',
+            valueColor: pageFault ? Colors.red : colors.onSurfaceVariant,
           ),
         ],
       ),
@@ -862,16 +858,62 @@ class WorkspaceStatusBar extends StatelessWidget {
   }
 
   Widget _separator(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Container(
-        width: 1,
-        height: 22,
-        color: Theme.of(context).colorScheme.outlineVariant,
-      ),
+    return Container(
+      width: 1,
+      height: 22,
+      color: Theme.of(context).colorScheme.outlineVariant,
     );
   }
 }
+
+// ================================================================
+// GENERIC STATUS LABEL
+// ================================================================
+
+class _StatusLabel extends StatelessWidget {
+  const _StatusLabel({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.monospace = false,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final bool monospace;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label:',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: colors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          value,
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontFamily: monospace ? 'Roboto-Mono' : 'Nunito',
+            fontWeight: FontWeight.bold,
+            color: valueColor ?? colors.onSurface,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ================================================================
+// CACHE / TLB STATUS
+// ================================================================
 
 class _AccessInfo extends StatelessWidget {
   const _AccessInfo({
@@ -899,7 +941,7 @@ class _AccessInfo extends StatelessWidget {
       statusColor = Colors.red;
       status = 'MISS';
     } else {
-      statusColor = colors.onSurface.withAlpha(120);
+      statusColor = colors.onSurfaceVariant;
       status = '--';
     }
 
@@ -909,24 +951,22 @@ class _AccessInfo extends StatelessWidget {
         Text(
           '$label:',
           style: theme.textTheme.labelMedium?.copyWith(
-            color: colors.onSurface.withAlpha(180),
+            color: colors.onSurfaceVariant,
           ),
         ),
         const SizedBox(width: 5),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        Container(
           width: 6,
           height: 6,
           decoration: BoxDecoration(shape: BoxShape.circle, color: statusColor),
         ),
         const SizedBox(width: 4),
-        AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 200),
-          style: theme.textTheme.labelMedium!.copyWith(
+        Text(
+          status,
+          style: theme.textTheme.labelMedium?.copyWith(
             color: statusColor,
             fontWeight: FontWeight.bold,
           ),
-          child: Text(status),
         ),
       ],
     );
