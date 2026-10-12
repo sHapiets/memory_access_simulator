@@ -386,15 +386,6 @@ class _AccessSequenceModifierDialogState
 
               const SizedBox(height: 12),
 
-              // Subtle divider, similar to the widget's edit-mode layout.
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: theme.colorScheme.outlineVariant.withOpacity(0.6),
-              ),
-
-              const SizedBox(height: 12),
-
               // Main editor — gets almost all available space.
               Expanded(
                 child: TextField(

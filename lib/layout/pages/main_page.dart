@@ -11,147 +11,166 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   // ================================================================
-  // Configurable pane width limits (logical pixels)
+  // Configurable pane size limits
   // ================================================================
 
-  static const double minLeftWidth = 180;
-  static const double maxLeftWidth = 420;
+  static const double minLeftWidth = 160;
+  static const double maxLeftWidth = 320;
 
-  static const double minMiddleWidth = 420;
-  static const double maxMiddleWidth = 1400;
+  static const double minMiddleWidth = 800;
+  static const double maxMiddleWidth = 1900;
 
-  static const double minRightWidth = 220;
-  static const double maxRightWidth = 600;
+  static const double minSequenceHeight = 50;
+  static const double minLogHeight = 150;
 
   static const double dividerWidth = 12;
+  static const double dividerHeight = 20;
 
-  // Null means use the initial proportions.
+  // Horizontal divider: left pane width.
   double? _leftWidth;
-  double? _middleWidth;
+
+  // Vertical divider: height of the access sequence pane.
+  double? _sequenceHeight;
 
   double _clamp(double value, double min, double max) {
     return value.clamp(min, max).toDouble();
   }
+
+  double _min(double a, double b) => a < b ? a : b;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalWidth = constraints.maxWidth;
-        final availableWidth = totalWidth - dividerWidth * 2;
+        final availableWidth = totalWidth - dividerWidth;
 
-        // Preserve the original 8 : 25 : 10 proportions initially.
-        final initialLeft = availableWidth * 6 / 43;
-        final initialMiddle = availableWidth * 30 / 43;
+        final initialLeft = availableWidth * 0.30;
 
         double left = _leftWidth ?? initialLeft;
-        double middle = _middleWidth ?? initialMiddle;
-        double right = availableWidth - left - middle;
+        double middle = availableWidth - left;
 
-        // If the viewport is too small to satisfy every minimum,
-        // fall back to proportional sizing until enough room is available.
-        final minimumTotal = minLeftWidth + minMiddleWidth + minRightWidth;
-
-        if (availableWidth < minimumTotal) {
-          left = availableWidth * 8 / 43;
-          middle = availableWidth * 25 / 43;
-          right = availableWidth - left - middle;
+        if (availableWidth < minLeftWidth + minMiddleWidth) {
+          left = availableWidth * 0.32;
+          middle = availableWidth - left;
         } else {
-          // Keep each pane within its limits, while leaving room
-          // for the minimum widths of the other panes.
           left = _clamp(
             left,
             minLeftWidth,
-            _min(maxLeftWidth, availableWidth - minMiddleWidth - minRightWidth),
+            _min(maxLeftWidth, availableWidth - minMiddleWidth),
           );
 
-          middle = _clamp(
-            middle,
-            minMiddleWidth,
-            _min(maxMiddleWidth, availableWidth - left - minRightWidth),
-          );
+          middle = availableWidth - left;
 
-          right = availableWidth - left - middle;
-
-          // Respect the right pane's limits too.
-          if (right < minRightWidth) {
-            final adjustment = minRightWidth - right;
-            middle -= adjustment;
-            right += adjustment;
-          } else if (right > maxRightWidth) {
-            final adjustment = right - maxRightWidth;
-            middle += adjustment;
-            right -= adjustment;
+          if (middle > maxMiddleWidth) {
+            middle = maxMiddleWidth;
+            left = availableWidth - middle;
           }
         }
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ========================================================
+            // LEFT COLUMN: Access Sequence + Log / Statistics
+            // ========================================================
             SizedBox(
               width: left,
-              child: const Padding(
-                padding: EdgeInsets.all(8),
-                child: AccessSequenceWidget(),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: LayoutBuilder(
+                  builder: (context, leftConstraints) {
+                    final totalHeight = leftConstraints.maxHeight;
+                    final availableHeight = totalHeight - dividerHeight;
+
+                    // Default: 60% sequence, 40% log/statistics.
+                    final initialSequenceHeight = availableHeight * 0.30;
+
+                    double sequenceHeight =
+                        _sequenceHeight ?? initialSequenceHeight;
+
+                    double logHeight = availableHeight - sequenceHeight;
+
+                    // Respect minimum heights when enough space exists.
+                    if (availableHeight >= minSequenceHeight + minLogHeight) {
+                      sequenceHeight = _clamp(
+                        sequenceHeight,
+                        minSequenceHeight,
+                        availableHeight - minLogHeight,
+                      );
+
+                      logHeight = availableHeight - sequenceHeight;
+                    } else {
+                      // On short viewports, use proportional sizing.
+                      sequenceHeight = availableHeight * 0.60;
+                      logHeight = availableHeight - sequenceHeight;
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Access Sequence
+                        SizedBox(
+                          height: sequenceHeight,
+                          child: const AccessSequenceWidget(),
+                        ),
+
+                        // Adjustable vertical divider
+                        _buildHorizontalDivider(
+                          onDrag: (delta) {
+                            if (availableHeight <
+                                minSequenceHeight + minLogHeight) {
+                              return;
+                            }
+
+                            setState(() {
+                              _sequenceHeight = _clamp(
+                                sequenceHeight + delta,
+                                minSequenceHeight,
+                                availableHeight - minLogHeight,
+                              );
+                            });
+                          },
+                        ),
+
+                        // Log / Statistics
+                        SizedBox(
+                          height: logHeight,
+                          child: _buildLogStatistics(context),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
 
-            _buildDivider(
+            // ========================================================
+            // ADJUSTABLE VERTICAL DIVIDER
+            // ========================================================
+            _buildVerticalDivider(
               onDrag: (delta) {
-                if (availableWidth < minimumTotal) return;
-
-                final minDelta = _max(
-                  minLeftWidth - left,
-                  middle - maxMiddleWidth,
-                );
-                final maxDelta = _min(
-                  maxLeftWidth - left,
-                  middle - minMiddleWidth,
-                );
-
-                final adjustedDelta = _clamp(delta, minDelta, maxDelta);
+                if (availableWidth < minLeftWidth + minMiddleWidth) {
+                  return;
+                }
 
                 setState(() {
-                  _leftWidth = left + adjustedDelta;
-                  _middleWidth = middle - adjustedDelta;
+                  _leftWidth = _clamp(
+                    left + delta,
+                    minLeftWidth,
+                    _min(maxLeftWidth, availableWidth - minMiddleWidth),
+                  );
                 });
               },
             ),
 
-            SizedBox(
-              width: middle,
-              child: const Padding(
-                padding: EdgeInsets.all(8),
-                child: ComponentsArea(),
-              ),
-            ),
-
-            _buildDivider(
-              onDrag: (delta) {
-                if (availableWidth < minimumTotal) return;
-
-                final minDelta = _max(
-                  minMiddleWidth - middle,
-                  right - maxRightWidth,
-                );
-                final maxDelta = _min(
-                  maxMiddleWidth - middle,
-                  right - minRightWidth,
-                );
-
-                final adjustedDelta = _clamp(delta, minDelta, maxDelta);
-
-                setState(() {
-                  _middleWidth = middle + adjustedDelta;
-                });
-              },
-            ),
-
-            SizedBox(
-              width: right,
-              child: const Padding(
-                padding: EdgeInsets.all(8),
-                child: Center(child: Text('Log/Statistics')),
+            // ========================================================
+            // RIGHT COLUMN: MEMORY COMPONENTS
+            // ========================================================
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: const ComponentsArea(),
               ),
             ),
           ],
@@ -160,7 +179,38 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _buildDivider({required ValueChanged<double> onDrag}) {
+  // ================================================================
+  // Log / Statistics panel
+  // ================================================================
+
+  Widget _buildLogStatistics(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outline),
+      ),
+      child: Center(
+        child: Text(
+          'Log / Statistics',
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ================================================================
+  // Vertical divider: resizes left/right panes
+  // ================================================================
+
+  Widget _buildVerticalDivider({required ValueChanged<double> onDrag}) {
     return MouseRegion(
       cursor: SystemMouseCursors.resizeColumn,
       child: GestureDetector(
@@ -172,7 +222,7 @@ class _MainPageState extends State<MainPage> {
           width: dividerWidth,
           child: Center(
             child: Container(
-              width: 3,
+              width: 2,
               margin: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 color: Theme.of(context).dividerColor,
@@ -185,7 +235,32 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  double _min(double a, double b) => a < b ? a : b;
+  // ================================================================
+  // Horizontal divider: resizes top/bottom panes
+  // ================================================================
 
-  double _max(double a, double b) => a > b ? a : b;
+  Widget _buildHorizontalDivider({required ValueChanged<double> onDrag}) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeRow,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragUpdate: (details) {
+          onDrag(details.delta.dy);
+        },
+        child: SizedBox(
+          height: dividerHeight,
+          child: Center(
+            child: Container(
+              height: 2,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

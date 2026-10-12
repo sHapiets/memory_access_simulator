@@ -24,13 +24,30 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
 
   int get _maxAddress => (1 << _addressBits) - 1;
 
-  bool _isEditing = false;
+  bool _isDirty = false;
+  bool _updatingController = false;
   String? _error;
+  late String _savedText;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _savedText = _serializeSequence(accessSequence.sequence);
+    _editorController.text = _savedText;
+
+    _editorController.addListener(_handleEditorChanged);
+    accessSequence.addListener(_handleSequenceChanged);
+  }
 
   @override
   void dispose() {
+    _editorController.removeListener(_handleEditorChanged);
+    accessSequence.removeListener(_handleSequenceChanged);
+
     _scrollController.dispose();
     _editorController.dispose();
+
     super.dispose();
   }
 
@@ -59,34 +76,64 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     }
   }
 
-  // ================================================================
-  // EDITING
-  // ================================================================
-
-  void _startEditing() {
-    final text = accessSequence.sequence
+  String _serializeSequence(List<Access> sequence) {
+    return sequence
         .map((access) {
           final type = access.type == AccessType.load ? 'L' : 'S';
           return '$type ${_formatAddress(access.address)}';
         })
         .join('\n');
+  }
+
+  // ================================================================
+  // EDITOR STATE AND SYNCHRONIZATION
+  // ================================================================
+
+  void _setEditorText(String text) {
+    _updatingController = true;
+
+    _editorController.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+
+    _updatingController = false;
+  }
+
+  void _handleEditorChanged() {
+    if (_updatingController || !mounted) return;
+
+    final dirty = _editorController.text != _savedText;
 
     setState(() {
-      _editorController.text = text;
-      _isEditing = true;
+      _isDirty = dirty;
       _error = null;
     });
   }
 
-  void _cancelEditing() {
+  void _handleSequenceChanged() {
+    if (!mounted || _isDirty) return;
+
+    final latestText = _serializeSequence(accessSequence.sequence);
+
+    if (latestText == _savedText) return;
+
+    _savedText = latestText;
+    _setEditorText(latestText);
+
     setState(() {
-      _isEditing = false;
+      _isDirty = false;
       _error = null;
-      _editorController.clear();
     });
   }
+
+  // ================================================================
+  // SAVE AND VALIDATION
+  // ================================================================
 
   void _saveEditing() {
+    if (!_isDirty) return;
+
     final newSequence = <Access>[];
     final lines = _editorController.text.split('\n');
 
@@ -108,6 +155,7 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
       final typeText = parts[0].toUpperCase();
 
       final AccessType type;
+
       if (typeText == 'L') {
         type = AccessType.load;
       } else if (typeText == 'S') {
@@ -141,15 +189,20 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
       newSequence.add(Access(type: type, address: address));
     }
 
+    // Normalize the editor contents and update the saved baseline first.
+    final normalizedText = _serializeSequence(newSequence);
+
+    _savedText = normalizedText;
+    _setEditorText(normalizedText);
+
+    setState(() {
+      _isDirty = false;
+      _error = null;
+    });
+
     // Apply the sequence only after every line passes validation.
     accessSequence.setSequence(newSequence);
     runtime.reset();
-
-    setState(() {
-      _isEditing = false;
-      _error = null;
-      _editorController.clear();
-    });
   }
 
   // ================================================================
@@ -200,14 +253,10 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
           return ListenableBuilder(
             listenable: Listenable.merge([accessSequence, runtime]),
             builder: (context, child) {
-              final sequence = accessSequence.sequence;
-
-              final count = _isEditing
-                  ? _editorController.text
-                        .split('\n')
-                        .where((line) => line.trim().isNotEmpty)
-                        .length
-                  : sequence.length;
+              final count = _editorController.text
+                  .split('\n')
+                  .where((line) => line.trim().isNotEmpty)
+                  .length;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -229,15 +278,7 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
                       ),
                     ),
 
-                  Expanded(
-                    child: _isEditing
-                        ? _buildEditorList(compact: compact)
-                        : _buildSequenceList(
-                            sequence,
-                            accessSequence.pointer,
-                            compact: compact,
-                          ),
-                  ),
+                  Expanded(child: _buildEditorList(compact: compact)),
                 ],
               );
             },
@@ -273,41 +314,37 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
             SizedBox(width: compact ? 4 : 8),
 
             Expanded(
-              child: Text(
-                _isEditing ? 'Edit Sequence' : 'Access Sequence',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: compact ? 13 : 16,
-                  fontWeight: FontWeight.w700,
-                  color: colors.onSurface,
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Access Sequence',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: compact ? 13 : 16,
+                      fontWeight: FontWeight.w700,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                ],
               ),
             ),
 
-            if (_isEditing) ...[
-              _headerButton(
-                context,
-                icon: Icons.close_rounded,
-                tooltip: 'Cancel Editing',
-                onPressed: _cancelEditing,
-              ),
-              const SizedBox(width: 4),
-              _headerButton(
-                context,
-                icon: Icons.check_rounded,
-                tooltip: 'Save Changes',
-                onPressed: _saveEditing,
-                color: colors.primary,
-              ),
-            ] else
-              _headerButton(
-                context,
-                icon: Icons.edit_rounded,
-                tooltip: 'Edit Sequence',
-                onPressed: _startEditing,
-              ),
+            _headerButton(
+              context,
+              icon: Icons.save_rounded,
+              tooltip: _isDirty
+                  ? 'Save changes to the access sequence'
+                  : 'No unsaved changes',
+              onPressed: _saveEditing,
+              enabled: _isDirty,
+              color: _isDirty
+                  ? colors.primary
+                  : colors.onSurface.withValues(alpha: 0.3),
+            ),
           ],
         ),
       ),
@@ -319,43 +356,16 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     required IconData icon,
     required String tooltip,
     required VoidCallback onPressed,
+    bool enabled = true,
     Color? color,
   }) {
     return IconButton(
-      onPressed: onPressed,
+      onPressed: enabled ? onPressed : null,
       tooltip: tooltip,
       visualDensity: VisualDensity.compact,
       constraints: const BoxConstraints(minWidth: 28, minHeight: 32),
       padding: EdgeInsets.zero,
       icon: Icon(icon, size: 18, color: color),
-    );
-  }
-
-  // ================================================================
-  // NORMAL ACCESS SEQUENCE LIST
-  // ================================================================
-
-  Widget _buildSequenceList(
-    List<Access> sequence,
-    int pointer, {
-    required bool compact,
-  }) {
-    if (sequence.isEmpty) {
-      return _buildEmptyState(context, 'No accesses');
-    }
-
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: compact ? 4 : 8),
-      itemCount: sequence.length,
-      itemBuilder: (context, index) {
-        return _AccessItem(
-          access: sequence[index],
-          index: index,
-          isActive: index == pointer,
-          compact: compact,
-        );
-      },
     );
   }
 
@@ -370,11 +380,6 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
       padding: EdgeInsets.all(compact ? 6 : 10),
       child: TextField(
         controller: _editorController,
-        onChanged: (_) {
-          setState(() {
-            _error = null;
-          });
-        },
         expands: true,
         minLines: null,
         maxLines: null,
@@ -414,21 +419,6 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
             borderSide: BorderSide(color: colors.primary, width: 1.5),
           ),
         ),
-      ),
-    );
-  }
-
-  // ================================================================
-  // EMPTY STATE
-  // ================================================================
-
-  Widget _buildEmptyState(BuildContext context, String message) {
-    return Center(
-      child: Text(
-        message,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(fontFamily: 'Nunito'),
       ),
     );
   }

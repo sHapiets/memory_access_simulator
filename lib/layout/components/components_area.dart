@@ -44,8 +44,8 @@ class _ComponentsAreaState extends State<ComponentsArea>
   // Workspace configuration
   // ------------------------------------------------------------
 
-  static const double minScale = 0.5;
-  static const double maxScale = 2.5;
+  static const double minScale = 0.1;
+  static const double maxScale = 3;
 
   bool _initialFitScheduled = false;
 
@@ -483,7 +483,7 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   ],
                                   isOn: () => Runtime
                                       .singleton
-                                      .connectCacheToDRAMFromLineEviction,
+                                      .connectCacheToDRAMFromPageEviction,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),

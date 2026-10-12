@@ -309,49 +309,38 @@ class _BottomBarUIState extends State<BottomBarUI> {
           key: const ValueKey('run-bar'),
           child: Row(
             children: [
-              Expanded(
-                flex: 2,
+              _stepItem(
+                context: context,
+                label: 'Return',
+                subLabel: 'back to setup',
+                icon: Icons.arrow_back_rounded,
+                onPressed: _returnToSetup,
+                compact: compact,
+              ),
+
+              SizedBox(width: 16),
+              Center(
                 child: _stepItem(
                   context: context,
-                  label: 'Return',
-                  subLabel: 'back to setup',
-                  icon: Icons.arrow_back_rounded,
-                  onPressed: _returnToSetup,
+                  label: 'Run Micro Step',
+                  subLabel: 'advance one micro-step',
+                  highlighted: true,
+                  icon: Icons.skip_next_rounded,
+                  onPressed: _runMicroStep,
                   compact: compact,
                 ),
               ),
+              SizedBox(width: 16),
 
-              const Spacer(flex: 1),
-
-              Expanded(
-                flex: 3,
-                child: Center(
-                  child: _stepItem(
-                    context: context,
-                    label: 'Run Micro Step',
-                    subLabel: 'advance one micro-step',
-                    highlighted: true,
-                    icon: Icons.skip_next_rounded,
-                    onPressed: _runMicroStep,
-                    compact: compact,
-                  ),
-                ),
-              ),
-
-              const Spacer(flex: 1),
-
-              Expanded(
-                flex: 2,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: _stepItem(
-                    context: context,
-                    label: 'Run Access',
-                    subLabel: 'execute a full access',
-                    icon: Icons.fast_forward_rounded,
-                    onPressed: _runAccess,
-                    compact: compact,
-                  ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: _stepItem(
+                  context: context,
+                  label: 'Run Access',
+                  subLabel: 'execute a full access',
+                  icon: Icons.fast_forward_rounded,
+                  onPressed: _runAccess,
+                  compact: compact,
                 ),
               ),
             ],

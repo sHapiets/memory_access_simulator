@@ -26,15 +26,7 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: mode,
-        home: Scaffold(
-          appBar: const AppbarUI(),
-          body: Column(
-            children: [
-              const Expanded(flex: 1, child: BottomBarUI()),
-              const Expanded(flex: 10, child: MainPage()),
-            ],
-          ),
-        ),
+        home: Scaffold(appBar: const AppbarUI(), body: MainPage()),
       ),
     );
   }
