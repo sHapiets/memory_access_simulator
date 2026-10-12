@@ -8,8 +8,9 @@ import 'package:memory_access_simulator/foundation/access_type.dart';
 import 'package:memory_access_simulator/layout/components/access_register.dart';
 import 'package:memory_access_simulator/layout/components/address/physical_address_widget.dart';
 import 'package:memory_access_simulator/layout/components/address/virtual_address_widget.dart';
-import 'package:memory_access_simulator/layout/components/button/show_in_dialog_button.dart';
+import 'package:memory_access_simulator/layout/components/component_dialog/show_in_dialog_button.dart';
 import 'package:memory_access_simulator/layout/components/cache_widget.dart';
+import 'package:memory_access_simulator/layout/components/component_dialog/tap_to_show_in_dialog.dart';
 import 'package:memory_access_simulator/layout/components/connection_widget.dart';
 import 'package:memory_access_simulator/layout/components/disk_widget.dart';
 import 'package:memory_access_simulator/layout/components/dynamic_memory_widget.dart';
@@ -229,6 +230,14 @@ class _ComponentsAreaState extends State<ComponentsArea>
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final overlayScale = math
+                    .min(
+                      constraints.maxWidth / 900,
+                      constraints.maxHeight / 700,
+                    )
+                    .clamp(0.85, 1.65)
+                    .toDouble();
+
                 if (!_initialFitScheduled) {
                   _initialFitScheduled = true;
 
@@ -530,14 +539,18 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 left: 40,
                                 top: 420,
                                 width: 300,
-                                child: PhysicalAddressWidget(),
+                                child: TapToShowInDialog(
+                                  child: PhysicalAddressWidget(),
+                                ),
                               ),
 
                               Positioned(
                                 left: 40,
                                 top: 840,
                                 width: 300,
-                                child: VirtualAddressWidget(),
+                                child: TapToShowInDialog(
+                                  child: VirtualAddressWidget(),
+                                ),
                               ),
 
                               Positioned(
@@ -548,7 +561,9 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
-                                  child: const CacheWidget(),
+                                  child: TapToShowInDialog(
+                                    child: const CacheWidget(),
+                                  ),
                                 ),
                               ),
 
@@ -560,7 +575,9 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
-                                  child: const TLBWidget(),
+                                  child: TapToShowInDialog(
+                                    child: const TLBWidget(),
+                                  ),
                                 ),
                               ),
 
@@ -572,7 +589,9 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
-                                  child: const PageTableWidget(),
+                                  child: TapToShowInDialog(
+                                    child: const PageTableWidget(),
+                                  ),
                                 ),
                               ),
                               Positioned(
@@ -583,7 +602,9 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
-                                  child: const DynamicMemoryWidget(),
+                                  child: TapToShowInDialog(
+                                    child: const DynamicMemoryWidget(),
+                                  ),
                                 ),
                               ),
 
@@ -601,91 +622,48 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
-                                  child: const MMUWidget(),
+                                  child: TapToShowInDialog(
+                                    child: const MMUWidget(),
+                                  ),
                                 ),
-                              ),
-
-                              /// View Dialog of components
-                              Positioned(
-                                left: 300,
-                                top: 420,
-                                child: ShowInDialogButton(
-                                  child: PhysicalAddressWidget(),
-                                ),
-                              ),
-
-                              Positioned(
-                                left: 300,
-                                top: 840,
-                                child: ShowInDialogButton(
-                                  child: VirtualAddressWidget(),
-                                ),
-                              ),
-
-                              Positioned(
-                                left: 575,
-                                top: 590,
-                                child: ShowInDialogButton(child: TLBWidget()),
-                              ),
-
-                              Positioned(
-                                left: 575,
-                                top: 70,
-                                child: ShowInDialogButton(child: CacheWidget()),
-                              ),
-
-                              Positioned(
-                                left: 1100,
-                                top: 40,
-                                child: ShowInDialogButton(
-                                  child: DynamicMemoryWidget(),
-                                ),
-                              ),
-
-                              Positioned(
-                                left: 1100,
-                                top: 560,
-                                child: ShowInDialogButton(
-                                  child: PageTableWidget(),
-                                ),
-                              ),
-
-                              Positioned(
-                                left: 1605,
-                                top: 260,
-                                child: ShowInDialogButton(child: MMUWidget()),
                               ),
                             ],
                           ),
                         ),
                       ),
                     ),
-
-                    Positioned(right: 12, bottom: 12, child: _Legend()),
-
+                    Positioned(
+                      right: 12,
+                      bottom: 12,
+                      child: Transform.scale(
+                        scale: overlayScale,
+                        alignment: Alignment.bottomRight,
+                        child: _Legend(),
+                      ),
+                    ),
                     Positioned(
                       top: 16,
                       right: 16,
-                      child: ZoomControls(
-                        onZoomIn: _zoomIn,
-                        onZoomOut: _zoomOut,
-                        onFitToScreen: () {
-                          final renderBox =
-                              context.findRenderObject() as RenderBox?;
+                      child: Transform.scale(
+                        scale: overlayScale,
+                        alignment: Alignment.topRight,
+                        child: ZoomControls(
+                          onZoomIn: _zoomIn,
+                          onZoomOut: _zoomOut,
+                          onFitToScreen: () {
+                            final renderBox =
+                                context.findRenderObject() as RenderBox?;
 
-                          if (renderBox == null) {
-                            return;
-                          }
+                            if (renderBox == null) return;
 
-                          final width = renderBox.size.width;
-                          final height = renderBox.size.height;
-                          return _fitToView(
-                            BoxConstraints.tightFor(
-                              width: width,
-                              height: height,
-                            ),
-                          );
-                        },
+                            _fitToView(
+                              BoxConstraints.tightFor(
+                                width: renderBox.size.width,
+                                height: renderBox.size.height,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
 
@@ -694,31 +672,36 @@ class _ComponentsAreaState extends State<ComponentsArea>
                       right: 0,
                       bottom: 12,
                       child: Center(
-                        child: ListenableBuilder(
-                          listenable: Listenable.merge([
-                            Runtime.singleton,
-                            AccessSequence.singleton,
-                          ]),
-                          builder: (context, _) {
-                            final runtime = Runtime.singleton;
-                            final sequence = AccessSequence.singleton.sequence;
-                            final pointer = AccessSequence.singleton.pointer;
+                        child: Transform.scale(
+                          scale: overlayScale * 1.3,
+                          alignment: Alignment.bottomCenter,
+                          child: ListenableBuilder(
+                            listenable: Listenable.merge([
+                              Runtime.singleton,
+                              AccessSequence.singleton,
+                            ]),
+                            builder: (context, _) {
+                              final runtime = Runtime.singleton;
+                              final sequence =
+                                  AccessSequence.singleton.sequence;
+                              final pointer = AccessSequence.singleton.pointer;
 
-                            final Access? currentAccess =
-                                pointer >= 0 && pointer < sequence.length
-                                ? sequence[pointer]
-                                : null;
+                              final Access? currentAccess =
+                                  pointer >= 0 && pointer < sequence.length
+                                  ? sequence[pointer]
+                                  : null;
 
-                            return WorkspaceStatusBar(
-                              pointer: pointer,
-                              currentAccess: currentAccess,
-                              cacheHit: runtime.cacheHit,
-                              cacheMiss: runtime.cacheMiss,
-                              tlbHit: runtime.tlbHit,
-                              tlbMiss: runtime.tlbMiss,
-                              pageFault: runtime.pageFault,
-                            );
-                          },
+                              return WorkspaceStatusBar(
+                                pointer: pointer,
+                                currentAccess: currentAccess,
+                                cacheHit: runtime.cacheHit,
+                                cacheMiss: runtime.cacheMiss,
+                                tlbHit: runtime.tlbHit,
+                                tlbMiss: runtime.tlbMiss,
+                                pageFault: runtime.pageFault,
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/layout/components/access_sequence_widget.dart';
 import 'package:memory_access_simulator/layout/components/components_area.dart';
+import 'package:memory_access_simulator/layout/misc/log_statistics_widget.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -193,16 +194,7 @@ class _MainPageState extends State<MainPage> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: theme.colorScheme.outline),
       ),
-      child: Center(
-        child: Text(
-          'Log / Statistics',
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontWeight: FontWeight.w700,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-      ),
+      child: LogStatisticsWidget(),
     );
   }
 

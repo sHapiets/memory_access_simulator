@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
-import 'package:memory_access_simulator/layout/components/button/show_in_dialog_button.dart';
+import 'package:memory_access_simulator/layout/components/component_dialog/show_in_dialog_button.dart';
 
 class PhysicalAddressWidget extends StatelessWidget {
   const PhysicalAddressWidget({super.key});

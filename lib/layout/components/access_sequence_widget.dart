@@ -15,6 +15,15 @@ class AccessSequenceWidget extends StatefulWidget {
 class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _editorController = TextEditingController();
+  final ScrollController _editorScrollController = ScrollController();
+
+  double _editorScrollOffset = 0;
+
+  static const double _editorFontSize = 16;
+  static const double _editorLineHeight = 1.65;
+  static const double _editorVerticalPadding = 12;
+
+  int get _currentPointer => accessSequence.pointer;
 
   AccessSequence get accessSequence => AccessSequence.singleton;
   Runtime get runtime => Runtime.singleton;
@@ -47,6 +56,7 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
 
     _scrollController.dispose();
     _editorController.dispose();
+    _editorScrollController.dispose();
 
     super.dispose();
   }
@@ -372,52 +382,122 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
   // ================================================================
   // TEXT EDITOR
   // ================================================================
-
   Widget _buildEditorList({required bool compact}) {
     final colors = Theme.of(context).colorScheme;
+    final fontSize = _editorFontSize;
+    final lineHeight = fontSize * _editorLineHeight;
+
+    final lines = _editorController.text.split('\n');
+
+    // Find the editor line corresponding to the current access.
+    var currentLineIndex = -1;
+    var accessIndex = 0;
+
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].trim().isEmpty) continue;
+
+      if (accessIndex == _currentPointer) {
+        currentLineIndex = i;
+        break;
+      }
+
+      accessIndex++;
+    }
 
     return Padding(
       padding: EdgeInsets.all(compact ? 6 : 10),
-      child: TextField(
-        controller: _editorController,
-        expands: true,
-        minLines: null,
-        maxLines: null,
-        keyboardType: TextInputType.multiline,
-        textAlignVertical: TextAlignVertical.top,
-        style: TextStyle(
-          fontFamily: 'Roboto-Mono',
-          fontSize: compact ? 11 : 13,
-          height: 1.65,
-          color: colors.onSurface,
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerHighest.withValues(alpha: 0.25),
+          border: Border.all(color: colors.outlineVariant),
+          borderRadius: BorderRadius.circular(10),
         ),
-        decoration: InputDecoration(
-          hintText:
-              'Enter one access per line:\n\n'
-              'L 0x0040\n'
-              'S 0x0080\n'
-              'L 128',
-          hintStyle: TextStyle(
-            fontFamily: 'Roboto-Mono',
-            fontSize: compact ? 11 : 13,
-            height: 1.65,
-            color: colors.onSurfaceVariant.withValues(alpha: 0.7),
-          ),
-          filled: true,
-          fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.25),
-          contentPadding: const EdgeInsets.all(12),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: colors.outlineVariant),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: colors.outlineVariant),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: colors.primary, width: 1.5),
-          ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Current-access indicator gutter.
+            SizedBox(
+              width: 24,
+              child: ClipRect(
+                child: Stack(
+                  children: [
+                    if (currentLineIndex >= 0)
+                      Positioned(
+                        top:
+                            _editorVerticalPadding +
+                            currentLineIndex * lineHeight -
+                            _editorScrollOffset -
+                            5,
+                        left: 0,
+                        right: 0,
+                        height: lineHeight,
+                        child: Center(
+                          child: Icon(
+                            Icons.play_arrow_rounded,
+                            size: compact ? 16 : 20,
+                            color: colors.primary,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Editable text.
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.metrics.axis == Axis.vertical) {
+                    setState(() {
+                      _editorScrollOffset = notification.metrics.pixels;
+                    });
+                  }
+                  return false;
+                },
+                child: TextField(
+                  controller: _editorController,
+                  scrollController: _editorScrollController,
+                  expands: true,
+                  minLines: null,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  textAlignVertical: TextAlignVertical.top,
+                  style: const TextStyle(
+                    fontFamily: 'Roboto-Mono',
+                    fontSize: _editorFontSize,
+                    height: _editorLineHeight,
+                  ),
+
+                  decoration: InputDecoration(
+                    hintText:
+                        'Enter one access per line:\n\n'
+                        'L 0x0040\n'
+                        'S 0x0080\n'
+                        'L 128',
+
+                    hintStyle: TextStyle(
+                      fontFamily: 'Roboto-Mono',
+                      fontSize: _editorFontSize,
+                      height: _editorLineHeight,
+                      color: colors.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
+                    filled: false,
+                    contentPadding: const EdgeInsets.fromLTRB(
+                      0,
+                      _editorVerticalPadding,
+                      12,
+                      _editorVerticalPadding,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
