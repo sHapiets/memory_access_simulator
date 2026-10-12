@@ -28,8 +28,12 @@ class MyApp extends StatelessWidget {
         themeMode: mode,
         home: Scaffold(
           appBar: const AppbarUI(),
-          body: Center(child: MainPage()),
-          bottomNavigationBar: BottomBarUI(),
+          body: Column(
+            children: [
+              const Expanded(flex: 1, child: BottomBarUI()),
+              const Expanded(flex: 10, child: MainPage()),
+            ],
+          ),
         ),
       ),
     );

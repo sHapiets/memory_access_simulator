@@ -12,18 +12,9 @@ class AccessSequenceWidget extends StatefulWidget {
   State<AccessSequenceWidget> createState() => _AccessSequenceWidgetState();
 }
 
-class _AccessDraft {
-  AccessType type;
-  final TextEditingController addressController;
-
-  _AccessDraft({required this.type, required String address})
-    : addressController = TextEditingController(text: address);
-
-  void dispose() => addressController.dispose();
-}
-
 class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _editorController = TextEditingController();
 
   AccessSequence get accessSequence => AccessSequence.singleton;
   Runtime get runtime => Runtime.singleton;
@@ -35,21 +26,17 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
 
   bool _isEditing = false;
   String? _error;
-  final List<_AccessDraft> _drafts = [];
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _disposeDrafts();
+    _editorController.dispose();
     super.dispose();
   }
 
-  void _disposeDrafts() {
-    for (final draft in _drafts) {
-      draft.dispose();
-    }
-    _drafts.clear();
-  }
+  // ================================================================
+  // ADDRESS FORMATTING AND PARSING
+  // ================================================================
 
   String _formatAddress(int address) {
     return '0x${address.toRadixString(16).toUpperCase().padLeft(4, '0')}';
@@ -72,19 +59,20 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     }
   }
 
-  void _startEditing() {
-    _disposeDrafts();
+  // ================================================================
+  // EDITING
+  // ================================================================
 
-    _drafts.addAll(
-      accessSequence.sequence.map(
-        (access) => _AccessDraft(
-          type: access.type,
-          address: _formatAddress(access.address),
-        ),
-      ),
-    );
+  void _startEditing() {
+    final text = accessSequence.sequence
+        .map((access) {
+          final type = access.type == AccessType.load ? 'L' : 'S';
+          return '$type ${_formatAddress(access.address)}';
+        })
+        .join('\n');
 
     setState(() {
+      _editorController.text = text;
       _isEditing = true;
       _error = null;
     });
@@ -92,36 +80,50 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
 
   void _cancelEditing() {
     setState(() {
-      _disposeDrafts();
       _isEditing = false;
       _error = null;
-    });
-  }
-
-  void _addAccess() {
-    setState(() {
-      _drafts.add(_AccessDraft(type: AccessType.load, address: '0x0000'));
-      _error = null;
-    });
-  }
-
-  void _removeAccess(int index) {
-    setState(() {
-      _drafts.removeAt(index).dispose();
-      _error = null;
+      _editorController.clear();
     });
   }
 
   void _saveEditing() {
     final newSequence = <Access>[];
+    final lines = _editorController.text.split('\n');
 
-    for (var i = 0; i < _drafts.length; i++) {
-      final draft = _drafts[i];
-      final address = _parseAddress(draft.addressController.text);
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+
+      // Ignore blank lines.
+      if (line.isEmpty) continue;
+
+      final parts = line.split(RegExp(r'\s+'));
+
+      if (parts.length != 2) {
+        setState(() {
+          _error = 'Line ${i + 1}: Use "L 0x0040" or "S 64".';
+        });
+        return;
+      }
+
+      final typeText = parts[0].toUpperCase();
+
+      final AccessType type;
+      if (typeText == 'L') {
+        type = AccessType.load;
+      } else if (typeText == 'S') {
+        type = AccessType.store;
+      } else {
+        setState(() {
+          _error = 'Line ${i + 1}: Access type must be L or S.';
+        });
+        return;
+      }
+
+      final address = _parseAddress(parts[1]);
 
       if (address == null || address < 0) {
         setState(() {
-          _error = 'Access ${i + 1}: Enter a valid NON-NEGATIVE address...';
+          _error = 'Line ${i + 1}: Enter a valid non-negative address.';
         });
         return;
       }
@@ -129,23 +131,30 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
       if (address > _maxAddress) {
         setState(() {
           _error =
-              'ACCESS ${i + 1}: Address exceeds the configured virtual address space... '
-              '(maximum: 0x${_maxAddress.toRadixString(16).toUpperCase().padLeft(4, '0')}).';
+              'Line ${i + 1}: Address exceeds the configured '
+              'virtual address space. Maximum: '
+              '${_formatAddress(_maxAddress)}.';
         });
         return;
       }
 
-      newSequence.add(Access(type: draft.type, address: address));
+      newSequence.add(Access(type: type, address: address));
     }
 
+    // Apply the sequence only after every line passes validation.
     accessSequence.setSequence(newSequence);
+    runtime.reset();
 
     setState(() {
-      _disposeDrafts();
       _isEditing = false;
       _error = null;
+      _editorController.clear();
     });
   }
+
+  // ================================================================
+  // SCROLLING
+  // ================================================================
 
   void scrollToPointer(int pointer) {
     final sequence = accessSequence.sequence;
@@ -169,6 +178,10 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     );
   }
 
+  // ================================================================
+  // BUILD
+  // ================================================================
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -189,19 +202,23 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
             builder: (context, child) {
               final sequence = accessSequence.sequence;
 
+              final count = _isEditing
+                  ? _editorController.text
+                        .split('\n')
+                        .where((line) => line.trim().isNotEmpty)
+                        .length
+                  : sequence.length;
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildHeader(
-                    context,
-                    _isEditing ? _drafts.length : sequence.length,
-                    compact: compact,
-                  ),
+                  _buildHeader(context, count, compact: compact),
+
                   const Divider(height: 1),
 
                   if (_error != null)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+                      padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
                       child: Text(
                         _error!,
                         style: TextStyle(
@@ -230,13 +247,16 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     );
   }
 
+  // ================================================================
+  // HEADER
+  // ================================================================
+
   Widget _buildHeader(
     BuildContext context,
     int count, {
     required bool compact,
   }) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final colors = Theme.of(context).colorScheme;
 
     return SizedBox(
       height: 48,
@@ -249,16 +269,17 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
               size: 20,
               color: colors.primary,
             ),
+
             SizedBox(width: compact ? 4 : 8),
 
             Expanded(
               child: Text(
-                'Access Sequence',
+                _isEditing ? 'Edit Sequence' : 'Access Sequence',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 16,
+                  fontSize: compact ? 13 : 16,
                   fontWeight: FontWeight.w700,
                   color: colors.onSurface,
                 ),
@@ -268,18 +289,11 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
             if (_isEditing) ...[
               _headerButton(
                 context,
-                icon: Icons.add_rounded,
-                tooltip: 'Add Access',
-                onPressed: _addAccess,
-              ),
-              SizedBox(width: 4),
-              _headerButton(
-                context,
                 icon: Icons.close_rounded,
                 tooltip: 'Cancel Editing',
                 onPressed: _cancelEditing,
               ),
-              SizedBox(width: 4),
+              const SizedBox(width: 4),
               _headerButton(
                 context,
                 icon: Icons.check_rounded,
@@ -291,7 +305,7 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
               _headerButton(
                 context,
                 icon: Icons.edit_rounded,
-                tooltip: 'Edit',
+                tooltip: 'Edit Sequence',
                 onPressed: _startEditing,
               ),
           ],
@@ -317,6 +331,10 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     );
   }
 
+  // ================================================================
+  // NORMAL ACCESS SEQUENCE LIST
+  // ================================================================
+
   Widget _buildSequenceList(
     List<Access> sequence,
     int pointer, {
@@ -341,53 +359,68 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     );
   }
 
+  // ================================================================
+  // TEXT EDITOR
+  // ================================================================
+
   Widget _buildEditorList({required bool compact}) {
-    if (_drafts.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'No accesses yet...',
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontFamily: 'Nunito'),
-            ),
-            SizedBox(height: 5),
-            Text(
-              'Click the "+" button above to start',
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontFamily: 'Nunito'),
-            ),
-          ],
+    final colors = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.all(compact ? 6 : 10),
+      child: TextField(
+        controller: _editorController,
+        onChanged: (_) {
+          setState(() {
+            _error = null;
+          });
+        },
+        expands: true,
+        minLines: null,
+        maxLines: null,
+        keyboardType: TextInputType.multiline,
+        textAlignVertical: TextAlignVertical.top,
+        style: TextStyle(
+          fontFamily: 'Roboto-Mono',
+          fontSize: compact ? 11 : 13,
+          height: 1.65,
+          color: colors.onSurface,
         ),
-      );
-    }
-
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: compact ? 4 : 8),
-      itemCount: _drafts.length,
-      itemBuilder: (context, index) {
-        final draft = _drafts[index];
-
-        return _EditableAccessItem(
-          key: ObjectKey(draft),
-          index: index,
-          draft: draft,
-          compact: compact,
-          onChanged: () {
-            setState(() {
-              _error = null;
-            });
-          },
-          onRemove: () => _removeAccess(index),
-        );
-      },
+        decoration: InputDecoration(
+          hintText:
+              'Enter one access per line:\n\n'
+              'L 0x0040\n'
+              'S 0x0080\n'
+              'L 128',
+          hintStyle: TextStyle(
+            fontFamily: 'Roboto-Mono',
+            fontSize: compact ? 11 : 13,
+            height: 1.65,
+            color: colors.onSurfaceVariant.withValues(alpha: 0.7),
+          ),
+          filled: true,
+          fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.25),
+          contentPadding: const EdgeInsets.all(12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.outlineVariant),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.outlineVariant),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: colors.primary, width: 1.5),
+          ),
+        ),
+      ),
     );
   }
+
+  // ================================================================
+  // EMPTY STATE
+  // ================================================================
 
   Widget _buildEmptyState(BuildContext context, String message) {
     return Center(
@@ -400,6 +433,10 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     );
   }
 }
+
+// ==================================================================
+// ACCESS ITEM
+// ==================================================================
 
 class _AccessItem extends StatelessWidget {
   final Access access;
@@ -442,8 +479,11 @@ class _AccessItem extends StatelessWidget {
               ),
             ),
           ),
+
           _AccessTypeBadge(type: access.type, compact: compact),
+
           SizedBox(width: compact ? 5 : 12),
+
           Expanded(
             child: Text(
               '0x${access.address.toRadixString(16).toUpperCase().padLeft(4, '0')}',
@@ -456,6 +496,7 @@ class _AccessItem extends StatelessWidget {
               ),
             ),
           ),
+
           if (isActive)
             Icon(
               Icons.play_arrow_rounded,
@@ -467,6 +508,10 @@ class _AccessItem extends StatelessWidget {
     );
   }
 }
+
+// ==================================================================
+// ACCESS TYPE BADGE
+// ==================================================================
 
 class _AccessTypeBadge extends StatelessWidget {
   final AccessType type;
@@ -496,140 +541,6 @@ class _AccessTypeBadge extends StatelessWidget {
           fontWeight: FontWeight.w800,
           color: isLoad ? colors.secondary : colors.onTertiaryContainer,
         ),
-      ),
-    );
-  }
-}
-
-class _EditableAccessItem extends StatelessWidget {
-  final int index;
-  final _AccessDraft draft;
-  final bool compact;
-  final VoidCallback onChanged;
-  final VoidCallback onRemove;
-
-  const _EditableAccessItem({
-    super.key,
-    required this.index,
-    required this.draft,
-    required this.compact,
-    required this.onChanged,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 3),
-      padding: EdgeInsets.symmetric(horizontal: compact ? 4 : 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colors.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: compact ? 18 : 26,
-            child: Text(
-              '${index + 1}',
-              style: TextStyle(
-                fontFamily: 'Fredoka',
-                fontSize: compact ? 11 : 14,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-
-          // Access type selector.
-          DropdownButtonHideUnderline(
-            child: DropdownButton<AccessType>(
-              value: draft.type,
-              isDense: true,
-              iconSize: compact ? 16 : 18,
-              borderRadius: BorderRadius.circular(8),
-              items: [
-                DropdownMenuItem(
-                  value: AccessType.load,
-                  child: Text(
-                    'LOAD',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: compact ? 9 : 11,
-                      fontWeight: FontWeight.w800,
-                      color: colors.secondary,
-                    ),
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: AccessType.store,
-                  child: Text(
-                    'STORE',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: compact ? 9 : 11,
-                      fontWeight: FontWeight.w800,
-                      color: colors.tertiary,
-                    ),
-                  ),
-                ),
-              ],
-              onChanged: (value) {
-                if (value == null) return;
-
-                draft.type = value;
-                onChanged();
-              },
-            ),
-          ),
-
-          const SizedBox(width: 4),
-
-          // Address editor. Accepts decimal or 0x-prefixed hexadecimal.
-          Expanded(
-            child: TextField(
-              controller: draft.addressController,
-              onChanged: (_) => onChanged(),
-              maxLines: 1,
-              style: TextStyle(
-                fontFamily: 'Fredoka',
-                fontSize: compact ? 12 : 15,
-                color: colors.onSurface,
-              ),
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: 'Address',
-                hintStyle: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: compact ? 10 : 12,
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: compact ? 5 : 8,
-                  vertical: 9,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(7),
-                ),
-              ),
-            ),
-          ),
-
-          IconButton(
-            onPressed: onRemove,
-            tooltip: 'Remove access',
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 32),
-            padding: EdgeInsets.zero,
-            icon: Icon(
-              Icons.delete_outline_rounded,
-              size: compact ? 17 : 20,
-              color: colors.error,
-            ),
-          ),
-        ],
       ),
     );
   }

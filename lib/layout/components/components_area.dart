@@ -675,10 +675,8 @@ class _ComponentsAreaState extends State<ComponentsArea>
                             return;
                           }
 
-                          final toolbarHeight = 48.0;
-
                           final width = renderBox.size.width;
-                          final height = renderBox.size.height - toolbarHeight;
+                          final height = renderBox.size.height;
                           return _fitToView(
                             BoxConstraints.tightFor(
                               width: width,
