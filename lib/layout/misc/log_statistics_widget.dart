@@ -98,7 +98,8 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
     IconData icon = Icons.info_outline_rounded,
     Color? color,
   }) {
-    _entries.add(
+    _entries.insert(
+      0,
       _LogEntry(
         message: message,
         icon: icon,
@@ -271,17 +272,6 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
       }
 
       _previousStep = nextStep;
-    });
-
-    // Scroll to the newest event after the frame is rendered.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_logScrollController.hasClients) return;
-
-      _logScrollController.animateTo(
-        _logScrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-      );
     });
   }
 
@@ -481,15 +471,6 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1,
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_entries.length} events',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
                   color: colors.onSurfaceVariant,
                 ),
               ),

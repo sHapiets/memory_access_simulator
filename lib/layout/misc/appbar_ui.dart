@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/layout/misc/access_sequence_modifier_dialog.dart';
@@ -36,6 +37,8 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
         ),
       );
     }
+
+    final runtime = Runtime.singleton;
 
     return AppBar(
       toolbarHeight: 68,
@@ -116,11 +119,21 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
 
         _toolbarButton(
           context,
+          icon: CupertinoIcons.arrow_uturn_left,
+          tooltip: 'Undo Step',
+          onPressed: runtime.undo,
+          selected: runtime.canUndo,
+        ),
+
+        _toolbarButton(
+          context,
           icon: Icons.skip_next_rounded,
           label: 'STEP',
           tooltip: 'Advance the simulation by one micro-step.',
+          highlighted: true,
           onPressed: () => Runtime.singleton.microRun(),
         ),
+
         _toolbarButton(
           context,
           icon: Icons.fast_forward_rounded,
@@ -204,9 +217,24 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
     required VoidCallback onPressed,
     bool highlighted = false,
     bool selected = false,
+    bool pronounced = false,
   }) {
     final colors = Theme.of(context).colorScheme;
-    final active = highlighted || selected;
+    final active = highlighted || selected || pronounced;
+
+    final backgroundColor = pronounced
+        ? colors.primary.withValues(alpha: 0.22)
+        : active
+        ? colors.primary.withValues(alpha: 0.12)
+        : Colors.transparent;
+
+    final borderColor = pronounced
+        ? colors.primary
+        : active
+        ? colors.primary.withValues(alpha: 0.45)
+        : colors.outlineVariant.withValues(alpha: 0.65);
+
+    final foregroundColor = active ? colors.primary : colors.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -214,9 +242,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
         message: tooltip,
         waitDuration: const Duration(milliseconds: 400),
         child: Material(
-          color: active
-              ? colors.primary.withValues(alpha: 0.12)
-              : Colors.transparent,
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(9),
           child: InkWell(
             onTap: onPressed,
@@ -227,31 +253,28 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(9),
                 border: Border.all(
-                  color: active
-                      ? colors.primary.withValues(alpha: 0.45)
-                      : colors.outlineVariant.withValues(alpha: 0.65),
+                  color: borderColor,
+                  width: pronounced ? 1.5 : 1,
                 ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    icon,
-                    size: 17,
-                    color: active ? colors.primary : colors.onSurfaceVariant,
-                  ),
-
-                  if (label != '') const SizedBox(width: 5),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: active ? colors.primary : colors.onSurface,
+                  Icon(icon, size: 17, color: foregroundColor),
+                  if (label.isNotEmpty) const SizedBox(width: 5),
+                  if (label.isNotEmpty)
+                    Text(
+                      label,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 11,
+                        fontWeight: pronounced
+                            ? FontWeight.w900
+                            : FontWeight.w800,
+                        color: active ? colors.primary : colors.onSurface,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

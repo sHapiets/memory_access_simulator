@@ -7,10 +7,16 @@ import 'package:memory_access_simulator/core/configuration.dart';
 import 'package:memory_access_simulator/core/controller/micro_step.dart';
 import 'package:memory_access_simulator/foundation/access.dart';
 import 'package:memory_access_simulator/foundation/access_type.dart';
+import 'package:memory_access_simulator/foundation/cache_block.dart';
+import 'package:memory_access_simulator/foundation/dynamic_memory_page.dart';
+import 'package:memory_access_simulator/foundation/page_table_entry.dart';
 import 'package:memory_access_simulator/foundation/parser.dart';
+import 'package:memory_access_simulator/foundation/tlb_entry.dart';
 
 class Runtime extends ChangeNotifier {
-  Runtime._();
+  Runtime._() {
+    _saveInitialSnapshot();
+  }
   static final singleton = Runtime._();
 
   MicroStep microStep = MicroStep.initializeGetTranslation;
@@ -66,6 +72,72 @@ class Runtime extends ChangeNotifier {
   bool get cacheMiss => connectPAtoDRAM;
   bool get pageFault => connectVAtoMMU;
 
+  final List<_RuntimeSnapshot> _history = [];
+  int _historyIndex = -1;
+
+  bool get canUndo => _historyIndex > 0;
+
+  bool get canRedo => _historyIndex >= 0 && _historyIndex < _history.length - 1;
+
+  int get historyLength => _history.length;
+
+  int get historyPosition => _historyIndex;
+
+  void _saveInitialSnapshot() {
+    _history.clear();
+    _history.add(_RuntimeSnapshot.capture(this));
+    _historyIndex = 0;
+  }
+
+  /// Records the current state as the starting point for the next microstep.
+  /// If the user has undone some steps, running again discards the redo branch.
+  void _prepareHistoryForMicrostep() {
+    if (_historyIndex < 0) {
+      _history.add(_RuntimeSnapshot.capture(this));
+      _historyIndex = 0;
+      return;
+    }
+
+    if (_historyIndex < _history.length - 1) {
+      _history.removeRange(_historyIndex + 1, _history.length);
+    }
+
+    // Account for state changes made outside Runtime since the last step.
+    _history[_historyIndex] = _RuntimeSnapshot.capture(this);
+  }
+
+  void _recordHistoryStep() {
+    _history.add(_RuntimeSnapshot.capture(this));
+    _historyIndex = _history.length - 1;
+  }
+
+  /// Restores the state before the most recently recorded microstep.
+  bool undo() {
+    if (!canUndo) return false;
+
+    _historyIndex--;
+    _history[_historyIndex].restore(this);
+
+    // Notify both Runtime listeners and AccessSequence listeners.
+    AccessSequence.singleton.notifyListeners();
+    notifyListeners();
+
+    return true;
+  }
+
+  /// Restores the next recorded state without executing the algorithm again.
+  bool redo() {
+    if (!canRedo) return false;
+
+    _historyIndex++;
+    _history[_historyIndex].restore(this);
+
+    AccessSequence.singleton.notifyListeners();
+    notifyListeners();
+
+    return true;
+  }
+
   void runAccess() {
     if (microStep == MicroStep.complete) {
       final sequence = AccessSequence.singleton;
@@ -92,6 +164,8 @@ class Runtime extends ChangeNotifier {
         return;
       }
     }
+
+    _prepareHistoryForMicrostep();
 
     switch (microStep) {
       case MicroStep.initializeGetTranslation:
@@ -130,6 +204,9 @@ class Runtime extends ChangeNotifier {
         _microComplete();
         break;
     }
+
+    // Save the completed state.
+    _recordHistoryStep();
 
     notifyListeners();
   }
@@ -403,6 +480,8 @@ class Runtime extends ChangeNotifier {
     Memory.singleton.resetMemory();
     Cache.singleton.resetCache();
 
+    _saveInitialSnapshot();
+
     notifyListeners();
   }
 
@@ -427,5 +506,210 @@ class Runtime extends ChangeNotifier {
 
     connectCacheToAccessRegister = false;
     connectAccessRegisterToCache = false;
+  }
+}
+
+class _RuntimeSnapshot {
+  // Runtime execution state.
+  final MicroStep microStep;
+  final int vpn;
+  final int pageOffset;
+  final int ppn;
+  final int physicalAddress;
+  final int tlbEntry;
+  final int cacheLine;
+  final AccessType? accessType;
+  final int invalidatedVPN;
+  final int replacedPagePPN;
+
+  // Connection flags.
+  final Map<String, bool> connections;
+
+  // Access sequence.
+  final List<Access> sequence;
+  final int sequencePointer;
+
+  // Component state.
+  final List<CacheBlock> cacheBlocks;
+  final List<TLBEntry> tlbEntries;
+  final List<DynamicMemoryPage> dynamicPages;
+  final List<PageTableEntry> pageTable;
+
+  _RuntimeSnapshot({
+    required this.microStep,
+    required this.vpn,
+    required this.pageOffset,
+    required this.ppn,
+    required this.physicalAddress,
+    required this.tlbEntry,
+    required this.cacheLine,
+    required this.accessType,
+    required this.invalidatedVPN,
+    required this.replacedPagePPN,
+    required this.connections,
+    required this.sequence,
+    required this.sequencePointer,
+    required this.cacheBlocks,
+    required this.tlbEntries,
+    required this.dynamicPages,
+    required this.pageTable,
+  });
+
+  factory _RuntimeSnapshot.capture(Runtime runtime) {
+    final accessSequence = AccessSequence.singleton;
+    final cache = Cache.singleton;
+    final tlb = TLB.singleton;
+    final memory = Memory.singleton;
+
+    return _RuntimeSnapshot(
+      microStep: runtime.microStep,
+      vpn: runtime._vpn,
+      pageOffset: runtime._pageOffset,
+      ppn: runtime._ppn,
+      physicalAddress: runtime._physicalAddress,
+      tlbEntry: runtime._tlbEntry,
+      cacheLine: runtime._cacheLine,
+      accessType: runtime._accessType,
+      invalidatedVPN: runtime._invalidatedVPN,
+      replacedPagePPN: runtime._replacedPagePPN,
+
+      connections: {
+        'connectVAtoTLB': runtime.connectVAtoTLB,
+        'connectVAtoPageTable': runtime.connectVAtoPageTable,
+        'connectPageTableToTLB': runtime.connectPageTableToTLB,
+        'connectVAtoMMU': runtime.connectVAtoMMU,
+        'connectMMUtoDisk': runtime.connectMMUtoDisk,
+        'connectDiskToDRAM': runtime.connectDiskToDRAM,
+        'connectDRAMtoDisk': runtime.connectDRAMtoDisk,
+        'connectMMUtoPageTable': runtime.connectMMUtoPageTable,
+        'connectTLBtoPA': runtime.connectTLBtoPA,
+        'connectVAtoPA': runtime.connectVAtoPA,
+        'connectPAtoCache': runtime.connectPAtoCache,
+        'connectPAtoDRAM': runtime.connectPAtoDRAM,
+        'connectDRAMtoCache': runtime.connectDRAMtoCache,
+        'connectCacheToDRAMFromLineEviction':
+            runtime.connectCacheToDRAMFromLineEviction,
+        'connectCacheToDRAMFromPageEviction':
+            runtime.connectCacheToDRAMFromPageEviction,
+        'connectCacheToAccessRegister': runtime.connectCacheToAccessRegister,
+        'connectAccessRegisterToCache': runtime.connectAccessRegisterToCache,
+      },
+
+      sequence: accessSequence.sequence
+          .map((a) => Access(type: a.type, address: a.address))
+          .toList(),
+      sequencePointer: accessSequence.pointer,
+
+      cacheBlocks: cache.blocks.map((block) {
+        final copy = CacheBlock.newBlock();
+        copy.tag = block.tag;
+        copy.valid = block.valid;
+        copy.dirty = block.dirty;
+        copy.latestAccess = block.latestAccess;
+        return copy;
+      }).toList(),
+
+      tlbEntries: tlb.entries.map((entry) {
+        final copy = TLBEntry.newEntry();
+        copy.vpn = entry.vpn;
+        copy.valid = entry.valid;
+        copy.ppn = entry.ppn;
+        copy.lastAccess = entry.lastAccess;
+        return copy;
+      }).toList(),
+
+      dynamicPages: memory.dynamic.map((page) {
+        final copy = DynamicMemoryPage.newPage();
+        copy.used = page.used;
+        copy.lastAccess = page.lastAccess;
+        return copy;
+      }).toList(),
+
+      pageTable: memory.pageTable.map((entry) {
+        final copy = PageTableEntry.newEntry();
+        copy.valid = entry.valid;
+        copy.dirty = entry.dirty;
+        copy.ppn = entry.ppn;
+        return copy;
+      }).toList(),
+    );
+  }
+
+  void restore(Runtime runtime) {
+    runtime.microStep = microStep;
+
+    runtime._vpn = vpn;
+    runtime._pageOffset = pageOffset;
+    runtime._ppn = ppn;
+    runtime._physicalAddress = physicalAddress;
+    runtime._tlbEntry = tlbEntry;
+    runtime._cacheLine = cacheLine;
+    runtime._accessType = accessType;
+    runtime._invalidatedVPN = invalidatedVPN;
+    runtime._replacedPagePPN = replacedPagePPN;
+
+    runtime.connectVAtoTLB = connections['connectVAtoTLB']!;
+    runtime.connectVAtoPageTable = connections['connectVAtoPageTable']!;
+    runtime.connectPageTableToTLB = connections['connectPageTableToTLB']!;
+    runtime.connectVAtoMMU = connections['connectVAtoMMU']!;
+    runtime.connectMMUtoDisk = connections['connectMMUtoDisk']!;
+    runtime.connectDiskToDRAM = connections['connectDiskToDRAM']!;
+    runtime.connectDRAMtoDisk = connections['connectDRAMtoDisk']!;
+    runtime.connectMMUtoPageTable = connections['connectMMUtoPageTable']!;
+    runtime.connectTLBtoPA = connections['connectTLBtoPA']!;
+    runtime.connectVAtoPA = connections['connectVAtoPA']!;
+    runtime.connectPAtoCache = connections['connectPAtoCache']!;
+    runtime.connectPAtoDRAM = connections['connectPAtoDRAM']!;
+    runtime.connectDRAMtoCache = connections['connectDRAMtoCache']!;
+    runtime.connectCacheToDRAMFromLineEviction =
+        connections['connectCacheToDRAMFromLineEviction']!;
+    runtime.connectCacheToDRAMFromPageEviction =
+        connections['connectCacheToDRAMFromPageEviction']!;
+    runtime.connectCacheToAccessRegister =
+        connections['connectCacheToAccessRegister']!;
+    runtime.connectAccessRegisterToCache =
+        connections['connectAccessRegisterToCache']!;
+
+    final accessSequence = AccessSequence.singleton;
+    accessSequence.sequence = sequence
+        .map((a) => Access(type: a.type, address: a.address))
+        .toList();
+    accessSequence.pointer = sequencePointer;
+
+    final cache = Cache.singleton;
+    cache.blocks = cacheBlocks.map((block) {
+      final copy = CacheBlock.newBlock();
+      copy.tag = block.tag;
+      copy.valid = block.valid;
+      copy.dirty = block.dirty;
+      copy.latestAccess = block.latestAccess;
+      return copy;
+    }).toList();
+
+    final tlb = TLB.singleton;
+    tlb.entries = tlbEntries.map((entry) {
+      final copy = TLBEntry.newEntry();
+      copy.vpn = entry.vpn;
+      copy.valid = entry.valid;
+      copy.ppn = entry.ppn;
+      copy.lastAccess = entry.lastAccess;
+      return copy;
+    }).toList();
+
+    final memory = Memory.singleton;
+    memory.dynamic = dynamicPages.map((page) {
+      final copy = DynamicMemoryPage.newPage();
+      copy.used = page.used;
+      copy.lastAccess = page.lastAccess;
+      return copy;
+    }).toList();
+
+    memory.pageTable = pageTable.map((entry) {
+      final copy = PageTableEntry.newEntry();
+      copy.valid = entry.valid;
+      copy.dirty = entry.dirty;
+      copy.ppn = entry.ppn;
+      return copy;
+    }).toList();
   }
 }

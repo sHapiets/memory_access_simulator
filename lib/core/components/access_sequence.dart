@@ -101,4 +101,13 @@ class AccessSequence extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void restoreSnapshot({required List<Access> sequence, required int pointer}) {
+    this.sequence = sequence
+        .map((access) => Access(type: access.type, address: access.address))
+        .toList();
+
+    this.pointer = pointer;
+    notifyListeners();
+  }
 }
