@@ -4,6 +4,7 @@ import 'package:memory_access_simulator/core/configuration.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/foundation/access.dart';
 import 'package:memory_access_simulator/foundation/access_type.dart';
+import 'package:memory_access_simulator/layout/misc/line_highlighting_text_editor.dart';
 
 class AccessSequenceWidget extends StatefulWidget {
   const AccessSequenceWidget({super.key});
@@ -241,6 +242,23 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
     );
   }
 
+  int _getCurrentLineIndex() {
+    final lines = _editorController.text.split('\n');
+    var accessIndex = 0;
+
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].trim().isEmpty) continue;
+
+      if (accessIndex == _currentPointer) {
+        return i;
+      }
+
+      accessIndex++;
+    }
+
+    return -1;
+  }
+
   // ================================================================
   // BUILD
   // ================================================================
@@ -384,25 +402,10 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
   // ================================================================
   Widget _buildEditorList({required bool compact}) {
     final colors = Theme.of(context).colorScheme;
+    final currentLineIndex = _getCurrentLineIndex();
+
     final fontSize = _editorFontSize;
     final lineHeight = fontSize * _editorLineHeight;
-
-    final lines = _editorController.text.split('\n');
-
-    // Find the editor line corresponding to the current access.
-    var currentLineIndex = -1;
-    var accessIndex = 0;
-
-    for (var i = 0; i < lines.length; i++) {
-      if (lines[i].trim().isEmpty) continue;
-
-      if (accessIndex == _currentPointer) {
-        currentLineIndex = i;
-        break;
-      }
-
-      accessIndex++;
-    }
 
     return Padding(
       padding: EdgeInsets.all(compact ? 6 : 10),
@@ -413,87 +416,71 @@ class _AccessSequenceWidgetState extends State<AccessSequenceWidget> {
           borderRadius: BorderRadius.circular(10),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
           children: [
-            // Current-access indicator gutter.
-            SizedBox(
-              width: 24,
-              child: ClipRect(
-                child: Stack(
-                  children: [
-                    if (currentLineIndex >= 0)
-                      Positioned(
-                        top:
-                            _editorVerticalPadding +
-                            currentLineIndex * lineHeight -
-                            _editorScrollOffset -
-                            5,
-                        left: 0,
-                        right: 0,
-                        height: lineHeight,
-                        child: Center(
-                          child: Icon(
-                            Icons.play_arrow_rounded,
-                            size: compact ? 16 : 20,
-                            color: colors.primary,
-                          ),
-                        ),
+            // Highlight layer, positioned behind the editor text.
+            if (currentLineIndex >= 0)
+              Positioned(
+                top:
+                    _editorVerticalPadding +
+                    currentLineIndex * lineHeight -
+                    _editorScrollOffset -
+                    (5 + (currentLineIndex * 0.345)),
+                left: 0,
+                right: 0,
+                height: lineHeight,
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.16),
+                      border: Border(
+                        left: BorderSide(color: colors.primary, width: 3),
                       ),
-                  ],
+                    ),
+                  ),
                 ),
               ),
-            ),
 
             // Editable text.
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (notification) {
-                  if (notification.metrics.axis == Axis.vertical) {
-                    setState(() {
-                      _editorScrollOffset = notification.metrics.pixels;
-                    });
-                  }
-                  return false;
-                },
-                child: TextField(
-                  controller: _editorController,
-                  scrollController: _editorScrollController,
-                  expands: true,
-                  minLines: null,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  textAlignVertical: TextAlignVertical.top,
-                  style: const TextStyle(
-                    fontFamily: 'Roboto-Mono',
-                    fontSize: _editorFontSize,
-                    height: _editorLineHeight,
-                  ),
-
-                  decoration: InputDecoration(
-                    hintText:
-                        'Enter one access per line:\n\n'
-                        'L 0x0040\n'
-                        'S 0x0080\n'
-                        'L 128',
-
-                    hintStyle: TextStyle(
-                      fontFamily: 'Roboto-Mono',
-                      fontSize: _editorFontSize,
-                      height: _editorLineHeight,
-                      color: colors.onSurfaceVariant.withValues(alpha: 0.7),
-                    ),
-                    filled: false,
-                    contentPadding: const EdgeInsets.fromLTRB(
-                      0,
-                      _editorVerticalPadding,
-                      12,
-                      _editorVerticalPadding,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                  ),
+            NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification.metrics.axis == Axis.vertical) {
+                  setState(() {
+                    _editorScrollOffset = notification.metrics.pixels;
+                  });
+                }
+                return false;
+              },
+              child: LineHighlightingTextEditor(
+                controller: _editorController,
+                highlightedLine: _getCurrentLineIndex(),
+                highlightColor: colors.primary.withValues(alpha: 0.22),
+                highlightTextColor: colors.onSurface,
+                expands: true,
+                keyboardType: TextInputType.multiline,
+                style: const TextStyle(
+                  fontFamily: 'Roboto-Mono',
+                  fontSize: _editorFontSize,
+                  height: _editorLineHeight,
+                ),
+                hintText:
+                    'Enter one access per line:\n\nL 0x0040\nS 0x0080\nL 128',
+                hintStyle: TextStyle(
+                  fontFamily: 'Roboto-Mono',
+                  fontSize: _editorFontSize,
+                  height: _editorLineHeight,
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
+                contentPadding: const EdgeInsets.fromLTRB(
+                  12,
+                  _editorVerticalPadding,
+                  12,
+                  _editorVerticalPadding,
+                ),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
                 ),
               ),
             ),

@@ -168,7 +168,7 @@ class VirtualAddressWidget extends StatelessWidget {
         Expanded(
           child: Center(
             child: Text(
-              '0x${virtualAddress.toRadixString(16).toUpperCase()}',
+              '0x${virtualAddress.toRadixString(16).toUpperCase().padLeft((vpnBits + pageOffsetBits + 3) ~/ 4, '0')}',
               style: TextStyle(
                 fontFamily: 'Fredoka',
                 fontSize: 28,

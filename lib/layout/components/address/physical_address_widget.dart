@@ -200,7 +200,7 @@ class PhysicalAddressWidget extends StatelessWidget {
         Expanded(
           child: Center(
             child: Text(
-              '0x${physicalAddress.toRadixString(16).toUpperCase()}',
+              '0x${physicalAddress.toRadixString(16).toUpperCase().padLeft((addressBits + 3) ~/ 4, '0')}',
               style: TextStyle(
                 fontFamily: 'Fredoka',
                 fontSize: 28,

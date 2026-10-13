@@ -344,6 +344,7 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   ],
                                   isOn: () =>
                                       Runtime.singleton.connectDRAMtoDisk,
+                                  isDotted: true,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),
@@ -495,6 +496,7 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   isOn: () => Runtime
                                       .singleton
                                       .connectCacheToDRAMFromPageEviction,
+                                  isDotted: true,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),

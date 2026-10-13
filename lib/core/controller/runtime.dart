@@ -83,6 +83,8 @@ class Runtime extends ChangeNotifier {
 
   int get historyPosition => _historyIndex;
 
+  RuntimeChange lastChange = RuntimeChange.step;
+
   void _saveInitialSnapshot() {
     _history.clear();
     _history.add(_RuntimeSnapshot.capture(this));
@@ -118,7 +120,8 @@ class Runtime extends ChangeNotifier {
     _historyIndex--;
     _history[_historyIndex].restore(this);
 
-    // Notify both Runtime listeners and AccessSequence listeners.
+    lastChange = RuntimeChange.undo;
+
     AccessSequence.singleton.notifyListeners();
     notifyListeners();
 
@@ -131,6 +134,8 @@ class Runtime extends ChangeNotifier {
 
     _historyIndex++;
     _history[_historyIndex].restore(this);
+
+    lastChange = RuntimeChange.redo;
 
     AccessSequence.singleton.notifyListeners();
     notifyListeners();
@@ -205,9 +210,9 @@ class Runtime extends ChangeNotifier {
         break;
     }
 
-    // Save the completed state.
     _recordHistoryStep();
 
+    lastChange = RuntimeChange.step;
     notifyListeners();
   }
 
@@ -482,6 +487,8 @@ class Runtime extends ChangeNotifier {
 
     _saveInitialSnapshot();
 
+    lastChange = RuntimeChange.reset;
+
     notifyListeners();
   }
 
@@ -713,3 +720,5 @@ class _RuntimeSnapshot {
     }).toList();
   }
 }
+
+enum RuntimeChange { step, undo, redo, reset }

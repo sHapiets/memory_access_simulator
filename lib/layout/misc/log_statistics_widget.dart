@@ -27,10 +27,15 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
   int _cacheHits = 0;
   int _cacheMisses = 0;
 
+  final Map<int, _LogSnapshot> _logHistory = {};
+
   @override
   void initState() {
     super.initState();
+
     _previousStep = runtime.microStep;
+    _logHistory[runtime.historyPosition] = _captureLogSnapshot();
+
     runtime.addListener(_handleRuntimeChanged);
   }
 
@@ -115,6 +120,35 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
 
   void _handleRuntimeChanged() {
     if (!mounted) return;
+
+    if (runtime.lastChange == RuntimeChange.undo ||
+        runtime.lastChange == RuntimeChange.redo) {
+      final snapshot = _logHistory[runtime.historyPosition];
+
+      setState(() {
+        if (snapshot != null) {
+          _restoreLogSnapshot(snapshot);
+        } else {
+          // Defensive fallback if no matching log snapshot exists.
+          _clearLogAndStatistics();
+          _previousStep = runtime.microStep;
+        }
+      });
+
+      return;
+    }
+
+    if (runtime.lastChange == RuntimeChange.reset) {
+      setState(() {
+        _clearLogAndStatistics();
+        _previousStep = runtime.microStep;
+
+        _logHistory.clear();
+        _logHistory[runtime.historyPosition] = _captureLogSnapshot();
+      });
+
+      return;
+    }
 
     if (_isRuntimeReset) {
       setState(() {
@@ -272,7 +306,44 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
       }
 
       _previousStep = nextStep;
+      _saveLogSnapshot();
     });
+  }
+
+  _LogSnapshot _captureLogSnapshot() {
+    return _LogSnapshot(
+      entries: List<_LogEntry>.from(_entries),
+      completedAccesses: _completedAccesses,
+      tlbHits: _tlbHits,
+      tlbMisses: _tlbMisses,
+      pageFaults: _pageFaults,
+      cacheHits: _cacheHits,
+      cacheMisses: _cacheMisses,
+      previousStep: _previousStep,
+    );
+  }
+
+  void _restoreLogSnapshot(_LogSnapshot snapshot) {
+    _entries
+      ..clear()
+      ..addAll(snapshot.entries);
+
+    _completedAccesses = snapshot.completedAccesses;
+    _tlbHits = snapshot.tlbHits;
+    _tlbMisses = snapshot.tlbMisses;
+    _pageFaults = snapshot.pageFaults;
+    _cacheHits = snapshot.cacheHits;
+    _cacheMisses = snapshot.cacheMisses;
+    _previousStep = snapshot.previousStep;
+  }
+
+  void _saveLogSnapshot() {
+    final position = runtime.historyPosition;
+
+    // A new execution branch invalidates snapshots from the discarded redo branch.
+    _logHistory.removeWhere((key, _) => key > position);
+
+    _logHistory[position] = _captureLogSnapshot();
   }
 
   // ================================================================
@@ -564,7 +635,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
                     'Access ${entry.accessNumber}',
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 10,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: accent,
                     ),
@@ -574,7 +645,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
                     entry.message,
                     style: TextStyle(
                       fontFamily: 'Nunito',
-                      fontSize: 12,
+                      fontSize: 16,
                       height: 1.35,
                       color: colors.onSurface,
                     ),
@@ -604,5 +675,27 @@ class _LogEntry {
     required this.icon,
     required this.accessNumber,
     this.color,
+  });
+}
+
+class _LogSnapshot {
+  final List<_LogEntry> entries;
+  final int completedAccesses;
+  final int tlbHits;
+  final int tlbMisses;
+  final int pageFaults;
+  final int cacheHits;
+  final int cacheMisses;
+  final MicroStep? previousStep;
+
+  const _LogSnapshot({
+    required this.entries,
+    required this.completedAccesses,
+    required this.tlbHits,
+    required this.tlbMisses,
+    required this.pageFaults,
+    required this.cacheHits,
+    required this.cacheMisses,
+    required this.previousStep,
   });
 }
