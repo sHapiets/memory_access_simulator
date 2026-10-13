@@ -186,8 +186,9 @@ class _ConnectionPainter extends CustomPainter {
     if (previous == null) return;
 
     final angle = (end - previous).direction;
-    const arrowLength = 11.0;
-    const arrowAngle = 0.55;
+
+    const arrowLength = 16.0; // Larger arrowhead
+    const arrowAngle = 0.48; // Slightly narrower, cleaner shape
 
     final left = Offset(
       end.dx - arrowLength * math.cos(angle - arrowAngle),
@@ -209,7 +210,8 @@ class _ConnectionPainter extends CustomPainter {
       arrowPath,
       Paint()
         ..color = linePaint.color
-        ..style = PaintingStyle.fill,
+        ..style = PaintingStyle.fill
+        ..strokeJoin = StrokeJoin.round,
     );
   }
 
