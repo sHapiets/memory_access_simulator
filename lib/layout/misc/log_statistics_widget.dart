@@ -186,7 +186,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
             _tlbHits++;
             _addEntry(
               'TLB HIT: VPN ${runtime.getVPN} maps to '
-              'PPN ${runtime.getPPN}. \n\nConstruct physical address from'
+              'PPN ${runtime.getPPN}. \n\nConstruct physical address from '
               'PPN and page offset.\n\n'
               'Checking cache...',
               icon: Icons.check_circle_outline_rounded,
@@ -272,7 +272,8 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
             _cacheMisses++;
             _addEntry(
               'Cache Miss: Valid cache line of Tag ${Parser.cacheTagFromAddress(runtime.getPhysicalAddress, config.blockSizeBytes, config.cacheSets)} '
-              'in set-Index ${Parser.cacheIndexFromAddress(runtime.getPhysicalAddress, config.blockSizeBytes, config.cacheSets)}'
+              'in set-Index ${Parser.cacheIndexFromAddress(runtime.getPhysicalAddress, config.blockSizeBytes, config.cacheSets)} '
+              'is not found.'
               '\n\nFetching the block from main memory...',
               icon: Icons.search_rounded,
               color: Colors.orange,
@@ -590,7 +591,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
 
   Widget _buildLogEntry(BuildContext context, _LogEntry entry, int index) {
     final colors = Theme.of(context).colorScheme;
-    final accent = entry.color ?? colors.primary;
+    final accent = colors.primary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -600,7 +601,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
           SizedBox(
             width: 25,
             child: Padding(
-              padding: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.only(top: 15),
               child: Icon(entry.icon, size: 17, color: accent),
             ),
           ),
@@ -618,13 +619,21 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        'Access ${entry.accessNumber}',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: accent,
+                      Container(
+                        padding: EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: accent),
+                        ),
+                        child: Text(
+                          'Access ${entry.accessNumber}',
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: accent,
+                          ),
                         ),
                       ),
                       SizedBox(width: 20),
