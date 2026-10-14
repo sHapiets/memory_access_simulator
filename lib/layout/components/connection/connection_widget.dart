@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:memory_access_simulator/core/components/connection.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'dart:math' as math;
+// Import the file containing your Connection class.
 
-class ConnectionWidget extends StatelessWidget {
+class ConnectionWidget extends StatefulWidget {
   const ConnectionWidget({
     super.key,
     required this.points,
-    required this.isOn,
+    required this.connection,
     required this.onColor,
     this.offColor,
     this.strokeWidth = 3,
@@ -15,50 +17,109 @@ class ConnectionWidget extends StatelessWidget {
   });
 
   /// Coordinates relative to the components area's top-left corner.
-  /// First point is the start, last point is the end.
   final List<Offset> points;
 
-  /// Reads the current connection state from Runtime.
-  final bool Function() isOn;
+  /// Returns the Connection controlled by Runtime.
+  final Connection Function() connection;
 
-  /// Color used when the connection is active.
   final Color onColor;
-
-  /// Optional inactive color. Defaults to a muted theme outline.
   final Color? offColor;
-
   final double strokeWidth;
-
-  /// Duration of the color transition.
   final Duration animationDuration;
-
   final bool isDotted;
+
+  @override
+  State<ConnectionWidget> createState() => _ConnectionWidgetState();
+}
+
+class _ConnectionWidgetState extends State<ConnectionWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _scaleController;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1200),
+    );
+
+    _animation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 2.5,
+        ).chain(CurveTween(curve: Curves.linear)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 2.5,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.linear)),
+        weight: 50,
+      ),
+    ]).animate(_scaleController);
+  }
+
+  void _handleRuntimeChange() {
+    final connection = widget.connection();
+
+    final currentMicroStep = Runtime.singleton.microStepNumber;
+
+    final isCurrentConnection =
+        connection.active && (connection.microStepNumber == currentMicroStep);
+
+    // Trigger once when this connection becomes the current microstep's
+    // active connection. Ignore subsequent notifications for the same match.
+    if (isCurrentConnection) {
+      _scaleController.repeat();
+    } else {
+      _scaleController.stop();
+      _scaleController.reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     final inactiveColor =
-        offColor ?? theme.colorScheme.outline.withValues(alpha: 0.1);
+        widget.offColor ?? theme.colorScheme.outline.withValues(alpha: 0.1);
 
     return ListenableBuilder(
       listenable: Runtime.singleton,
       builder: (context, _) {
-        final active = isOn();
+        final connection = widget.connection();
+        _handleRuntimeChange();
 
         return TweenAnimationBuilder<Color?>(
-          tween: ColorTween(end: active ? onColor : inactiveColor),
-          duration: animationDuration,
+          tween: ColorTween(
+            end: connection.active ? widget.onColor : inactiveColor,
+          ),
+          duration: widget.animationDuration,
           curve: Curves.easeInOut,
           builder: (context, animatedColor, child) {
-            return CustomPaint(
-              painter: _ConnectionPainter(
-                points: points,
-                color: animatedColor ?? inactiveColor,
-                strokeWidth: strokeWidth,
-                isDotted: isDotted,
-              ),
-              child: const SizedBox.expand(),
+            return AnimatedBuilder(
+              animation: _animation,
+              builder: (context, _) {
+                return CustomPaint(
+                  painter: _ConnectionPainter(
+                    points: widget.points,
+                    color: animatedColor ?? inactiveColor,
+                    strokeWidth: widget.strokeWidth * _animation.value,
+                    isDotted: widget.isDotted,
+                  ),
+                  child: const SizedBox.expand(),
+                );
+              },
             );
           },
         );
@@ -82,9 +143,14 @@ class _ConnectionPainter extends CustomPainter {
   final double cornerRadius;
   final bool isDotted;
 
-  void _drawDottedPath(Canvas canvas, Path path, Paint paint) {
+  void _drawDottedPath(
+    Canvas canvas,
+    Path path,
+    Paint paint,
+    double strokeWidth,
+  ) {
     const dotSpacing = 8.0;
-    const dotRadius = 1.5;
+    final dotRadius = 1.5 * strokeWidth / 3;
 
     final metrics = path.computeMetrics();
 
@@ -163,21 +229,21 @@ class _ConnectionPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     if (isDotted) {
-      _drawDottedPath(canvas, path, paint);
+      _drawDottedPath(canvas, path, paint, strokeWidth);
     } else {
       canvas.drawPath(path, paint);
     }
 
-    _drawArrowhead(canvas, paint);
+    _drawArrowhead(canvas, paint, strokeWidth);
   }
 
-  void _drawArrowhead(Canvas canvas, Paint linePaint) {
-    final end = points.last;
+  void _drawArrowhead(Canvas canvas, Paint linePaint, double strokeWidth) {
+    final base = points.last;
 
     // Find the last non-zero-length segment.
     Offset? previous;
     for (int i = points.length - 2; i >= 0; i--) {
-      if ((end - points[i]).distance > 0) {
+      if ((base - points[i]).distance > 0) {
         previous = points[i];
         break;
       }
@@ -185,23 +251,38 @@ class _ConnectionPainter extends CustomPainter {
 
     if (previous == null) return;
 
-    final angle = (end - previous).direction;
+    final angle = (base - previous).direction;
 
-    const arrowLength = 16.0; // Larger arrowhead
-    const arrowAngle = 0.48; // Slightly narrower, cleaner shape
+    final arrowLength = 20.0 * strokeWidth / 10;
+    const arrowAngle = 0.9;
 
+    // Tip extends forward from the last point.
+    final tip = Offset(
+      base.dx + arrowLength * math.cos(angle),
+      base.dy + arrowLength * math.sin(angle),
+    );
+
+    // Base corners sit at the last point's position.
     final left = Offset(
-      end.dx - arrowLength * math.cos(angle - arrowAngle),
-      end.dy - arrowLength * math.sin(angle - arrowAngle),
+      base.dx -
+          arrowLength * math.cos(arrowAngle) * math.cos(angle) +
+          arrowLength * math.sin(arrowAngle) * math.sin(angle),
+      base.dy -
+          arrowLength * math.cos(arrowAngle) * math.sin(angle) -
+          arrowLength * math.sin(arrowAngle) * math.cos(angle),
     );
 
     final right = Offset(
-      end.dx - arrowLength * math.cos(angle + arrowAngle),
-      end.dy - arrowLength * math.sin(angle + arrowAngle),
+      base.dx -
+          arrowLength * math.cos(arrowAngle) * math.cos(angle) -
+          arrowLength * math.sin(arrowAngle) * math.sin(angle),
+      base.dy -
+          arrowLength * math.cos(arrowAngle) * math.sin(angle) +
+          arrowLength * math.sin(arrowAngle) * math.cos(angle),
     );
 
     final arrowPath = Path()
-      ..moveTo(end.dx, end.dy)
+      ..moveTo(tip.dx, tip.dy)
       ..lineTo(left.dx, left.dy)
       ..lineTo(right.dx, right.dy)
       ..close();

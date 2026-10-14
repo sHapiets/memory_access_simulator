@@ -128,7 +128,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
           context,
           icon: Icons.skip_next_rounded,
           label: 'STEP',
-          tooltip: 'Advance the simulation by one micro-step.',
+          tooltip: 'Advance the simulation by one Step.',
           highlighted: true,
           onPressed: () => Runtime.singleton.microRun(),
         ),
@@ -137,7 +137,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
           context,
           icon: Icons.fast_forward_rounded,
           label: 'ACCESS',
-          tooltip: 'Execute the next complete memory access.',
+          tooltip: 'Execute the current memory access.',
           onPressed: () => Runtime.singleton.runAccess(),
         ),
 
@@ -147,7 +147,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
           context,
           icon: Icons.restart_alt_rounded,
           label: 'RESET',
-          tooltip: 'Reset the simulation state and its statistics.',
+          tooltip: 'Reset components state and access statistics.',
           onPressed: () => Runtime.singleton.reset(),
         ),
 
@@ -173,7 +173,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
                 _toolbarButton(
                   context,
                   icon: Icons.light_mode_rounded,
-                  tooltip: 'Switch the application to its light theme.',
+                  tooltip: 'Light Mode',
                   selected: mode == ThemeMode.light,
                   onPressed: () {
                     themeModeNotifier.value = ThemeMode.light;
@@ -182,7 +182,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
                 _toolbarButton(
                   context,
                   icon: Icons.dark_mode_rounded,
-                  tooltip: 'Switch the application to its dark theme.',
+                  tooltip: 'Dark Mode',
                   selected: mode == ThemeMode.dark,
                   onPressed: () {
                     themeModeNotifier.value = ThemeMode.dark;

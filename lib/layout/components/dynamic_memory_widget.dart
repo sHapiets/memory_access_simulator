@@ -104,7 +104,9 @@ class _PhysicalPage extends StatelessWidget {
     final runtime = Runtime.singleton;
     final isPageAccessed =
         (runtime.getPPN == ppn) &&
-        (runtime.connectPAtoDRAM.active || runtime.connectDiskToDRAM.active);
+        (runtime.connectPAtoDRAM.active ||
+            runtime.connectDiskToDRAM.active ||
+            runtime.connectDRAMtoDisk.active);
 
     return Container(
       decoration: BoxDecoration(

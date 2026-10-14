@@ -21,7 +21,7 @@ class Runtime extends ChangeNotifier {
   static final singleton = Runtime._();
 
   MicroStep microStep = MicroStep.initializeGetTranslation;
-  int microStepNumber = 0;
+  int microStepNumber = 1;
 
   int _vpn = -1;
   int _pageOffset = -1;
@@ -45,6 +45,7 @@ class Runtime extends ChangeNotifier {
     _physicalAddress,
     Configuration.singleton.blockSizeBytes,
   );
+  int get getInvalidatedVPN => _invalidatedVPN;
 
   Connection connectVAtoTLB = Connection.newConnection();
   Connection connectVAtoPageTable = Connection.newConnection();
@@ -224,8 +225,10 @@ class Runtime extends ChangeNotifier {
 
   void _microInitializeGetTranslation() {
     final config = Configuration.singleton;
-    final accSequence = AccessSequence.singleton;
 
+    microStepNumber = 1;
+
+    final accSequence = AccessSequence.singleton;
     accSequence.pointer += 1;
 
     if (accSequence.pointer >= accSequence.sequence.length) {
@@ -274,8 +277,6 @@ class Runtime extends ChangeNotifier {
 
       _tlbEntry = tlb.accessEntry(_vpn, accSequence.pointer);
 
-      mem.updatePageAccess(_ppn, accSequence.pointer);
-
       connectPAtoCache.setActive(microStepNumber);
       connectTLBtoPA.setActive(microStepNumber);
       connectVAtoPA.setActive(microStepNumber);
@@ -303,8 +304,6 @@ class Runtime extends ChangeNotifier {
 
       _tlbEntry = tlb.addEntry(_vpn, _ppn, accSequence.pointer);
       connectPageTableToTLB.setActive(microStepNumber);
-
-      mem.updatePageAccess(_ppn, accSequence.pointer);
 
       microStep = MicroStep.intializeGetData;
       return;
@@ -372,8 +371,6 @@ class Runtime extends ChangeNotifier {
     _tlbEntry = tlb.addEntry(_vpn, _ppn, accSequence.pointer);
     connectPageTableToTLB.setActive(microStepNumber);
 
-    mem.updatePageAccess(_ppn, accSequence.pointer);
-
     microStep = MicroStep.intializeGetData;
   }
 
@@ -425,6 +422,9 @@ class Runtime extends ChangeNotifier {
   void _microDRAM() {
     final cache = Cache.singleton;
     final mem = Memory.singleton;
+    final accSequence = AccessSequence.singleton;
+
+    mem.updatePageAccess(_ppn, accSequence.pointer);
 
     _cacheLine = cache.findFreeCacheLine(_physicalAddress);
 
@@ -468,6 +468,7 @@ class Runtime extends ChangeNotifier {
 
   void reset() {
     microStep = MicroStep.initializeGetTranslation;
+    microStepNumber = 1;
 
     _vpn = -1;
     _pageOffset = -1;
@@ -525,6 +526,7 @@ class Runtime extends ChangeNotifier {
 class _RuntimeSnapshot {
   // Runtime execution state.
   final MicroStep microStep;
+  final int microStepNumber;
   final int vpn;
   final int pageOffset;
   final int ppn;
@@ -550,6 +552,7 @@ class _RuntimeSnapshot {
 
   _RuntimeSnapshot({
     required this.microStep,
+    required this.microStepNumber,
     required this.vpn,
     required this.pageOffset,
     required this.ppn,
@@ -576,6 +579,7 @@ class _RuntimeSnapshot {
 
     return _RuntimeSnapshot(
       microStep: runtime.microStep,
+      microStepNumber: runtime.microStepNumber,
       vpn: runtime._vpn,
       pageOffset: runtime._pageOffset,
       ppn: runtime._ppn,
@@ -664,6 +668,7 @@ class _RuntimeSnapshot {
 
   void restore(Runtime runtime) {
     runtime.microStep = microStep;
+    runtime.microStepNumber = microStepNumber;
 
     runtime._vpn = vpn;
     runtime._pageOffset = pageOffset;

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/components/access_sequence.dart';
+import 'package:memory_access_simulator/core/configuration.dart';
 import 'package:memory_access_simulator/core/controller/micro_step.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/foundation/access_type.dart';
+import 'package:memory_access_simulator/foundation/parser.dart';
 
 class LogStatisticsWidget extends StatefulWidget {
   const LogStatisticsWidget({super.key});
@@ -110,6 +112,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
         icon: icon,
         color: color,
         accessNumber: accessSequence.pointer + 1,
+        microStepNumber: runtime.microStepNumber,
       ),
     );
   }
@@ -172,7 +175,8 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
           _addEntry(
             'Starting $_accessDescription: '
             'VPN ${runtime.getVPN}, '
-            'offset ${runtime.getPageOffset}.',
+            'offset ${runtime.getPageOffset}. \n\n'
+            'Checking TLB first...',
             icon: Icons.play_arrow_rounded,
           );
           break;
@@ -181,16 +185,18 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
           if (runtime.tlbHit) {
             _tlbHits++;
             _addEntry(
-              'TLB hit: VPN ${runtime.getVPN} maps to '
-              'PPN ${runtime.getPPN}.',
+              'TLB HIT: VPN ${runtime.getVPN} maps to '
+              'PPN ${runtime.getPPN}. \n\nConstruct physical address from'
+              'PPN and page offset.\n\n'
+              'Checking cache...',
               icon: Icons.check_circle_outline_rounded,
               color: Colors.green,
             );
           } else if (runtime.tlbMiss) {
             _tlbMisses++;
             _addEntry(
-              'TLB miss: VPN ${runtime.getVPN} was not found. '
-              'Checking the page table.',
+              'TLB Miss: No valid translation was found for VPN ${runtime.getVPN}. \n\n'
+              'Checking page table next...',
               icon: Icons.search_rounded,
               color: Colors.orange,
             );
@@ -201,15 +207,16 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
           if (runtime.pageFault) {
             _pageFaults++;
             _addEntry(
-              'Page fault: VPN ${runtime.getVPN} is not in '
-              'physical memory.',
+              'Page Fault: Page table translation at VPN ${runtime.getVPN} '
+              'is invalid. \n\nFinding a free or replaceable page '
+              'via MMU...',
               icon: Icons.warning_amber_rounded,
               color: Colors.deepOrange,
             );
           } else if (runtime.connectPageTableToTLB.active) {
             _addEntry(
-              'Page-table hit: VPN ${runtime.getVPN} maps to '
-              'PPN ${runtime.getPPN}. TLB entry updated.',
+              'Page Table Hit: VPN ${runtime.getVPN} maps to '
+              'PPN ${runtime.getPPN}. \n\nTLB updated.',
               icon: Icons.table_chart_rounded,
               color: Colors.green,
             );
@@ -217,53 +224,56 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
           break;
 
         case MicroStep.pageFaultEviction:
-          _addEntry(
-            'Physical memory is full. Evicting a page to '
-            'make room for VPN ${runtime.getVPN}.',
-            icon: Icons.swap_horiz_rounded,
-            color: Colors.deepOrange,
-          );
+          String logText =
+              'Physical memory is full. MMU selects PPN ${runtime.getPPN} '
+              'due to LRU replacement policy. \n\n'
+              'Invalidated previous owner: VPN ${runtime.getInvalidatedVPN}'
+              '\n\nSearched cache for blocks owned by evicted page.';
 
           if (runtime.connectCacheToDRAMFromPageEviction.active) {
-            _addEntry(
-              'Dirty cache data written back during page eviction.',
-              icon: Icons.save_alt_rounded,
-            );
+            logText +=
+                '\n\nEvicted page has a dirty cache line. Writeback dirty block to page.';
           }
 
           if (runtime.connectDRAMtoDisk.active) {
-            _addEntry(
-              'Page written back to disk.',
-              icon: Icons.storage_rounded,
-            );
+            logText += '\n\nEvicted page is dirty. Writeback page to disk.';
           }
+
+          _addEntry(
+            logText,
+            color: Colors.orange,
+            icon: Icons.swap_horiz_rounded,
+          );
           break;
 
         case MicroStep.pageFaultLoad:
           _addEntry(
-            'Loaded VPN ${runtime.getVPN} into physical page '
-            'PPN ${runtime.getPPN}.',
+            'Loaded a page in main memory at '
+            'PPN ${runtime.getPPN} from disk. \n\n'
+            'Write PPN translation in '
+            'page table, then loaded VPN → PPN mapping in TLB.',
             icon: Icons.download_rounded,
           );
           break;
 
         case MicroStep.intializeGetData:
           _addEntry(
-            'Address translation complete: '
-            'VPN ${runtime.getVPN} → PPN ${runtime.getPPN}. '
-            'Physical address '
-            '${_formatAddress(runtime.getPhysicalAddress)}.',
+            'Construct physical address from PPN '
+            'and page offset. \n\n'
+            'Check cache...',
             icon: Icons.transform_rounded,
           );
           break;
 
         case MicroStep.cache:
+          final config = Configuration.singleton;
+
           if (nextStep == MicroStep.dram) {
             _cacheMisses++;
             _addEntry(
-              'Cache miss at PA '
-              '${_formatAddress(runtime.getPhysicalAddress)}. '
-              'Fetching the block from DRAM.',
+              'Cache Miss: Valid cache line of Tag ${Parser.cacheTagFromAddress(runtime.getPhysicalAddress, config.blockSizeBytes, config.cacheSets)} '
+              'in set-Index ${Parser.cacheIndexFromAddress(runtime.getPhysicalAddress, config.blockSizeBytes, config.cacheSets)}'
+              '\n\nFetching the block from main memory...',
               icon: Icons.search_rounded,
               color: Colors.orange,
             );
@@ -271,8 +281,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
             _cacheHits++;
             _completedAccesses++;
             _addEntry(
-              'Cache hit$_currentAddressDescription. '
-              '$_accessDescription completed.',
+              'Cache Hit: Execute access in cache. Memory access completed.',
               icon: Icons.check_circle_rounded,
               color: Colors.green,
             );
@@ -280,25 +289,21 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
           break;
 
         case MicroStep.dram:
-          _addEntry(
-            'DRAM returned the requested cache block.',
-            icon: Icons.memory_rounded,
-          );
+          String logText =
+              'Requested block loaded in cache from main memory. Updated MMU.';
 
           if (runtime.connectCacheToDRAMFromLineEviction.active) {
-            _addEntry(
-              'Dirty cache line evicted; its data will be '
-              'written back to DRAM.',
-              icon: Icons.save_alt_rounded,
-            );
+            logText +=
+                '\n\nEvicted cache line is dirty. Writeback to main memory, updated MMU.';
           }
+
+          _addEntry(logText, icon: Icons.memory_rounded);
           break;
 
         case MicroStep.complete:
           _completedAccesses++;
           _addEntry(
-            '$_accessDescription completed after the DRAM access'
-            '$_currentAddressDescription.',
+            'Execute access on cache. Memory access completed.',
             icon: Icons.check_circle_rounded,
             color: Colors.green,
           );
@@ -611,14 +616,36 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Access ${entry.accessNumber}',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: accent,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        'Access ${entry.accessNumber}',
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: accent,
+                        ),
+                      ),
+                      SizedBox(width: 20),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(width: 2, color: colors.onSurface),
+                        ),
+                        child: Text(
+                          '${entry.microStepNumber}',
+                          style: TextStyle(
+                            color: colors.onSurface,
+                            fontFamily: 'Nunito',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 3),
                   Text(
@@ -649,11 +676,13 @@ class _LogEntry {
   final IconData icon;
   final Color? color;
   final int accessNumber;
+  final int microStepNumber;
 
   const _LogEntry({
     required this.message,
     required this.icon,
     required this.accessNumber,
+    required this.microStepNumber,
     this.color,
   });
 }

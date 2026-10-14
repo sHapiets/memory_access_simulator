@@ -11,7 +11,8 @@ import 'package:memory_access_simulator/layout/components/address/virtual_addres
 import 'package:memory_access_simulator/layout/components/component_dialog/show_in_dialog_button.dart';
 import 'package:memory_access_simulator/layout/components/cache_widget.dart';
 import 'package:memory_access_simulator/layout/components/component_dialog/tap_to_show_in_dialog.dart';
-import 'package:memory_access_simulator/layout/components/connection_widget.dart';
+import 'package:memory_access_simulator/layout/components/connection/connection_step_number.dart';
+import 'package:memory_access_simulator/layout/components/connection/connection_widget.dart';
 import 'package:memory_access_simulator/layout/components/disk_widget.dart';
 import 'package:memory_access_simulator/layout/components/dynamic_memory_widget.dart';
 import 'package:memory_access_simulator/layout/components/mmu_widget.dart';
@@ -280,10 +281,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   points: const [
                                     Offset(420, 940),
                                     Offset(750, 940),
-                                    Offset(750, 885),
+                                    Offset(750, 895),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectVAtoTLB.active,
+                                  connection: () =>
+                                      Runtime.singleton.connectVAtoTLB,
                                   onColor: theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -293,12 +294,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   points: const [
                                     Offset(420, 940),
                                     Offset(1330, 940),
-                                    Offset(1330, 910),
+                                    Offset(1330, 915),
                                   ],
-                                  isOn: () => Runtime
-                                      .singleton
-                                      .connectVAtoPageTable
-                                      .active,
+                                  connection: () =>
+                                      Runtime.singleton.connectVAtoPageTable,
                                   onColor: theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -308,10 +307,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   points: const [
                                     Offset(420, 940),
                                     Offset(1880, 940),
-                                    Offset(1880, 510),
+                                    Offset(1880, 515),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectVAtoMMU.active,
+                                  connection: () =>
+                                      Runtime.singleton.connectVAtoMMU,
                                   onColor: theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -320,10 +319,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(1860, 255),
-                                    Offset(1860, 235),
+                                    Offset(1860, 245),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectMMUtoDisk.active,
+                                  connection: () =>
+                                      Runtime.singleton.connectMMUtoDisk,
                                   onColor: theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -332,12 +331,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(1760, 140),
-                                    Offset(1590, 140),
+                                    Offset(1600, 140),
                                   ],
-                                  isOn: () => Runtime
-                                      .singleton
-                                      .connectDiskToDRAM
-                                      .active,
+                                  connection: () =>
+                                      Runtime.singleton.connectDiskToDRAM,
                                   onColor: theme.colorScheme.primary,
                                   isDotted: true,
                                 ),
@@ -349,10 +346,8 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                     Offset(1590, 170),
                                     Offset(1760, 170),
                                   ],
-                                  isOn: () => Runtime
-                                      .singleton
-                                      .connectDRAMtoDisk
-                                      .active,
+                                  connection: () =>
+                                      Runtime.singleton.connectDRAMtoDisk,
                                   isDotted: true,
                                   onColor: theme.colorScheme.primary,
                                 ),
@@ -363,12 +358,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   points: const [
                                     Offset(1840, 510),
                                     Offset(1840, 760),
-                                    Offset(1590, 760),
+                                    Offset(1600, 760),
                                   ],
-                                  isOn: () => Runtime
-                                      .singleton
-                                      .connectMMUtoPageTable
-                                      .active,
+                                  connection: () =>
+                                      Runtime.singleton.connectMMUtoPageTable,
                                   onColor: Colors.green,
                                 ),
                               ),
@@ -377,12 +370,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(1070, 730),
-                                    Offset(950, 730),
+                                    Offset(960, 730),
                                   ],
-                                  isOn: () => Runtime
-                                      .singleton
-                                      .connectPageTableToTLB
-                                      .active,
+                                  connection: () =>
+                                      Runtime.singleton.connectPageTableToTLB,
                                   onColor: Colors.green,
                                 ),
                               ),
@@ -391,12 +382,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(1070, 790),
-                                    Offset(950, 790),
+                                    Offset(960, 790),
                                   ],
-                                  isOn: () => Runtime
-                                      .singleton
-                                      .connectPageTableToTLB
-                                      .active,
+                                  connection: () =>
+                                      Runtime.singleton.connectPageTableToTLB,
                                   onColor: theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -406,10 +395,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   points: const [
                                     Offset(540, 760),
                                     Offset(230, 760),
-                                    Offset(230, 710),
+                                    Offset(230, 715),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectTLBtoPA.active,
+                                  connection: () =>
+                                      Runtime.singleton.connectTLBtoPA,
                                   onColor: Colors.green,
                                 ),
                               ),
@@ -418,10 +407,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(190, 795),
-                                    Offset(190, 710),
+                                    Offset(190, 715),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectVAtoPA.active,
+                                  connection: () =>
+                                      Runtime.singleton.connectVAtoPA,
                                   onColor: Colors.pink.withAlpha(120),
                                 ),
                               ),
@@ -430,11 +419,11 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(420, 540),
-                                    Offset(780, 540),
-                                    Offset(780, 495),
+                                    Offset(770, 540),
+                                    Offset(770, 507),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectPAtoCache.active,
+                                  connection: () =>
+                                      Runtime.singleton.connectPAtoCache,
                                   onColor: theme.colorScheme.tertiary
                                       .withValues(alpha: 0.8),
                                 ),
@@ -445,10 +434,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   points: const [
                                     Offset(420, 540),
                                     Offset(750, 540),
-                                    Offset(750, 495),
+                                    Offset(750, 507),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectPAtoCache.active,
+                                  connection: () =>
+                                      Runtime.singleton.connectPAtoCache,
                                   onColor: theme.colorScheme.secondary
                                       .withValues(alpha: 0.8),
                                 ),
@@ -458,11 +447,11 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(420, 540),
-                                    Offset(720, 540),
-                                    Offset(720, 495),
+                                    Offset(730, 540),
+                                    Offset(730, 507),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectPAtoCache.active,
+                                  connection: () =>
+                                      Runtime.singleton.connectPAtoCache,
                                   onColor: Colors.blueAccent.withAlpha(180),
                                 ),
                               ),
@@ -472,10 +461,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   points: const [
                                     Offset(420, 540),
                                     Offset(1330, 540),
-                                    Offset(1330, 510),
+                                    Offset(1330, 515),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectPAtoDRAM.active,
+                                  connection: () =>
+                                      Runtime.singleton.connectPAtoDRAM,
                                   onColor: Colors.green,
                                 ),
                               ),
@@ -484,12 +473,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(1070, 200),
-                                    Offset(950, 200),
+                                    Offset(960, 200),
                                   ],
-                                  isOn: () => Runtime
-                                      .singleton
-                                      .connectDRAMtoCache
-                                      .active,
+                                  connection: () =>
+                                      Runtime.singleton.connectDRAMtoCache,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),
@@ -498,12 +485,11 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(950, 380),
-                                    Offset(1070, 380),
+                                    Offset(1060, 380),
                                   ],
-                                  isOn: () => Runtime
+                                  connection: () => Runtime
                                       .singleton
-                                      .connectCacheToDRAMFromLineEviction
-                                      .active,
+                                      .connectCacheToDRAMFromLineEviction,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),
@@ -512,12 +498,11 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 child: ConnectionWidget(
                                   points: const [
                                     Offset(950, 420),
-                                    Offset(1070, 420),
+                                    Offset(1060, 420),
                                   ],
-                                  isOn: () => Runtime
+                                  connection: () => Runtime
                                       .singleton
-                                      .connectCacheToDRAMFromPageEviction
-                                      .active,
+                                      .connectCacheToDRAMFromPageEviction,
                                   isDotted: true,
                                   onColor: theme.colorScheme.primary,
                                 ),
@@ -528,12 +513,11 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   points: const [
                                     Offset(540, 290),
                                     Offset(210, 290),
-                                    Offset(210, 150),
+                                    Offset(210, 160),
                                   ],
-                                  isOn: () => Runtime
+                                  connection: () => Runtime
                                       .singleton
-                                      .connectCacheToAccessRegister
-                                      .active,
+                                      .connectCacheToAccessRegister,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),
@@ -543,18 +527,17 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   points: const [
                                     Offset(210, 150),
                                     Offset(210, 290),
-                                    Offset(540, 290),
+                                    Offset(530, 290),
                                   ],
-                                  isOn: () => Runtime
+                                  connection: () => Runtime
                                       .singleton
-                                      .connectAccessRegisterToCache
-                                      .active,
+                                      .connectAccessRegisterToCache,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),
 
                               //// LAYOUT ELEMENTS
-                              ///
+                              /// DRAM BOX
                               Positioned(
                                 left: 1040,
                                 top: 40,
@@ -564,6 +547,136 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                   height: 910,
                                   dashLength: 6,
                                   gapLength: 12,
+                                ),
+                              ),
+
+                              //// CONNECTION STEP NUMBERS
+                              Positioned(
+                                left: 700,
+                                top: 897,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectVAtoTLB,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 1275,
+                                top: 897,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectVAtoPageTable,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 1900,
+                                top: 500,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectVAtoMMU,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 1660,
+                                top: 90,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectDiskToDRAM,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 1660,
+                                top: 180,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectDRAMtoDisk,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 1660,
+                                top: 710,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectMMUtoPageTable,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 1000,
+                                top: 740,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectPageTableToTLB,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 670,
+                                top: 497,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectPAtoCache,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 1275,
+                                top: 497,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectPAtoDRAM,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 995,
+                                top: 155,
+                                child: ConnectionStepNumber(
+                                  connection: () =>
+                                      Runtime.singleton.connectDRAMtoCache,
+                                ),
+                              ),
+                              Positioned(
+                                left: 995,
+                                top: 335,
+                                child: ConnectionStepNumber(
+                                  connection: () => Runtime
+                                      .singleton
+                                      .connectCacheToDRAMFromLineEviction,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 995,
+                                top: 420,
+                                child: ConnectionStepNumber(
+                                  connection: () => Runtime
+                                      .singleton
+                                      .connectCacheToDRAMFromPageEviction,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 225,
+                                top: 240,
+                                child: ConnectionStepNumber(
+                                  connection: () => Runtime
+                                      .singleton
+                                      .connectCacheToAccessRegister,
+                                ),
+                              ),
+
+                              Positioned(
+                                left: 225,
+                                top: 240,
+                                child: ConnectionStepNumber(
+                                  connection: () => Runtime
+                                      .singleton
+                                      .connectAccessRegisterToCache,
                                 ),
                               ),
 
