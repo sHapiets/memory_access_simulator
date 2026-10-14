@@ -206,7 +206,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
               icon: Icons.warning_amber_rounded,
               color: Colors.deepOrange,
             );
-          } else if (runtime.connectPageTableToTLB) {
+          } else if (runtime.connectPageTableToTLB.active) {
             _addEntry(
               'Page-table hit: VPN ${runtime.getVPN} maps to '
               'PPN ${runtime.getPPN}. TLB entry updated.',
@@ -224,14 +224,14 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
             color: Colors.deepOrange,
           );
 
-          if (runtime.connectCacheToDRAMFromPageEviction) {
+          if (runtime.connectCacheToDRAMFromPageEviction.active) {
             _addEntry(
               'Dirty cache data written back during page eviction.',
               icon: Icons.save_alt_rounded,
             );
           }
 
-          if (runtime.connectDRAMtoDisk) {
+          if (runtime.connectDRAMtoDisk.active) {
             _addEntry(
               'Page written back to disk.',
               icon: Icons.storage_rounded,
@@ -285,7 +285,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
             icon: Icons.memory_rounded,
           );
 
-          if (runtime.connectCacheToDRAMFromLineEviction) {
+          if (runtime.connectCacheToDRAMFromLineEviction.active) {
             _addEntry(
               'Dirty cache line evicted; its data will be '
               'written back to DRAM.',
@@ -529,26 +529,6 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
-          child: Row(
-            children: [
-              Icon(Icons.history_rounded, size: 17, color: colors.primary),
-              const SizedBox(width: 6),
-              Text(
-                'LOG',
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
         Expanded(
           child: _entries.isEmpty
               ? Center(

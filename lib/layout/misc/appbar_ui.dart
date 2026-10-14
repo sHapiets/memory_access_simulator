@@ -122,7 +122,6 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
           icon: CupertinoIcons.arrow_uturn_left,
           tooltip: 'Undo Step',
           onPressed: runtime.undo,
-          selected: runtime.canUndo,
         ),
 
         _toolbarButton(

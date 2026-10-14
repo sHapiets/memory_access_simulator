@@ -59,8 +59,8 @@ class AccessRegisterWidget extends StatelessWidget {
                   final pointer = AccessSequence.singleton.pointer;
 
                   final accessingCache =
-                      runtime.connectAccessRegisterToCache ||
-                      runtime.connectCacheToAccessRegister;
+                      runtime.connectAccessRegisterToCache.active ||
+                      runtime.connectCacheToAccessRegister.active;
 
                   final accessType = accessingCache
                       ? sequence[pointer].type

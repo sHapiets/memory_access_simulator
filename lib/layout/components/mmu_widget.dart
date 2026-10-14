@@ -79,7 +79,7 @@ class _MMUWidgetState extends State<MMUWidget> {
                                 'PPN',
                                 style: TextStyle(
                                   fontFamily: 'Nunito',
-                                  fontSize: 11,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: colors.onSurfaceVariant,
                                 ),
@@ -145,7 +145,7 @@ class _MMUWidgetState extends State<MMUWidget> {
                                           '$index',
                                           style: TextStyle(
                                             fontFamily: 'Nunito',
-                                            fontSize: 12,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                             color: colors.onSurfaceVariant,
                                           ),
@@ -222,7 +222,7 @@ class _MMUWidgetState extends State<MMUWidget> {
           text,
           style: TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 11,
+            fontSize: 14,
             fontWeight: FontWeight.w700,
             color: colors.onSurfaceVariant,
           ),
@@ -239,7 +239,7 @@ class _MMUWidgetState extends State<MMUWidget> {
         text,
         style: TextStyle(
           fontFamily: 'Fredoka',
-          fontSize: 13,
+          fontSize: 16,
           fontWeight: FontWeight.w500,
           color: colors.onSurface,
         ),
@@ -266,7 +266,7 @@ class _MMUWidgetState extends State<MMUWidget> {
           value ? '1' : '0',
           style: TextStyle(
             fontFamily: 'Fredoka',
-            fontSize: 12,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
             color: value ? colors.primary : colors.onSurfaceVariant,
           ),

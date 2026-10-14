@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:memory_access_simulator/core/configuration.dart';
 
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/core/components/memory.dart';
@@ -41,7 +42,7 @@ class DynamicMemoryWidget extends StatelessWidget {
                 const SizedBox(width: 8),
 
                 Text(
-                  'DRAM',
+                  'Main Memory',
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontSize: 18,
@@ -103,7 +104,7 @@ class _PhysicalPage extends StatelessWidget {
     final runtime = Runtime.singleton;
     final isPageAccessed =
         (runtime.getPPN == ppn) &&
-        (runtime.connectPAtoDRAM || runtime.connectDiskToDRAM);
+        (runtime.connectPAtoDRAM.active || runtime.connectDiskToDRAM.active);
 
     return Container(
       decoration: BoxDecoration(
@@ -134,15 +135,33 @@ class _PhysicalPage extends StatelessWidget {
                 'P$ppn',
                 style: TextStyle(
                   fontFamily: 'Fredoka',
-                  fontSize: 15,
+                  fontSize: 18,
                   fontWeight: FontWeight.w500,
                   color: theme.colorScheme.onSurface,
                 ),
               ),
             ],
           ),
-
           const Spacer(),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${Configuration.singleton.pageSizeBlocks}',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+
+              const SizedBox(width: 4),
+              Icon(Icons.table_rows_rounded, size: 14, color: colors.outline),
+              const SizedBox(width: 8),
+            ],
+          ),
         ],
       ),
     );

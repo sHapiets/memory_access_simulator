@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:memory_access_simulator/core/components/access_sequence.dart';
 import 'package:memory_access_simulator/core/components/cache.dart';
+import 'package:memory_access_simulator/core/components/connection.dart';
 import 'package:memory_access_simulator/core/components/memory.dart';
 import 'package:memory_access_simulator/core/components/tlb.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
@@ -20,6 +21,7 @@ class Runtime extends ChangeNotifier {
   static final singleton = Runtime._();
 
   MicroStep microStep = MicroStep.initializeGetTranslation;
+  int microStepNumber = 0;
 
   int _vpn = -1;
   int _pageOffset = -1;
@@ -44,33 +46,35 @@ class Runtime extends ChangeNotifier {
     Configuration.singleton.blockSizeBytes,
   );
 
-  bool connectVAtoTLB = false;
-  bool connectVAtoPageTable = false;
-  bool connectPageTableToTLB = false;
-  bool connectVAtoMMU = false;
+  Connection connectVAtoTLB = Connection.newConnection();
+  Connection connectVAtoPageTable = Connection.newConnection();
+  Connection connectPageTableToTLB = Connection.newConnection();
+  Connection connectVAtoMMU = Connection.newConnection();
 
-  bool connectMMUtoDisk = false;
-  bool connectDiskToDRAM = false;
-  bool connectDRAMtoDisk = false;
-  bool connectMMUtoPageTable = false;
+  Connection connectMMUtoDisk = Connection.newConnection();
+  Connection connectDiskToDRAM = Connection.newConnection();
+  Connection connectDRAMtoDisk = Connection.newConnection();
+  Connection connectMMUtoPageTable = Connection.newConnection();
 
-  bool connectTLBtoPA = false;
-  bool connectVAtoPA = false;
-  bool connectPAtoCache = false;
-  bool connectPAtoDRAM = false;
-  bool connectDRAMtoCache = false;
-  bool connectCacheToDRAMFromLineEviction = false;
-  bool connectCacheToDRAMFromPageEviction = false;
+  Connection connectTLBtoPA = Connection.newConnection();
+  Connection connectVAtoPA = Connection.newConnection();
+  Connection connectPAtoCache = Connection.newConnection();
+  Connection connectPAtoDRAM = Connection.newConnection();
+  Connection connectDRAMtoCache = Connection.newConnection();
+  Connection connectCacheToDRAMFromLineEviction = Connection.newConnection();
+  Connection connectCacheToDRAMFromPageEviction = Connection.newConnection();
 
-  bool connectCacheToAccessRegister = false;
-  bool connectAccessRegisterToCache = false;
+  Connection connectCacheToAccessRegister = Connection.newConnection();
+  Connection connectAccessRegisterToCache = Connection.newConnection();
 
   bool get tlbHit =>
-      connectTLBtoPA && (!connectVAtoPageTable && !connectVAtoMMU);
-  bool get tlbMiss => connectVAtoPageTable;
-  bool get cacheHit => connectCacheToAccessRegister && (!connectPAtoDRAM);
-  bool get cacheMiss => connectPAtoDRAM;
-  bool get pageFault => connectVAtoMMU;
+      connectTLBtoPA.active &&
+      (!connectVAtoPageTable.active && !connectVAtoMMU.active);
+  bool get tlbMiss => connectVAtoPageTable.active;
+  bool get cacheHit =>
+      connectCacheToAccessRegister.active && (!connectPAtoDRAM.active);
+  bool get cacheMiss => connectPAtoDRAM.active;
+  bool get pageFault => connectVAtoMMU.active;
 
   final List<_RuntimeSnapshot> _history = [];
   int _historyIndex = -1;
@@ -172,6 +176,8 @@ class Runtime extends ChangeNotifier {
 
     _prepareHistoryForMicrostep();
 
+    microStepNumber++;
+
     switch (microStep) {
       case MicroStep.initializeGetTranslation:
         _microInitializeGetTranslation();
@@ -250,7 +256,7 @@ class Runtime extends ChangeNotifier {
 
     _resetConnections();
 
-    connectVAtoTLB = true;
+    connectVAtoTLB.setActive(microStepNumber);
 
     microStep = MicroStep.tlb;
   }
@@ -270,9 +276,9 @@ class Runtime extends ChangeNotifier {
 
       mem.updatePageAccess(_ppn, accSequence.pointer);
 
-      connectPAtoCache = true;
-      connectTLBtoPA = true;
-      connectVAtoPA = true;
+      connectPAtoCache.setActive(microStepNumber);
+      connectTLBtoPA.setActive(microStepNumber);
+      connectVAtoPA.setActive(microStepNumber);
 
       _finishTranslation();
 
@@ -282,8 +288,8 @@ class Runtime extends ChangeNotifier {
 
     // TLB MISS.
     microStep = MicroStep.pageTable;
-    connectVAtoTLB = false;
-    connectVAtoPageTable = true;
+    connectVAtoTLB.setInactiveOnly();
+    connectVAtoPageTable.setActive(microStepNumber);
   }
 
   void _microPageTable() {
@@ -296,7 +302,7 @@ class Runtime extends ChangeNotifier {
       _ppn = mem.getPPNFromPageTable(_vpn);
 
       _tlbEntry = tlb.addEntry(_vpn, _ppn, accSequence.pointer);
-      connectPageTableToTLB = true;
+      connectPageTableToTLB.setActive(microStepNumber);
 
       mem.updatePageAccess(_ppn, accSequence.pointer);
 
@@ -305,8 +311,8 @@ class Runtime extends ChangeNotifier {
     }
 
     // PAGE FAULT.
-    connectVAtoMMU = true;
-    connectMMUtoDisk = true;
+    connectVAtoMMU.setActive(microStepNumber);
+    connectMMUtoDisk.setActive(microStepNumber);
 
     final ppnForPageLoad = mem.findFreePage();
 
@@ -340,13 +346,13 @@ class Runtime extends ChangeNotifier {
       mem.dirtyVPNEntry(_invalidatedVPN);
 
       // TODO: Cache writeback stats / delay.
-      connectCacheToDRAMFromPageEviction = true;
+      connectCacheToDRAMFromPageEviction.setActive(microStepNumber);
 
       // TODO: Page writeback stats / delay.
-      connectDRAMtoDisk = true;
+      connectDRAMtoDisk.setActive(microStepNumber);
     } else if (isReplacedPageAlreadyDirty) {
       // TODO: Page writeback stats / delay.
-      connectDRAMtoDisk = true;
+      connectDRAMtoDisk.setActive(microStepNumber);
     }
 
     _ppn = _replacedPagePPN;
@@ -360,11 +366,11 @@ class Runtime extends ChangeNotifier {
     final mem = Memory.singleton;
 
     mem.loadPageFromDisk(_vpn, _ppn);
-    connectDiskToDRAM = true;
-    connectMMUtoPageTable = true;
+    connectDiskToDRAM.setActive(microStepNumber);
+    connectMMUtoPageTable.setActive(microStepNumber);
 
     _tlbEntry = tlb.addEntry(_vpn, _ppn, accSequence.pointer);
-    connectPageTableToTLB = true;
+    connectPageTableToTLB.setActive(microStepNumber);
 
     mem.updatePageAccess(_ppn, accSequence.pointer);
 
@@ -372,9 +378,9 @@ class Runtime extends ChangeNotifier {
   }
 
   void _microInitializeGetData() {
-    connectPAtoCache = true;
-    connectTLBtoPA = true;
-    connectVAtoPA = true;
+    connectPAtoCache.setActive(microStepNumber);
+    connectTLBtoPA.setActive(microStepNumber);
+    connectVAtoPA.setActive(microStepNumber);
 
     _finishTranslation();
 
@@ -401,9 +407,9 @@ class Runtime extends ChangeNotifier {
       _finishData();
 
       if (_accessType == AccessType.load) {
-        connectCacheToAccessRegister = true;
+        connectCacheToAccessRegister.setActive(microStepNumber);
       } else if (_accessType == AccessType.store) {
-        connectAccessRegisterToCache = true;
+        connectAccessRegisterToCache.setActive(microStepNumber);
       }
 
       microStep = MicroStep.initializeGetTranslation;
@@ -413,7 +419,7 @@ class Runtime extends ChangeNotifier {
 
     // CACHE MISS.
     microStep = MicroStep.dram;
-    connectPAtoDRAM = true;
+    connectPAtoDRAM.setActive(microStepNumber);
   }
 
   void _microDRAM() {
@@ -430,12 +436,12 @@ class Runtime extends ChangeNotifier {
       _cacheLine,
       _physicalAddress,
     );
-    connectDRAMtoCache = true;
+    connectDRAMtoCache.setActive(microStepNumber);
 
     if (replacedLinePPN != -1) {
       // TODO: Cache writeback delay / stats.
       mem.dirtyVPNEntryFromPPN(replacedLinePPN);
-      connectCacheToDRAMFromLineEviction = true;
+      connectCacheToDRAMFromLineEviction.setActive(microStepNumber);
     }
 
     _finishData();
@@ -452,9 +458,9 @@ class Runtime extends ChangeNotifier {
 
   void _microComplete() {
     if (_accessType == AccessType.load) {
-      connectCacheToAccessRegister = true;
+      connectCacheToAccessRegister.setActive(microStepNumber);
     } else if (_accessType == AccessType.store) {
-      connectAccessRegisterToCache = true;
+      connectAccessRegisterToCache.setActive(microStepNumber);
     }
 
     microStep = MicroStep.initializeGetTranslation;
@@ -493,26 +499,26 @@ class Runtime extends ChangeNotifier {
   }
 
   void _resetConnections() {
-    connectVAtoTLB = false;
-    connectVAtoPageTable = false;
-    connectPageTableToTLB = false;
-    connectVAtoMMU = false;
+    connectVAtoTLB.reset();
+    connectVAtoPageTable.reset();
+    connectPageTableToTLB.reset();
+    connectVAtoMMU.reset();
 
-    connectMMUtoDisk = false;
-    connectDiskToDRAM = false;
-    connectDRAMtoDisk = false;
-    connectMMUtoPageTable = false;
+    connectMMUtoDisk.reset();
+    connectDiskToDRAM.reset();
+    connectDRAMtoDisk.reset();
+    connectMMUtoPageTable.reset();
 
-    connectTLBtoPA = false;
-    connectVAtoPA = false;
-    connectPAtoCache = false;
-    connectPAtoDRAM = false;
-    connectDRAMtoCache = false;
-    connectCacheToDRAMFromLineEviction = false;
-    connectCacheToDRAMFromPageEviction = false;
+    connectTLBtoPA.reset();
+    connectVAtoPA.reset();
+    connectPAtoCache.reset();
+    connectPAtoDRAM.reset();
+    connectDRAMtoCache.reset();
+    connectCacheToDRAMFromPageEviction.reset();
+    connectCacheToDRAMFromLineEviction.reset();
 
-    connectCacheToAccessRegister = false;
-    connectAccessRegisterToCache = false;
+    connectAccessRegisterToCache.reset();
+    connectCacheToAccessRegister.reset();
   }
 }
 
@@ -530,7 +536,7 @@ class _RuntimeSnapshot {
   final int replacedPagePPN;
 
   // Connection flags.
-  final Map<String, bool> connections;
+  final Map<String, Connection> connections;
 
   // Access sequence.
   final List<Access> sequence;
@@ -581,25 +587,39 @@ class _RuntimeSnapshot {
       replacedPagePPN: runtime._replacedPagePPN,
 
       connections: {
-        'connectVAtoTLB': runtime.connectVAtoTLB,
-        'connectVAtoPageTable': runtime.connectVAtoPageTable,
-        'connectPageTableToTLB': runtime.connectPageTableToTLB,
-        'connectVAtoMMU': runtime.connectVAtoMMU,
-        'connectMMUtoDisk': runtime.connectMMUtoDisk,
-        'connectDiskToDRAM': runtime.connectDiskToDRAM,
-        'connectDRAMtoDisk': runtime.connectDRAMtoDisk,
-        'connectMMUtoPageTable': runtime.connectMMUtoPageTable,
-        'connectTLBtoPA': runtime.connectTLBtoPA,
-        'connectVAtoPA': runtime.connectVAtoPA,
-        'connectPAtoCache': runtime.connectPAtoCache,
-        'connectPAtoDRAM': runtime.connectPAtoDRAM,
-        'connectDRAMtoCache': runtime.connectDRAMtoCache,
-        'connectCacheToDRAMFromLineEviction':
-            runtime.connectCacheToDRAMFromLineEviction,
-        'connectCacheToDRAMFromPageEviction':
-            runtime.connectCacheToDRAMFromPageEviction,
-        'connectCacheToAccessRegister': runtime.connectCacheToAccessRegister,
-        'connectAccessRegisterToCache': runtime.connectAccessRegisterToCache,
+        'connectVAtoTLB': Connection.newConnection()
+          ..set(runtime.connectVAtoTLB),
+        'connectVAtoPageTable': Connection.newConnection()
+          ..set(runtime.connectVAtoPageTable),
+        'connectPageTableToTLB': Connection.newConnection()
+          ..set(runtime.connectPageTableToTLB),
+        'connectVAtoMMU': Connection.newConnection()
+          ..set(runtime.connectVAtoMMU),
+        'connectMMUtoDisk': Connection.newConnection()
+          ..set(runtime.connectMMUtoDisk),
+        'connectDiskToDRAM': Connection.newConnection()
+          ..set(runtime.connectDiskToDRAM),
+        'connectDRAMtoDisk': Connection.newConnection()
+          ..set(runtime.connectDRAMtoDisk),
+        'connectMMUtoPageTable': Connection.newConnection()
+          ..set(runtime.connectMMUtoPageTable),
+        'connectTLBtoPA': Connection.newConnection()
+          ..set(runtime.connectTLBtoPA),
+        'connectVAtoPA': Connection.newConnection()..set(runtime.connectVAtoPA),
+        'connectPAtoCache': Connection.newConnection()
+          ..set(runtime.connectPAtoCache),
+        'connectPAtoDRAM': Connection.newConnection()
+          ..set(runtime.connectPAtoDRAM),
+        'connectDRAMtoCache': Connection.newConnection()
+          ..set(runtime.connectDRAMtoCache),
+        'connectCacheToDRAMFromLineEviction': Connection.newConnection()
+          ..set(runtime.connectCacheToDRAMFromLineEviction),
+        'connectCacheToDRAMFromPageEviction': Connection.newConnection()
+          ..set(runtime.connectCacheToDRAMFromPageEviction),
+        'connectCacheToAccessRegister': Connection.newConnection()
+          ..set(runtime.connectCacheToAccessRegister),
+        'connectAccessRegisterToCache': Connection.newConnection()
+          ..set(runtime.connectAccessRegisterToCache),
       },
 
       sequence: accessSequence.sequence
@@ -655,27 +675,31 @@ class _RuntimeSnapshot {
     runtime._invalidatedVPN = invalidatedVPN;
     runtime._replacedPagePPN = replacedPagePPN;
 
-    runtime.connectVAtoTLB = connections['connectVAtoTLB']!;
-    runtime.connectVAtoPageTable = connections['connectVAtoPageTable']!;
-    runtime.connectPageTableToTLB = connections['connectPageTableToTLB']!;
-    runtime.connectVAtoMMU = connections['connectVAtoMMU']!;
-    runtime.connectMMUtoDisk = connections['connectMMUtoDisk']!;
-    runtime.connectDiskToDRAM = connections['connectDiskToDRAM']!;
-    runtime.connectDRAMtoDisk = connections['connectDRAMtoDisk']!;
-    runtime.connectMMUtoPageTable = connections['connectMMUtoPageTable']!;
-    runtime.connectTLBtoPA = connections['connectTLBtoPA']!;
-    runtime.connectVAtoPA = connections['connectVAtoPA']!;
-    runtime.connectPAtoCache = connections['connectPAtoCache']!;
-    runtime.connectPAtoDRAM = connections['connectPAtoDRAM']!;
-    runtime.connectDRAMtoCache = connections['connectDRAMtoCache']!;
-    runtime.connectCacheToDRAMFromLineEviction =
-        connections['connectCacheToDRAMFromLineEviction']!;
-    runtime.connectCacheToDRAMFromPageEviction =
-        connections['connectCacheToDRAMFromPageEviction']!;
-    runtime.connectCacheToAccessRegister =
-        connections['connectCacheToAccessRegister']!;
-    runtime.connectAccessRegisterToCache =
-        connections['connectAccessRegisterToCache']!;
+    runtime.connectVAtoTLB.set(connections['connectVAtoTLB']!);
+    runtime.connectVAtoPageTable.set(connections['connectVAtoPageTable']!);
+    runtime.connectPageTableToTLB.set(connections['connectPageTableToTLB']!);
+    runtime.connectVAtoMMU.set(connections['connectVAtoMMU']!);
+    runtime.connectMMUtoDisk.set(connections['connectMMUtoDisk']!);
+    runtime.connectDiskToDRAM.set(connections['connectDiskToDRAM']!);
+    runtime.connectDRAMtoDisk.set(connections['connectDRAMtoDisk']!);
+    runtime.connectMMUtoPageTable.set(connections['connectMMUtoPageTable']!);
+    runtime.connectTLBtoPA.set(connections['connectTLBtoPA']!);
+    runtime.connectVAtoPA.set(connections['connectVAtoPA']!);
+    runtime.connectPAtoCache.set(connections['connectPAtoCache']!);
+    runtime.connectPAtoDRAM.set(connections['connectPAtoDRAM']!);
+    runtime.connectDRAMtoCache.set(connections['connectDRAMtoCache']!);
+    runtime.connectCacheToDRAMFromLineEviction.set(
+      connections['connectCacheToDRAMFromLineEviction']!,
+    );
+    runtime.connectCacheToDRAMFromPageEviction.set(
+      connections['connectCacheToDRAMFromPageEviction']!,
+    );
+    runtime.connectCacheToAccessRegister.set(
+      connections['connectCacheToAccessRegister']!,
+    );
+    runtime.connectAccessRegisterToCache.set(
+      connections['connectAccessRegisterToCache']!,
+    );
 
     final accessSequence = AccessSequence.singleton;
     accessSequence.sequence = sequence

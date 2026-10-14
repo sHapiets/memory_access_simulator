@@ -17,6 +17,7 @@ import 'package:memory_access_simulator/layout/components/dynamic_memory_widget.
 import 'package:memory_access_simulator/layout/components/mmu_widget.dart';
 import 'package:memory_access_simulator/layout/components/page_table_widget.dart';
 import 'package:memory_access_simulator/layout/components/tlb_widget.dart';
+import 'package:memory_access_simulator/layout/misc/broken_line_container.dart';
 import 'package:memory_access_simulator/layout/pages/page_mode.dart';
 import 'package:memory_access_simulator/main.dart';
 
@@ -26,7 +27,7 @@ class ComponentsArea extends StatefulWidget {
   /// Size of the virtual canvas.
   ///
   /// This is intentionally larger than the visible middle pane.
-  static const double canvasWidth = 1680;
+  static const double canvasWidth = 1980;
   static const double canvasHeight = 1080;
 
   @override
@@ -277,24 +278,12 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(350, 940),
-                                    Offset(595, 940),
-                                    Offset(595, 885),
-                                  ],
-                                  isOn: () => Runtime.singleton.connectVAtoTLB,
-                                  onColor: theme.colorScheme.onSurface,
-                                ),
-                              ),
-
-                              Positioned.fill(
-                                child: ConnectionWidget(
-                                  points: const [
-                                    Offset(350, 940),
-                                    Offset(1120, 940),
-                                    Offset(1120, 910),
+                                    Offset(420, 940),
+                                    Offset(750, 940),
+                                    Offset(750, 885),
                                   ],
                                   isOn: () =>
-                                      Runtime.singleton.connectVAtoPageTable,
+                                      Runtime.singleton.connectVAtoTLB.active,
                                   onColor: theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -302,11 +291,14 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(350, 940),
-                                    Offset(1600, 940),
-                                    Offset(1600, 510),
+                                    Offset(420, 940),
+                                    Offset(1330, 940),
+                                    Offset(1330, 910),
                                   ],
-                                  isOn: () => Runtime.singleton.connectVAtoMMU,
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectVAtoPageTable
+                                      .active,
                                   onColor: theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -314,23 +306,38 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(1580, 255),
-                                    Offset(1580, 235),
-                                  ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectMMUtoDisk,
-                                  onColor: theme.colorScheme.onSurface,
-                                ),
-                              ),
-
-                              Positioned.fill(
-                                child: ConnectionWidget(
-                                  points: const [
-                                    Offset(1490, 140),
-                                    Offset(1370, 140),
+                                    Offset(420, 940),
+                                    Offset(1880, 940),
+                                    Offset(1880, 510),
                                   ],
                                   isOn: () =>
-                                      Runtime.singleton.connectDiskToDRAM,
+                                      Runtime.singleton.connectVAtoMMU.active,
+                                  onColor: theme.colorScheme.onSurface,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(1860, 255),
+                                    Offset(1860, 235),
+                                  ],
+                                  isOn: () =>
+                                      Runtime.singleton.connectMMUtoDisk.active,
+                                  onColor: theme.colorScheme.onSurface,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(1760, 140),
+                                    Offset(1590, 140),
+                                  ],
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectDiskToDRAM
+                                      .active,
                                   onColor: theme.colorScheme.primary,
                                   isDotted: true,
                                 ),
@@ -339,11 +346,13 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(1370, 170),
-                                    Offset(1490, 170),
+                                    Offset(1590, 170),
+                                    Offset(1760, 170),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectDRAMtoDisk,
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectDRAMtoDisk
+                                      .active,
                                   isDotted: true,
                                   onColor: theme.colorScheme.primary,
                                 ),
@@ -352,12 +361,14 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(1560, 510),
-                                    Offset(1560, 760),
-                                    Offset(1370, 760),
+                                    Offset(1840, 510),
+                                    Offset(1840, 760),
+                                    Offset(1590, 760),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectMMUtoPageTable,
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectMMUtoPageTable
+                                      .active,
                                   onColor: Colors.green,
                                 ),
                               ),
@@ -365,11 +376,13 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(870, 740),
-                                    Offset(760, 740),
+                                    Offset(1070, 730),
+                                    Offset(950, 730),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectPageTableToTLB,
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectPageTableToTLB
+                                      .active,
                                   onColor: Colors.green,
                                 ),
                               ),
@@ -377,11 +390,13 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(870, 780),
-                                    Offset(760, 780),
+                                    Offset(1070, 790),
+                                    Offset(950, 790),
                                   ],
-                                  isOn: () =>
-                                      Runtime.singleton.connectPageTableToTLB,
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectPageTableToTLB
+                                      .active,
                                   onColor: theme.colorScheme.onSurface,
                                 ),
                               ),
@@ -389,11 +404,12 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(440, 760),
-                                    Offset(220, 760),
-                                    Offset(220, 685),
+                                    Offset(540, 760),
+                                    Offset(230, 760),
+                                    Offset(230, 710),
                                   ],
-                                  isOn: () => Runtime.singleton.connectTLBtoPA,
+                                  isOn: () =>
+                                      Runtime.singleton.connectTLBtoPA.active,
                                   onColor: Colors.green,
                                 ),
                               ),
@@ -401,10 +417,11 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(190, 830),
-                                    Offset(190, 685),
+                                    Offset(190, 795),
+                                    Offset(190, 710),
                                   ],
-                                  isOn: () => Runtime.singleton.connectVAtoPA,
+                                  isOn: () =>
+                                      Runtime.singleton.connectVAtoPA.active,
                                   onColor: Colors.pink.withAlpha(120),
                                 ),
                               ),
@@ -412,12 +429,12 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(350, 540),
-                                    Offset(615, 540),
-                                    Offset(615, 485),
+                                    Offset(420, 540),
+                                    Offset(780, 540),
+                                    Offset(780, 495),
                                   ],
                                   isOn: () =>
-                                      Runtime.singleton.connectPAtoCache,
+                                      Runtime.singleton.connectPAtoCache.active,
                                   onColor: theme.colorScheme.tertiary
                                       .withValues(alpha: 0.8),
                                 ),
@@ -426,12 +443,12 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(350, 540),
-                                    Offset(595, 540),
-                                    Offset(595, 485),
+                                    Offset(420, 540),
+                                    Offset(750, 540),
+                                    Offset(750, 495),
                                   ],
                                   isOn: () =>
-                                      Runtime.singleton.connectPAtoCache,
+                                      Runtime.singleton.connectPAtoCache.active,
                                   onColor: theme.colorScheme.secondary
                                       .withValues(alpha: 0.8),
                                 ),
@@ -440,24 +457,12 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(350, 540),
-                                    Offset(1120, 540),
-                                    Offset(1120, 510),
-                                  ],
-                                  isOn: () => Runtime.singleton.connectPAtoDRAM,
-                                  onColor: Colors.green,
-                                ),
-                              ),
-
-                              Positioned.fill(
-                                child: ConnectionWidget(
-                                  points: const [
-                                    Offset(350, 540),
-                                    Offset(575, 540),
-                                    Offset(575, 485),
+                                    Offset(420, 540),
+                                    Offset(720, 540),
+                                    Offset(720, 495),
                                   ],
                                   isOn: () =>
-                                      Runtime.singleton.connectPAtoCache,
+                                      Runtime.singleton.connectPAtoCache.active,
                                   onColor: Colors.blueAccent.withAlpha(180),
                                 ),
                               ),
@@ -465,11 +470,26 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(870, 200),
-                                    Offset(760, 200),
+                                    Offset(420, 540),
+                                    Offset(1330, 540),
+                                    Offset(1330, 510),
                                   ],
                                   isOn: () =>
-                                      Runtime.singleton.connectDRAMtoCache,
+                                      Runtime.singleton.connectPAtoDRAM.active,
+                                  onColor: Colors.green,
+                                ),
+                              ),
+
+                              Positioned.fill(
+                                child: ConnectionWidget(
+                                  points: const [
+                                    Offset(1070, 200),
+                                    Offset(950, 200),
+                                  ],
+                                  isOn: () => Runtime
+                                      .singleton
+                                      .connectDRAMtoCache
+                                      .active,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),
@@ -477,12 +497,13 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(760, 380),
-                                    Offset(870, 380),
+                                    Offset(950, 380),
+                                    Offset(1070, 380),
                                   ],
                                   isOn: () => Runtime
                                       .singleton
-                                      .connectCacheToDRAMFromLineEviction,
+                                      .connectCacheToDRAMFromLineEviction
+                                      .active,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),
@@ -490,12 +511,13 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(760, 420),
-                                    Offset(870, 420),
+                                    Offset(950, 420),
+                                    Offset(1070, 420),
                                   ],
                                   isOn: () => Runtime
                                       .singleton
-                                      .connectCacheToDRAMFromPageEviction,
+                                      .connectCacheToDRAMFromPageEviction
+                                      .active,
                                   isDotted: true,
                                   onColor: theme.colorScheme.primary,
                                 ),
@@ -504,13 +526,14 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(440, 280),
-                                    Offset(190, 280),
-                                    Offset(190, 150),
+                                    Offset(540, 290),
+                                    Offset(210, 290),
+                                    Offset(210, 150),
                                   ],
                                   isOn: () => Runtime
                                       .singleton
-                                      .connectCacheToAccessRegister,
+                                      .connectCacheToAccessRegister
+                                      .active,
                                   onColor: theme.colorScheme.primary,
                                 ),
                               ),
@@ -518,48 +541,63 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               Positioned.fill(
                                 child: ConnectionWidget(
                                   points: const [
-                                    Offset(190, 150),
-                                    Offset(190, 280),
-                                    Offset(440, 280),
+                                    Offset(210, 150),
+                                    Offset(210, 290),
+                                    Offset(540, 290),
                                   ],
                                   isOn: () => Runtime
                                       .singleton
-                                      .connectAccessRegisterToCache,
+                                      .connectAccessRegisterToCache
+                                      .active,
                                   onColor: theme.colorScheme.primary,
+                                ),
+                              ),
+
+                              //// LAYOUT ELEMENTS
+                              ///
+                              Positioned(
+                                left: 1040,
+                                top: 40,
+                                child: BrokenLineContainer(
+                                  title: 'DRAM',
+                                  width: 580,
+                                  height: 910,
+                                  dashLength: 6,
+                                  gapLength: 12,
                                 ),
                               ),
 
                               ////// COMPONENTS ///////
                               Positioned(
-                                left: 40,
+                                left: 60,
                                 top: 40,
                                 width: 300,
                                 child: AccessRegisterWidget(),
                               ),
 
                               Positioned(
-                                left: 40,
-                                top: 420,
-                                width: 300,
+                                left: 20,
+                                top: 350,
+                                width: 390,
                                 child: TapToShowInDialog(
                                   child: PhysicalAddressWidget(),
                                 ),
                               ),
 
                               Positioned(
-                                left: 40,
-                                top: 840,
-                                width: 300,
+                                left: 20,
+                                top: 800,
+                                width: 390,
                                 child: TapToShowInDialog(
                                   child: VirtualAddressWidget(),
                                 ),
                               ),
 
                               Positioned(
-                                left: 450,
-                                top: 110,
-                                height: 360,
-                                width: 300,
+                                left: 550,
+                                top: 100,
+                                height: 390,
+                                width: 390,
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
@@ -570,10 +608,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               ),
 
                               Positioned(
-                                left: 450,
-                                top: 630,
-                                width: 300,
-                                height: 240,
+                                left: 550,
+                                top: 600,
+                                width: 390,
+                                height: 280,
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
@@ -584,10 +622,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               ),
 
                               Positioned(
-                                left: 880,
-                                top: 600,
-                                width: 480,
-                                height: 300,
+                                left: 1080,
+                                top: 580,
+                                width: 500,
+                                height: 320,
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
@@ -597,10 +635,10 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 ),
                               ),
                               Positioned(
-                                left: 880,
+                                left: 1080,
                                 top: 80,
                                 height: 420,
-                                width: 480,
+                                width: 500,
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),
                                   onExit: (_) => _setComponentHover(false),
@@ -611,15 +649,15 @@ class _ComponentsAreaState extends State<ComponentsArea>
                               ),
 
                               Positioned(
-                                left: 1500,
+                                left: 1780,
                                 top: 80,
                                 child: const DiskWidget(),
                               ),
 
                               Positioned(
-                                left: 1500,
+                                left: 1762,
                                 top: 260,
-                                width: 150,
+                                width: 190,
                                 height: 240,
                                 child: MouseRegion(
                                   onEnter: (_) => _setComponentHover(true),

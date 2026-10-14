@@ -10,7 +10,7 @@ class PhysicalAddressWidget extends StatelessWidget {
   static const double _bitBoxHeight = 34;
 
   static const double _width = 500;
-  static const double _height = 420;
+  static const double _height = 450;
 
   @override
   Widget build(BuildContext context) {
@@ -197,16 +197,14 @@ class PhysicalAddressWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // Physical address value
-        Expanded(
-          child: Center(
-            child: Text(
-              '0x${physicalAddress.toRadixString(16).toUpperCase().padLeft((addressBits + 3) ~/ 4, '0')}',
-              style: TextStyle(
-                fontFamily: 'Fredoka',
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-              ),
+        Center(
+          child: Text(
+            '0x${physicalAddress.toRadixString(16).toUpperCase().padLeft((addressBits + 3) ~/ 4, '0')}',
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
             ),
           ),
         ),
@@ -215,40 +213,44 @@ class PhysicalAddressWidget extends StatelessWidget {
         const SizedBox(height: 10),
 
         // Cache segmentation
-        _SegmentationRow(
-          title: 'CACHE BIT-SEGMENTATION',
-          segments: [
-            _Segment(
-              label: 'TAG',
-              bits: tagBitsString,
-              color: Colors.blueAccent,
-            ),
-            _Segment(
-              label: 'INDEX',
-              bits: indexBitsString,
-              color: theme.colorScheme.secondary,
-            ),
-            _Segment(
-              label: 'BLOCK OFFSET',
-              bits: blockOffsetBitsString,
-              color: theme.colorScheme.tertiary,
-            ),
-          ],
+        Expanded(
+          child: _SegmentationRow(
+            title: 'CACHE BIT-SEGMENTATION',
+            segments: [
+              _Segment(
+                label: 'TAG',
+                bits: tagBitsString,
+                color: Colors.blueAccent,
+              ),
+              _Segment(
+                label: 'INDEX',
+                bits: indexBitsString,
+                color: theme.colorScheme.secondary,
+              ),
+              _Segment(
+                label: 'BLOCK OFFSET',
+                bits: blockOffsetBitsString,
+                color: theme.colorScheme.tertiary,
+              ),
+            ],
+          ),
         ),
 
         const SizedBox(height: 24),
 
         // Physical memory segmentation
-        _SegmentationRow(
-          title: 'PHYSICAL MEMORY BIT-SEGMENTATION',
-          segments: [
-            _Segment(label: 'PPN', bits: ppnBinary, color: Colors.green),
-            _Segment(
-              label: 'PAGE OFFSET',
-              bits: pageOffsetBinary,
-              color: Colors.pink,
-            ),
-          ],
+        Expanded(
+          child: _SegmentationRow(
+            title: 'PHYSICAL MEMORY BIT-SEGMENTATION',
+            segments: [
+              _Segment(label: 'PPN', bits: ppnBinary, color: Colors.green),
+              _Segment(
+                label: 'PAGE OFFSET',
+                bits: pageOffsetBinary,
+                color: Colors.pink,
+              ),
+            ],
+          ),
         ),
 
         const SizedBox(height: 6),
@@ -368,7 +370,7 @@ class _AddressInfo extends StatelessWidget {
           label,
           style: TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 12,
+            fontSize: 15,
             fontWeight: FontWeight.w800,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -378,7 +380,7 @@ class _AddressInfo extends StatelessWidget {
           value,
           style: TextStyle(
             fontFamily: 'Fredoka',
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.w500,
             color: theme.colorScheme.onSurface,
           ),
@@ -479,7 +481,7 @@ class _BitBox extends StatelessWidget {
         value,
         style: TextStyle(
           fontFamily: 'Fredoka',
-          fontSize: 15,
+          fontSize: 23,
           fontWeight: FontWeight.w500,
           color: theme.colorScheme.onSurface,
         ),
@@ -493,6 +495,6 @@ class _BitBox extends StatelessWidget {
 // ============================================================================
 
 class _PhysicalAddressBitBox {
-  static const double width = 28;
-  static const double height = 34;
+  static const double width = 34;
+  static const double height = 40;
 }

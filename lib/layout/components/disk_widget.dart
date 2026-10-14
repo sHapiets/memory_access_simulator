@@ -52,7 +52,8 @@ class DiskWidget extends StatelessWidget {
                   child: ListenableBuilder(
                     listenable: runtime,
                     builder: (context, _) {
-                      final bool isDiskAccessed = (runtime.connectMMUtoDisk);
+                      final bool isDiskAccessed =
+                          (runtime.connectMMUtoDisk.active);
 
                       return CustomPaint(
                         painter: _DiskPainter(

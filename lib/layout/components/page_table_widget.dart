@@ -82,7 +82,7 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                                 'VPN',
                                 style: TextStyle(
                                   fontFamily: 'Nunito',
-                                  fontSize: 12,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                   color: colors.onSurfaceVariant,
                                 ),
@@ -130,8 +130,8 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                             final entry = entries[index];
                             final isEntryAccessed =
                                 (runtime.getVPN == index) &&
-                                (runtime.connectVAtoPageTable ||
-                                    runtime.connectMMUtoPageTable);
+                                (runtime.connectVAtoPageTable.active ||
+                                    runtime.connectMMUtoPageTable.active);
 
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 2),
@@ -150,7 +150,7 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                                           '$index',
                                           style: TextStyle(
                                             fontFamily: 'Nunito',
-                                            fontSize: 12,
+                                            fontSize: 18,
                                             fontWeight: FontWeight.w600,
                                             color: colors.onSurfaceVariant,
                                           ),
@@ -162,7 +162,7 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                                   // Stored page-table data.
                                   Expanded(
                                     child: Container(
-                                      height: 34,
+                                      height: 42,
                                       decoration: BoxDecoration(
                                         color: isEntryAccessed
                                             ? colors.primary.withValues(
@@ -234,7 +234,7 @@ class _PageTableWidgetState extends State<PageTableWidget> {
           text,
           style: TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 12,
+            fontSize: 16,
             fontWeight: FontWeight.w700,
             color: colors.onSurfaceVariant,
           ),
@@ -251,7 +251,7 @@ class _PageTableWidgetState extends State<PageTableWidget> {
         text,
         style: TextStyle(
           fontFamily: 'Fredoka',
-          fontSize: 13,
+          fontSize: 20,
           fontWeight: FontWeight.w500,
           color: colors.onSurface,
         ),

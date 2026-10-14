@@ -157,7 +157,7 @@ class _HeaderCell extends StatelessWidget {
           label,
           style: TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 11,
+            fontSize: 15,
             fontWeight: FontWeight.w800,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -183,7 +183,7 @@ class _TLBEntryRow extends StatelessWidget {
     final isEntryAccessed =
         entry.valid &&
         (runtime.getVPN == entry.vpn) &&
-        (runtime.connectVAtoTLB || runtime.connectPageTableToTLB);
+        (runtime.connectVAtoTLB.active || runtime.connectPageTableToTLB.active);
 
     final colors = theme.colorScheme;
 
@@ -286,7 +286,7 @@ class _ValueCell extends StatelessWidget {
           value,
           style: TextStyle(
             fontFamily: 'Fredoka',
-            fontSize: 14,
+            fontSize: 20,
             fontWeight: FontWeight.w500,
             color: muted
                 ? theme.colorScheme.onSurfaceVariant

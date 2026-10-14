@@ -6,7 +6,7 @@ class VirtualAddressWidget extends StatelessWidget {
   const VirtualAddressWidget({super.key});
 
   static const double _width = 500;
-  static const double _height = 320;
+  static const double _height = 340;
 
   @override
   Widget build(BuildContext context) {
@@ -165,16 +165,14 @@ class VirtualAddressWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // Hexadecimal virtual address
-        Expanded(
-          child: Center(
-            child: Text(
-              '0x${virtualAddress.toRadixString(16).toUpperCase().padLeft((vpnBits + pageOffsetBits + 3) ~/ 4, '0')}',
-              style: TextStyle(
-                fontFamily: 'Fredoka',
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-              ),
+        Center(
+          child: Text(
+            '0x${virtualAddress.toRadixString(16).toUpperCase().padLeft((vpnBits + pageOffsetBits + 3) ~/ 4, '0')}',
+            style: TextStyle(
+              fontFamily: 'Fredoka',
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
             ),
           ),
         ),
@@ -387,7 +385,7 @@ class _BitBox extends StatelessWidget {
         value,
         style: TextStyle(
           fontFamily: 'Fredoka',
-          fontSize: 15,
+          fontSize: 23,
           fontWeight: FontWeight.w500,
           color: theme.colorScheme.onSurface,
         ),
@@ -416,7 +414,7 @@ class _AddressInfo extends StatelessWidget {
           label,
           style: TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 10,
+            fontSize: 15,
             fontWeight: FontWeight.w800,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -426,7 +424,7 @@ class _AddressInfo extends StatelessWidget {
           value,
           style: TextStyle(
             fontFamily: 'Fredoka',
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.w500,
             color: theme.colorScheme.onSurface,
           ),
@@ -441,6 +439,6 @@ class _AddressInfo extends StatelessWidget {
 // ============================================================================
 
 class _VirtualAddressBitBox {
-  static const double width = 28;
-  static const double height = 34;
+  static const double width = 34;
+  static const double height = 40;
 }

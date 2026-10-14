@@ -130,7 +130,7 @@ class _CacheWidgetState extends State<CacheWidget> {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12, left: 4, right: 4),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
@@ -161,8 +161,8 @@ class _CacheWidgetState extends State<CacheWidget> {
                   'INDEX - $setIndex',
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
                     color: colorScheme.onSurface,
                   ),
                 ),
@@ -211,7 +211,7 @@ class _CacheLine extends StatelessWidget {
     final isLineAccessed =
         valid &&
         (lineNumber == runtime.getCacheLine) &&
-        (runtime.connectPAtoCache || runtime.connectDRAMtoCache);
+        (runtime.connectPAtoCache.active || runtime.connectDRAMtoCache.active);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -237,7 +237,7 @@ class _CacheLine extends StatelessWidget {
           // Dirty
           _StatusValue(label: 'D', value: dirty ? '1' : '0', active: dirty),
 
-          const SizedBox(width: 14),
+          const SizedBox(width: 28),
 
           // Tag
           Expanded(
@@ -248,19 +248,17 @@ class _CacheLine extends StatelessWidget {
                   'TAG',
                   style: TextStyle(
                     fontFamily: 'Nunito',
-                    fontSize: 8,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: Colors.blueAccent.withAlpha(180),
                   ),
                 ),
                 const SizedBox(height: 1),
                 Text(
-                  valid
-                      ? '0x${block.tag.toRadixString(16).toUpperCase()}'
-                      : '--',
+                  valid ? '${block.tag}' : '--',
                   style: TextStyle(
                     fontFamily: 'Fredoka',
-                    fontSize: 14,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -275,15 +273,16 @@ class _CacheLine extends StatelessWidget {
                 'DATA',
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 8,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.tertiary,
                 ),
               ),
               const SizedBox(height: 3),
               Container(
-                width: 60,
-                height: 24,
+                padding: EdgeInsets.symmetric(vertical: 2),
+                width: 100,
+                height: 40,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: Colors.transparent,
@@ -294,7 +293,7 @@ class _CacheLine extends StatelessWidget {
                   isLineAccessed ? '[ ${runtime.getBlockOffset} ]' : '',
                   style: TextStyle(
                     fontFamily: 'Fredoka',
-                    fontSize: 12,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -303,7 +302,7 @@ class _CacheLine extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(width: 10),
+          const SizedBox(width: 16),
 
           // Latest access
           Column(
@@ -313,7 +312,7 @@ class _CacheLine extends StatelessWidget {
                 'LAST',
                 style: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 8,
+                  fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -323,7 +322,7 @@ class _CacheLine extends StatelessWidget {
                 valid ? '${block.latestAccess}' : '--',
                 style: TextStyle(
                   fontFamily: 'Fredoka',
-                  fontSize: 13,
+                  fontSize: 14,
                   color: colorScheme.onSurface,
                 ),
               ),
@@ -356,7 +355,7 @@ class _StatusValue extends StatelessWidget {
           label,
           style: TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 8,
+            fontSize: 12,
             fontWeight: FontWeight.w700,
             color: colors.onSurfaceVariant,
           ),
