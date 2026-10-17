@@ -269,8 +269,9 @@ class PhysicalAddressWidget extends StatelessWidget {
             const SizedBox(width: 32),
             _AddressInfo(label: 'TAG', value: tag.toString()),
             const SizedBox(width: 32),
-            _AddressInfo(label: 'INDEX', value: index.toString()),
-            const SizedBox(width: 32),
+            if (indexBits != 0)
+              _AddressInfo(label: 'INDEX', value: index.toString()),
+            if (indexBits != 0) const SizedBox(width: 32),
             _AddressInfo(label: 'BLOCK OFFSET', value: blockOffset.toString()),
           ],
         ),
