@@ -171,10 +171,9 @@ class PhysicalAddressWidget extends StatelessWidget {
 
     final String tagBitsString = binary.substring(0, tagBits);
 
-    final String indexBitsString = binary.substring(
-      tagBits,
-      tagBits + indexBits,
-    );
+    final String indexBitsString = (indexBits != 0)
+        ? binary.substring(tagBits, tagBits + indexBits)
+        : '';
 
     final String blockOffsetBitsString = binary.substring(tagBits + indexBits);
 
@@ -183,7 +182,9 @@ class PhysicalAddressWidget extends StatelessWidget {
     // ========================================================================
 
     final int tag = int.parse(tagBitsString, radix: 2);
-    final int index = int.parse(indexBitsString, radix: 2);
+    final int index = (indexBits != 0)
+        ? int.parse(indexBitsString, radix: 2)
+        : 0;
     final int blockOffset = int.parse(blockOffsetBitsString, radix: 2);
 
     final int ppn = int.parse(ppnBinary, radix: 2);
@@ -222,11 +223,12 @@ class PhysicalAddressWidget extends StatelessWidget {
                 bits: tagBitsString,
                 color: Colors.blueAccent,
               ),
-              _Segment(
-                label: 'INDEX',
-                bits: indexBitsString,
-                color: theme.colorScheme.secondary,
-              ),
+              if (indexBits != 0)
+                _Segment(
+                  label: 'INDEX',
+                  bits: indexBitsString,
+                  color: theme.colorScheme.secondary,
+                ),
               _Segment(
                 label: 'BLOCK OFFSET',
                 bits: blockOffsetBitsString,

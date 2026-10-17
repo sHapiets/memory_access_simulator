@@ -95,6 +95,7 @@ class _CacheWidgetState extends State<CacheWidget> {
     final theme = Theme.of(context);
 
     final setCount = config.cacheSets;
+    final noIndex = (setCount == 1);
     final linesPerSet = config.cacheSetSizeBlocks;
 
     return Scrollbar(
@@ -114,6 +115,7 @@ class _CacheWidgetState extends State<CacheWidget> {
             setIndex: setIndex,
             startLine: startLine,
             linesPerSet: linesPerSet,
+            noSetHeader: noIndex,
           );
         },
       ),
@@ -125,11 +127,13 @@ class _CacheWidgetState extends State<CacheWidget> {
     required int setIndex,
     required int startLine,
     required int linesPerSet,
+    bool noSetHeader = false,
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Container(
+      padding: EdgeInsets.only(top: noSetHeader ? 6 : 0),
       margin: const EdgeInsets.only(bottom: 12, left: 4, right: 4),
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -139,48 +143,51 @@ class _CacheWidgetState extends State<CacheWidget> {
       child: Column(
         children: [
           // Set header
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 5),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-              borderRadius: const BorderRadius.all(Radius.circular(11)),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.layers_rounded,
-                  size: 15,
-                  color: colorScheme.secondary,
+          if (!noSetHeader)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.6,
                 ),
-
-                const SizedBox(width: 6),
-
-                Text(
-                  'INDEX - $setIndex',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: colorScheme.onSurface,
+                borderRadius: const BorderRadius.all(Radius.circular(11)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.layers_rounded,
+                    size: 15,
+                    color: colorScheme.secondary,
                   ),
-                ),
 
-                const Spacer(),
+                  const SizedBox(width: 6),
 
-                Text(
-                  '$linesPerSet-way',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurfaceVariant,
+                  Text(
+                    'INDEX - $setIndex',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
-                ),
-              ],
+
+                  const Spacer(),
+
+                  Text(
+                    '$linesPerSet-way',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
 
           // Cache lines belonging to this set.
           for (int i = 0; i < linesPerSet; i++)

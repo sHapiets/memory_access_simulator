@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/components/access_sequence.dart';
+import 'package:memory_access_simulator/core/configuration.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/foundation/access.dart';
 import 'package:memory_access_simulator/foundation/access_type.dart';
@@ -429,19 +430,20 @@ class _ComponentsAreaState extends State<ComponentsArea>
                                 ),
                               ),
 
-                              Positioned.fill(
-                                child: ConnectionWidget(
-                                  points: const [
-                                    Offset(420, 540),
-                                    Offset(750, 540),
-                                    Offset(750, 507),
-                                  ],
-                                  connection: () =>
-                                      Runtime.singleton.connectPAtoCache,
-                                  onColor: theme.colorScheme.secondary
-                                      .withValues(alpha: 0.8),
+                              if (Configuration.singleton.cacheIndexBits != 0)
+                                Positioned.fill(
+                                  child: ConnectionWidget(
+                                    points: const [
+                                      Offset(420, 540),
+                                      Offset(750, 540),
+                                      Offset(750, 507),
+                                    ],
+                                    connection: () =>
+                                        Runtime.singleton.connectPAtoCache,
+                                    onColor: theme.colorScheme.secondary
+                                        .withValues(alpha: 0.8),
+                                  ),
                                 ),
-                              ),
 
                               Positioned.fill(
                                 child: ConnectionWidget(

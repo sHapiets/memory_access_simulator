@@ -185,7 +185,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
           if (runtime.tlbHit) {
             _tlbHits++;
             _addEntry(
-              'TLB HIT: VPN ${runtime.getVPN} maps to '
+              'TLB Hit: VPN ${runtime.getVPN} maps '
               'PPN ${runtime.getPPN}. \n\nConstruct physical address from '
               'PPN and page offset.\n\n'
               'Checking cache...',
@@ -232,7 +232,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
 
           if (runtime.connectCacheToDRAMFromPageEviction.active) {
             logText +=
-                '\n\nEvicted page has a dirty cache line. Writeback dirty block to page.';
+                '\n\nEvicted page has a dirty cache line. Writeback dirty block to page first.';
           }
 
           if (runtime.connectDRAMtoDisk.active) {
@@ -251,7 +251,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
             'Loaded a page in main memory at '
             'PPN ${runtime.getPPN} from disk. \n\n'
             'Write PPN translation in '
-            'page table, then loaded VPN → PPN mapping in TLB.',
+            'page table, then loaded VPN-PPN mapping in TLB.',
             icon: Icons.download_rounded,
           );
           break;
@@ -272,7 +272,7 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
             _cacheMisses++;
             _addEntry(
               'Cache Miss: Valid cache line of Tag ${Parser.cacheTagFromAddress(runtime.getPhysicalAddress, config.blockSizeBytes, config.cacheSets)} '
-              'in set-Index ${Parser.cacheIndexFromAddress(runtime.getPhysicalAddress, config.blockSizeBytes, config.cacheSets)} '
+              'in Set-Index ${Parser.cacheIndexFromAddress(runtime.getPhysicalAddress, config.blockSizeBytes, config.cacheSets)} '
               'is not found.'
               '\n\nFetching the block from main memory...',
               icon: Icons.search_rounded,
