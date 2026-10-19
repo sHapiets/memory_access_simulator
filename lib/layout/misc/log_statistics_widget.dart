@@ -560,16 +560,6 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
                             color: colors.onSurface,
                           ),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Run an access to see the memory hierarchy in action.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 11,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
                       ],
                     ),
                   ),

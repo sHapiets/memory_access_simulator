@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/core/service/session_file_service.dart';
 import 'package:memory_access_simulator/layout/misc/access_sequence_modifier_dialog.dart';
+import 'package:memory_access_simulator/layout/misc/app_snackbar.dart';
 import 'package:memory_access_simulator/layout/misc/configuration_dialog.dart';
 import 'package:memory_access_simulator/layout/pages/page_mode.dart';
 import 'package:memory_access_simulator/main.dart';
@@ -104,7 +105,8 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
           context,
           icon: Icons.tune_rounded,
           label: 'CONFIGURE',
-          tooltip: 'Change cache, page, TLB, and memory parameters.',
+          tooltip:
+              'Change memory parameters (cache, physical memory, TLB, etc.).',
           onPressed: showConfiguration,
         ),
         /* 
@@ -121,7 +123,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
         _toolbarButton(
           context,
           icon: CupertinoIcons.arrow_uturn_left,
-          tooltip: 'Undo Step',
+          tooltip: 'Undo current step',
           onPressed: runtime.undo,
         ),
 
@@ -129,7 +131,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
           context,
           icon: Icons.skip_next_rounded,
           label: 'STEP',
-          tooltip: 'Advance the simulation by one Step.',
+          tooltip: 'Advance the simulation by one step.',
           highlighted: true,
           onPressed: () => Runtime.singleton.microRun(),
         ),
@@ -138,7 +140,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
           context,
           icon: Icons.fast_forward_rounded,
           label: 'ACCESS',
-          tooltip: 'Execute the current memory access.',
+          tooltip: 'Completely execute the current access.',
           onPressed: () => Runtime.singleton.runAccess(),
         ),
 
@@ -163,8 +165,10 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
             try {
               SessionFileService.downloadSession(Runtime.singleton);
             } catch (error) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to download session: $error')),
+              AppSnackbar.show(
+                context,
+                type: AppSnackbarType.error,
+                message: 'Failed to download session: $error',
               );
             }
           },
@@ -183,14 +187,18 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
 
               if (!context.mounted || !loaded) return;
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Session loaded successfully.')),
+              AppSnackbar.show(
+                context,
+                type: AppSnackbarType.success,
+                message: 'Session loaded successfully.',
               );
             } catch (error) {
               if (!context.mounted) return;
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to load session: $error')),
+              AppSnackbar.show(
+                context,
+                type: AppSnackbarType.error,
+                message: 'Failed to load session: $error',
               );
             }
           },

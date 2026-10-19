@@ -14,7 +14,7 @@ class SessionFileService {
     final url = html.Url.createObjectUrlFromBlob(blob);
 
     final anchor = html.AnchorElement(href: url)
-      ..download = 'memory_access_session.masim'
+      ..download = 'session_${_formattedTimestamp()}.masim'
       ..style.display = 'none';
 
     html.document.body?.append(anchor);
@@ -50,5 +50,18 @@ class SessionFileService {
 
     runtime.importSessionJson(result);
     return true;
+  }
+
+  static String _formattedTimestamp() {
+    final now = DateTime.now();
+
+    String twoDigits(int value) => value.toString().padLeft(2, '0');
+
+    return '${now.year}-'
+        '${twoDigits(now.month)}-'
+        '${twoDigits(now.day)}_'
+        '${twoDigits(now.hour)}-'
+        '${twoDigits(now.minute)}-'
+        '${twoDigits(now.second)}';
   }
 }

@@ -17,7 +17,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
   final Configuration config = Configuration.singleton;
 
   late final TextEditingController blockSizeController;
-  late final TextEditingController pageSizeBlocksController;
+  late final TextEditingController pageSizeBytesController;
   late final TextEditingController cacheSizeBlocksController;
   late final TextEditingController cacheSetsController;
   late final TextEditingController tlbSizeController;
@@ -32,8 +32,8 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
       text: config.blockSizeBytes.toString(),
     );
 
-    pageSizeBlocksController = TextEditingController(
-      text: config.pageSizeBlocks.toString(),
+    pageSizeBytesController = TextEditingController(
+      text: (config.pageSizeBlocks * config.blockSizeBytes).toString(),
     );
 
     cacheSizeBlocksController = TextEditingController(
@@ -56,7 +56,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
 
     for (final controller in [
       blockSizeController,
-      pageSizeBlocksController,
+      pageSizeBytesController,
       cacheSizeBlocksController,
       cacheSetsController,
       tlbSizeController,
@@ -70,7 +70,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
   @override
   void dispose() {
     blockSizeController.dispose();
-    pageSizeBlocksController.dispose();
+    pageSizeBytesController.dispose();
     cacheSizeBlocksController.dispose();
     cacheSetsController.dispose();
     tlbSizeController.dispose();
@@ -97,22 +97,35 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     return (log(pages) / ln2).round();
   }
 
-  String? _pageBytesHelper() {
-    final blockSize = _parse(blockSizeController);
-    final pageBlocks = _parse(pageSizeBlocksController);
-    if (_validateBlockSize() != null || _validatePageSizeBlocks() != null) {
-      return null;
-    }
-    return '${blockSize! * pageBlocks!} bytes per page';
+  int? _bits(int? number) {
+    if (number == null || !_isPowerOfTwo(number)) return null;
+    return (log(number) / ln2).round();
   }
 
-  String? _cacheWaysHelper() {
+  String? _blockBitsHelper() {
+    final blockSize = _parse(blockSizeController);
+    if (_validateBlockSize() != null) {
+      return null;
+    }
+    return '${_bits(blockSize!)} block-offset bits';
+  }
+
+  String? _pageBytesHelper() {
+    final blocksSize = _parse(blockSizeController);
+    final pageSize = _parse(pageSizeBytesController);
+    if (_validateBlockSize() != null || _validatePageSizeBytes() != null) {
+      return null;
+    }
+    return '${_bits(pageSize!)} page-offset bits, ${pageSize ~/ blocksSize!} blocks per page';
+  }
+
+  String? _cacheIndexBitsHelper() {
     final cacheSize = _parse(cacheSizeBlocksController);
     final sets = _parse(cacheSetsController);
     if (_validateCacheSize() != null || _validateCacheSets() != null) {
       return null;
     }
-    return '${cacheSize! ~/ sets!}-way set associative';
+    return '${_bits(sets)} index bits = [log2(cache sets)]';
   }
 
   String? _ppnBitsHelper() {
@@ -138,13 +151,26 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     return null;
   }
 
-  String? _validatePageSizeBlocks() {
-    final value = _parse(pageSizeBlocksController);
+  String? _validatePageSizeBytes() {
+    final value = _parse(pageSizeBytesController);
+    final blockSize = _parse(blockSizeController);
 
     if (value == null) return 'Enter a valid number.';
     if (value <= 0) return 'Page size must be greater than 0.';
     if (!_isPowerOfTwo(value)) return 'Page size must be a power of 2.';
-    if (value > 64) return 'Page size cannot exceed 64 blocks.';
+    if (value > 1024) return 'Page size cannot exceed 1024 bytes.';
+
+    if (blockSize == null || blockSize <= 0) {
+      return 'Enter a valid block size first.';
+    }
+
+    if (value < blockSize) {
+      return 'Page size must be at least as large as the block size.';
+    }
+
+    if (value % blockSize != 0) {
+      return 'Page size must be a multiple of the block size.';
+    }
 
     return null;
   }
@@ -226,7 +252,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
 
   bool get _isValid {
     return _validateBlockSize() == null &&
-        _validatePageSizeBlocks() == null &&
+        _validatePageSizeBytes() == null &&
         _validateCacheSize() == null &&
         _validateCacheSets() == null &&
         _validateTlbSize() == null &&
@@ -238,7 +264,8 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     if (!_isValid) return;
 
     config.blockSizeBytes = _parse(blockSizeController)!;
-    config.pageSizeBlocks = _parse(pageSizeBlocksController)!;
+    config.pageSizeBlocks =
+        _parse(pageSizeBytesController)! ~/ _parse(blockSizeController)!;
     config.cacheSizeBlocks = _parse(cacheSizeBlocksController)!;
     config.cacheSets = _parse(cacheSetsController)!;
     config.tlbSize = _parse(tlbSizeController)!;
@@ -353,14 +380,14 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     );
   }
 
-  Widget _buildMemoryOrganization() {
+  /* Widget _buildMemoryOrganization() {
     final blockSize = _parse(blockSizeController);
-    final pageBlocks = _parse(pageSizeBlocksController);
+    final pageSize = _parse(pageSizeBytesController);
 
     if (blockSize == null ||
-        pageBlocks == null ||
+        pageSize == null ||
         _validateBlockSize() != null ||
-        _validatePageSizeBlocks() != null) {
+        _validatePageSizeBytes() != null) {
       return _buildInvalidVisualization(
         'Enter valid block and page sizes to view the memory layout.',
       );
@@ -494,23 +521,24 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
       ),
     );
   }
+ */
 
   Widget _buildCacheAddressBreakdown() {
     final blockSize = _parse(blockSizeController);
     final cacheSets = _parse(cacheSetsController);
     final virtualPages = _parse(virtualPagesController);
     final dynamicSizePages = _parse(dynamicSizePagesController);
-    final pageBlocks = _parse(pageSizeBlocksController);
+    final pageBytes = _parse(pageSizeBytesController);
 
     if (blockSize == null ||
         cacheSets == null ||
         virtualPages == null ||
         dynamicSizePages == null ||
-        pageBlocks == null ||
+        pageBytes == null ||
         _validateBlockSize() != null ||
         _validateCacheSets() != null ||
         _validateVirtualPages() != null ||
-        _validatePageSizeBlocks() != null ||
+        _validatePageSizeBytes() != null ||
         _validateDynamicSizePages() != null) {
       return _buildInvalidVisualization(
         'Enter valid values to view the cache address breakdown.',
@@ -520,7 +548,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     final offsetBits = (log(blockSize) / ln2).round();
     final indexBits = (log(cacheSets) / ln2).round();
     final ppnBits = _bitsForPages(dynamicSizePages)!;
-    final pageOffsetBits = offsetBits + (log(pageBlocks) / ln2).round();
+    final pageOffsetBits = (log(pageBytes) / ln2).round();
     final addressBits = ppnBits + pageOffsetBits;
     final tagBits = addressBits - (offsetBits + indexBits);
 
@@ -844,13 +872,14 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                         controller: blockSizeController,
                         errorText: _validateBlockSize(),
                         unit: 'bytes',
+                        helperText: _blockBitsHelper(),
                       ),
 
                       _buildNumberField(
                         label: 'Page Size',
-                        controller: pageSizeBlocksController,
-                        errorText: _validatePageSizeBlocks(),
-                        unit: 'blocks',
+                        controller: pageSizeBytesController,
+                        errorText: _validatePageSizeBytes(),
+                        unit: 'bytes',
                         helperText: _pageBytesHelper(),
                       ),
 
@@ -860,7 +889,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                       _buildSectionTitle('Cache', Icons.cached_outlined),
 
                       _buildNumberField(
-                        label: 'Cache Size',
+                        label: 'Cache Lines',
                         controller: cacheSizeBlocksController,
                         errorText: _validateCacheSize(),
                         unit: 'lines',
@@ -871,7 +900,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
                         controller: cacheSetsController,
                         errorText: _validateCacheSets(),
                         unit: 'sets',
-                        helperText: _cacheWaysHelper(),
+                        helperText: _cacheIndexBitsHelper(),
                       ),
 
                       const SizedBox(height: 22),
