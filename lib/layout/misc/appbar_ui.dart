@@ -159,8 +159,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
         _toolbarButton(
           context,
           icon: Icons.download_rounded,
-          tooltip:
-              'Download: Save the complete simulator session (.masim file).',
+          tooltip: 'Download: Save the complete simulator session (.mas file).',
           onPressed: () {
             try {
               SessionFileService.downloadSession(Runtime.singleton);
@@ -178,7 +177,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
           context,
           icon: Icons.upload_file_rounded,
           tooltip:
-              'Upload: Load a previously saved simulator session (.masim file).',
+              'Upload: Load a previously saved simulator session (.mas file).',
           onPressed: () async {
             try {
               final loaded = await SessionFileService.loadSession(

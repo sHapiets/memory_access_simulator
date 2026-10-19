@@ -522,7 +522,7 @@ class Runtime extends ChangeNotifier {
     };
   }
 
-  /// Converts the current session into a JSON string suitable for a .masim file.
+  /// Converts the current session into a JSON string suitable for a .mas file.
   String exportSessionJson() {
     return const JsonEncoder.withIndent('  ').convert(exportSession());
   }

@@ -125,7 +125,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     if (_validateCacheSize() != null || _validateCacheSets() != null) {
       return null;
     }
-    return '${_bits(sets)} index bits = [log2(cache sets)]';
+    return '${_bits(sets)} index bits';
   }
 
   String? _ppnBitsHelper() {

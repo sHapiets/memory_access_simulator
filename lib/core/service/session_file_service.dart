@@ -14,7 +14,7 @@ class SessionFileService {
     final url = html.Url.createObjectUrlFromBlob(blob);
 
     final anchor = html.AnchorElement(href: url)
-      ..download = 'session_${_formattedTimestamp()}.masim'
+      ..download = 'session_${_formattedTimestamp()}.mas'
       ..style.display = 'none';
 
     html.document.body?.append(anchor);
@@ -29,7 +29,7 @@ class SessionFileService {
 
   static Future<bool> loadSession(Runtime runtime) async {
     final input = html.FileUploadInputElement()
-      ..accept = '.masim,application/json';
+      ..accept = '.mas,application/json';
 
     input.click();
 
