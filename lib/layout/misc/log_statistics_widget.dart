@@ -291,11 +291,13 @@ class _LogStatisticsWidgetState extends State<LogStatisticsWidget> {
 
         case MicroStep.dram:
           String logText =
-              'Requested block loaded in cache from main memory. Updated MMU.';
+              'Requested block loaded in cache from main memory. Update MMU.';
 
           if (runtime.connectCacheToDRAMFromLineEviction.active) {
             logText +=
-                '\n\nEvicted cache line is dirty. Writeback to main memory, updated MMU.';
+                '\n\nEvicted cache line, belonging to PPN ${runtime.getReplacedDirtyLinePPN}, is dirty. '
+                'Writeback line to main memory. \n\nSet '
+                'page table entry with PPN ${runtime.getReplacedDirtyLinePPN} as dirty.';
           }
 
           _addEntry(logText, icon: Icons.memory_rounded);

@@ -13,6 +13,7 @@ import 'package:memory_access_simulator/foundation/dynamic_memory_page.dart';
 import 'package:memory_access_simulator/foundation/page_table_entry.dart';
 import 'package:memory_access_simulator/foundation/parser.dart';
 import 'package:memory_access_simulator/foundation/tlb_entry.dart';
+import 'dart:convert';
 
 class Runtime extends ChangeNotifier {
   Runtime._() {
@@ -32,9 +33,9 @@ class Runtime extends ChangeNotifier {
   int _cacheLine = -1;
   AccessType? _accessType;
 
-  // Used during page replacement.
   int _invalidatedVPN = -1;
   int _replacedPagePPN = -1;
+  int _replacedDirtyLinePPN = -1;
 
   int get getVPN => _vpn;
   int get getPPN => _ppn;
@@ -46,6 +47,8 @@ class Runtime extends ChangeNotifier {
     Configuration.singleton.blockSizeBytes,
   );
   int get getInvalidatedVPN => _invalidatedVPN;
+  int get getReplacedPagePPN => _replacedPagePPN;
+  int get getReplacedDirtyLinePPN => _replacedDirtyLinePPN;
 
   Connection connectVAtoTLB = Connection.newConnection();
   Connection connectVAtoPageTable = Connection.newConnection();
@@ -432,15 +435,15 @@ class Runtime extends ChangeNotifier {
       _cacheLine = cache.findReplaceCacheLine(_physicalAddress);
     }
 
-    final int replacedLinePPN = cache.loadBlockFromMemory(
+    _replacedDirtyLinePPN = cache.loadBlockFromMemory(
       _cacheLine,
       _physicalAddress,
     );
     connectDRAMtoCache.setActive(microStepNumber);
 
-    if (replacedLinePPN != -1) {
+    if (_replacedDirtyLinePPN != -1) {
       // TODO: Cache writeback delay / stats.
-      mem.dirtyVPNEntryFromPPN(replacedLinePPN);
+      mem.dirtyVPNEntryFromPPN(_replacedDirtyLinePPN);
       connectCacheToDRAMFromLineEviction.setActive(microStepNumber);
     }
 
@@ -481,6 +484,7 @@ class Runtime extends ChangeNotifier {
 
     _invalidatedVPN = -1;
     _replacedPagePPN = -1;
+    _replacedDirtyLinePPN = -1;
 
     final accSequence = AccessSequence.singleton;
     accSequence.restart();
@@ -497,6 +501,77 @@ class Runtime extends ChangeNotifier {
     lastChange = RuntimeChange.reset;
 
     notifyListeners();
+  }
+
+  Map<String, dynamic> exportSession() {
+    return {
+      'format': 'memory_access_simulator',
+      'version': 1,
+      'configuration': {
+        'blockSizeBytes': Configuration.singleton.blockSizeBytes,
+        'pageSizeBlocks': Configuration.singleton.pageSizeBlocks,
+        'cacheSizeBlocks': Configuration.singleton.cacheSizeBlocks,
+        'cacheSets': Configuration.singleton.cacheSets,
+        'tlbSize': Configuration.singleton.tlbSize,
+        'dynamicSizePages': Configuration.singleton.dynamicSizePages,
+        'vpnBits': Configuration.singleton.vpnBits,
+      },
+      'currentState': _RuntimeSnapshot.capture(this).toJson(),
+      'history': _history.map((snapshot) => snapshot.toJson()).toList(),
+      'historyIndex': _historyIndex,
+    };
+  }
+
+  /// Converts the current session into a JSON string suitable for a .masim file.
+  String exportSessionJson() {
+    return const JsonEncoder.withIndent('  ').convert(exportSession());
+  }
+
+  /// Loads a session previously produced by [exportSession].
+  ///
+  /// All parsing and validation happens before any singleton is modified.
+  void importSession(Map<String, dynamic> json) {
+    final session = _ParsedSession.fromJson(json);
+
+    // The snapshots must agree with the configuration being imported.
+    session.validateComponentSizes();
+
+    // Apply configuration first because component dimensions depend on it.
+    final config = Configuration.singleton;
+    config
+      ..blockSizeBytes = session.blockSizeBytes
+      ..pageSizeBlocks = session.pageSizeBlocks
+      ..cacheSizeBlocks = session.cacheSizeBlocks
+      ..cacheSets = session.cacheSets
+      ..tlbSize = session.tlbSize
+      ..dynamicSizePages = session.dynamicSizePages
+      ..vpnBits = session.vpnBits;
+
+    // Restore the exact saved current state.
+    session.currentState.restore(this);
+
+    // Restore the complete undo/redo timeline.
+    _history
+      ..clear()
+      ..addAll(session.history);
+    _historyIndex = session.historyIndex;
+
+    // Refresh widgets that listen to the runtime or access sequence.
+    lastChange = RuntimeChange.reset;
+    AccessSequence.singleton.notifyListeners();
+    notifyListeners();
+  }
+
+  void importSessionJson(String source) {
+    final decoded = jsonDecode(source);
+
+    if (decoded is! Map) {
+      throw const FormatException(
+        'The session file must contain a JSON object.',
+      );
+    }
+
+    importSession(Map<String, dynamic>.from(decoded));
   }
 
   void _resetConnections() {
@@ -523,6 +598,214 @@ class Runtime extends ChangeNotifier {
   }
 }
 
+class _ParsedSession {
+  final int blockSizeBytes;
+  final int pageSizeBlocks;
+  final int cacheSizeBlocks;
+  final int cacheSets;
+  final int tlbSize;
+  final int dynamicSizePages;
+  final int vpnBits;
+
+  final _RuntimeSnapshot currentState;
+  final List<_RuntimeSnapshot> history;
+  final int historyIndex;
+
+  _ParsedSession({
+    required this.blockSizeBytes,
+    required this.pageSizeBlocks,
+    required this.cacheSizeBlocks,
+    required this.cacheSets,
+    required this.tlbSize,
+    required this.dynamicSizePages,
+    required this.vpnBits,
+    required this.currentState,
+    required this.history,
+    required this.historyIndex,
+  });
+
+  factory _ParsedSession.fromJson(Map<String, dynamic> json) {
+    if (json['format'] != 'memory_access_simulator') {
+      throw const FormatException(
+        'This is not a Memory Access Simulator file.',
+      );
+    }
+
+    if (json['version'] != 1) {
+      throw FormatException(
+        'Unsupported session file version: ${json['version']}',
+      );
+    }
+
+    final config = _jsonMap(json['configuration'], 'configuration');
+
+    final blockSizeBytes = _jsonInt(config, 'blockSizeBytes');
+    final pageSizeBlocks = _jsonInt(config, 'pageSizeBlocks');
+    final cacheSizeBlocks = _jsonInt(config, 'cacheSizeBlocks');
+    final cacheSets = _jsonInt(config, 'cacheSets');
+    final tlbSize = _jsonInt(config, 'tlbSize');
+    final dynamicSizePages = _jsonInt(config, 'dynamicSizePages');
+    final vpnBits = _jsonInt(config, 'vpnBits');
+
+    _validateConfiguration(
+      blockSizeBytes: blockSizeBytes,
+      pageSizeBlocks: pageSizeBlocks,
+      cacheSizeBlocks: cacheSizeBlocks,
+      cacheSets: cacheSets,
+      tlbSize: tlbSize,
+      dynamicSizePages: dynamicSizePages,
+      vpnBits: vpnBits,
+    );
+
+    final currentState = _RuntimeSnapshot.fromJson(
+      _jsonMap(json['currentState'], 'currentState'),
+    );
+
+    final historyJson = json['history'];
+    if (historyJson is! List || historyJson.isEmpty) {
+      throw const FormatException('Session history must not be empty.');
+    }
+
+    final history = historyJson.map((item) {
+      return _RuntimeSnapshot.fromJson(_jsonMap(item, 'history entry'));
+    }).toList();
+
+    final historyIndex = _jsonInt(json, 'historyIndex');
+
+    if (historyIndex < 0 || historyIndex >= history.length) {
+      throw const FormatException('Invalid history index.');
+    }
+
+    return _ParsedSession(
+      blockSizeBytes: blockSizeBytes,
+      pageSizeBlocks: pageSizeBlocks,
+      cacheSizeBlocks: cacheSizeBlocks,
+      cacheSets: cacheSets,
+      tlbSize: tlbSize,
+      dynamicSizePages: dynamicSizePages,
+      vpnBits: vpnBits,
+      currentState: currentState,
+      history: history,
+      historyIndex: historyIndex,
+    );
+  }
+
+  void validateComponentSizes() {
+    final expectedCacheBlocks = cacheSizeBlocks;
+    final expectedTlbEntries = tlbSize;
+    final expectedDynamicPages = dynamicSizePages;
+    final expectedPageTableEntries = 1 << vpnBits;
+
+    void check(_RuntimeSnapshot snapshot, String label) {
+      if (snapshot.cacheBlocks.length != expectedCacheBlocks ||
+          snapshot.tlbEntries.length != expectedTlbEntries ||
+          snapshot.dynamicPages.length != expectedDynamicPages ||
+          snapshot.pageTable.length != expectedPageTableEntries) {
+        throw FormatException(
+          '$label has component sizes that do not match its configuration.',
+        );
+      }
+
+      if (snapshot.sequencePointer < -1 ||
+          snapshot.sequencePointer >= snapshot.sequence.length) {
+        throw FormatException('$label has an invalid access-sequence pointer.');
+      }
+    }
+
+    check(currentState, 'Current state');
+
+    for (var i = 0; i < history.length; i++) {
+      check(history[i], 'History entry $i');
+    }
+  }
+}
+
+void _validateConfiguration({
+  required int blockSizeBytes,
+  required int pageSizeBlocks,
+  required int cacheSizeBlocks,
+  required int cacheSets,
+  required int tlbSize,
+  required int dynamicSizePages,
+  required int vpnBits,
+}) {
+  bool isPowerOfTwo(int value) => value > 0 && (value & (value - 1)) == 0;
+
+  if (!isPowerOfTwo(blockSizeBytes)) {
+    throw const FormatException('Block size must be a positive power of two.');
+  }
+
+  if (!isPowerOfTwo(pageSizeBlocks)) {
+    throw const FormatException(
+      'Blocks per page must be a positive power of two.',
+    );
+  }
+
+  if (!isPowerOfTwo(cacheSets) ||
+      cacheSizeBlocks <= 0 ||
+      cacheSets > cacheSizeBlocks ||
+      cacheSizeBlocks % cacheSets != 0) {
+    throw const FormatException('Invalid cache size or set configuration.');
+  }
+
+  if (tlbSize <= 0) {
+    throw const FormatException('TLB size must be positive.');
+  }
+
+  if (!isPowerOfTwo(dynamicSizePages)) {
+    throw const FormatException(
+      'DRAM page count must be a positive power of two.',
+    );
+  }
+
+  // Keep shifts and page-table allocation within a reasonable range.
+  if (vpnBits < 1 || vpnBits > 20) {
+    throw const FormatException('VPN bits must be between 1 and 20.');
+  }
+}
+
+Map<String, dynamic> _jsonMap(dynamic value, String label) {
+  if (value is! Map) {
+    throw FormatException('Invalid $label: expected an object.');
+  }
+
+  try {
+    return Map<String, dynamic>.from(value);
+  } catch (_) {
+    throw FormatException('Invalid $label: expected string keys.');
+  }
+}
+
+int _jsonInt(Map<String, dynamic> map, String key) {
+  final value = map[key];
+
+  if (value is! int) {
+    throw FormatException('Invalid or missing integer field: $key.');
+  }
+
+  return value;
+}
+
+bool _jsonBool(Map<String, dynamic> map, String key) {
+  final value = map[key];
+
+  if (value is! bool) {
+    throw FormatException('Invalid or missing boolean field: $key.');
+  }
+
+  return value;
+}
+
+String _jsonString(Map<String, dynamic> map, String key) {
+  final value = map[key];
+
+  if (value is! String) {
+    throw FormatException('Invalid or missing string field: $key.');
+  }
+
+  return value;
+}
+
 class _RuntimeSnapshot {
   // Runtime execution state.
   final MicroStep microStep;
@@ -536,6 +819,7 @@ class _RuntimeSnapshot {
   final AccessType? accessType;
   final int invalidatedVPN;
   final int replacedPagePPN;
+  final int replacedDirtyLinePPN;
 
   // Connection flags.
   final Map<String, Connection> connections;
@@ -562,6 +846,7 @@ class _RuntimeSnapshot {
     required this.accessType,
     required this.invalidatedVPN,
     required this.replacedPagePPN,
+    required this.replacedDirtyLinePPN,
     required this.connections,
     required this.sequence,
     required this.sequencePointer,
@@ -589,6 +874,7 @@ class _RuntimeSnapshot {
       accessType: runtime._accessType,
       invalidatedVPN: runtime._invalidatedVPN,
       replacedPagePPN: runtime._replacedPagePPN,
+      replacedDirtyLinePPN: runtime._replacedDirtyLinePPN,
 
       connections: {
         'connectVAtoTLB': Connection.newConnection()
@@ -679,6 +965,7 @@ class _RuntimeSnapshot {
     runtime._accessType = accessType;
     runtime._invalidatedVPN = invalidatedVPN;
     runtime._replacedPagePPN = replacedPagePPN;
+    runtime._replacedDirtyLinePPN = replacedDirtyLinePPN;
 
     runtime.connectVAtoTLB.set(connections['connectVAtoTLB']!);
     runtime.connectVAtoPageTable.set(connections['connectVAtoPageTable']!);
@@ -747,6 +1034,200 @@ class _RuntimeSnapshot {
       copy.ppn = entry.ppn;
       return copy;
     }).toList();
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'microStep': microStep.name,
+      'microStepNumber': microStepNumber,
+      'vpn': vpn,
+      'pageOffset': pageOffset,
+      'ppn': ppn,
+      'physicalAddress': physicalAddress,
+      'tlbEntry': tlbEntry,
+      'cacheLine': cacheLine,
+      'accessType': accessType?.name,
+      'invalidatedVPN': invalidatedVPN,
+      'replacedPagePPN': replacedPagePPN,
+      'replacedDirtyLinePPN': replacedDirtyLinePPN,
+
+      'connections': connections.map((name, connection) {
+        return MapEntry(name, {
+          'active': connection.active,
+          'microStepNumber': connection.microStepNumber,
+        });
+      }),
+
+      'sequence': sequence.map((access) {
+        return {'type': access.type.name, 'address': access.address};
+      }).toList(),
+      'sequencePointer': sequencePointer,
+
+      'cacheBlocks': cacheBlocks.map((block) {
+        return {
+          'valid': block.valid,
+          'dirty': block.dirty,
+          'tag': block.tag,
+          'latestAccess': block.latestAccess,
+        };
+      }).toList(),
+
+      'tlbEntries': tlbEntries.map((entry) {
+        return {
+          'vpn': entry.vpn,
+          'valid': entry.valid,
+          'ppn': entry.ppn,
+          'lastAccess': entry.lastAccess,
+        };
+      }).toList(),
+
+      'dynamicPages': dynamicPages.map((page) {
+        return {'used': page.used, 'lastAccess': page.lastAccess};
+      }).toList(),
+
+      'pageTable': pageTable.map((entry) {
+        return {'valid': entry.valid, 'dirty': entry.dirty, 'ppn': entry.ppn};
+      }).toList(),
+    };
+  }
+
+  factory _RuntimeSnapshot.fromJson(Map<String, dynamic> json) {
+    MicroStep parseMicroStep(String name) {
+      try {
+        return MicroStep.values.byName(name);
+      } catch (_) {
+        throw FormatException('Unknown microstep: $name');
+      }
+    }
+
+    AccessType? parseAccessType(dynamic value) {
+      if (value == null) return null;
+      if (value is! String) {
+        throw const FormatException('Invalid access type.');
+      }
+
+      try {
+        return AccessType.values.byName(value);
+      } catch (_) {
+        throw FormatException('Unknown access type: $value');
+      }
+    }
+
+    final connectionJson = _jsonMap(json['connections'], 'connections');
+
+    // Keep this list aligned with the connections captured by capture().
+    const connectionNames = [
+      'connectVAtoTLB',
+      'connectVAtoPageTable',
+      'connectPageTableToTLB',
+      'connectVAtoMMU',
+      'connectMMUtoDisk',
+      'connectDiskToDRAM',
+      'connectDRAMtoDisk',
+      'connectMMUtoPageTable',
+      'connectTLBtoPA',
+      'connectVAtoPA',
+      'connectPAtoCache',
+      'connectPAtoDRAM',
+      'connectDRAMtoCache',
+      'connectCacheToDRAMFromLineEviction',
+      'connectCacheToDRAMFromPageEviction',
+      'connectCacheToAccessRegister',
+      'connectAccessRegisterToCache',
+    ];
+
+    final parsedConnections = <String, Connection>{};
+
+    for (final name in connectionNames) {
+      final data = _jsonMap(connectionJson[name], 'connection $name');
+
+      parsedConnections[name] = Connection(
+        active: _jsonBool(data, 'active'),
+        microStepNumber: _jsonInt(data, 'microStepNumber'),
+      );
+    }
+
+    List<dynamic> requiredList(Map<String, dynamic> source, String key) {
+      final value = source[key];
+
+      if (value is! List) {
+        throw FormatException('Invalid or missing list: $key.');
+      }
+
+      return value;
+    }
+
+    final parsedSequence = requiredList(json, 'sequence').map((item) {
+      final data = _jsonMap(item, 'access');
+
+      return Access(
+        type: AccessType.values.byName(_jsonString(data, 'type')),
+        address: _jsonInt(data, 'address'),
+      );
+    }).toList();
+
+    final parsedCacheBlocks = requiredList(json, 'cacheBlocks').map((item) {
+      final data = _jsonMap(item, 'cache block');
+
+      return CacheBlock(
+        valid: _jsonBool(data, 'valid'),
+        dirty: _jsonBool(data, 'dirty'),
+        tag: _jsonInt(data, 'tag'),
+        latestAccess: _jsonInt(data, 'latestAccess'),
+      );
+    }).toList();
+
+    final parsedTlbEntries = requiredList(json, 'tlbEntries').map((item) {
+      final data = _jsonMap(item, 'TLB entry');
+
+      return TLBEntry(
+        vpn: _jsonInt(data, 'vpn'),
+        valid: _jsonBool(data, 'valid'),
+        ppn: _jsonInt(data, 'ppn'),
+        lastAccess: _jsonInt(data, 'lastAccess'),
+      );
+    }).toList();
+
+    final parsedDynamicPages = requiredList(json, 'dynamicPages').map((item) {
+      final data = _jsonMap(item, 'dynamic page');
+
+      return DynamicMemoryPage(
+        used: _jsonBool(data, 'used'),
+        lastAccess: _jsonInt(data, 'lastAccess'),
+      );
+    }).toList();
+
+    final parsedPageTable = requiredList(json, 'pageTable').map((item) {
+      final data = _jsonMap(item, 'page-table entry');
+
+      return PageTableEntry(
+        valid: _jsonBool(data, 'valid'),
+        dirty: _jsonBool(data, 'dirty'),
+        ppn: _jsonInt(data, 'ppn'),
+      );
+    }).toList();
+
+    return _RuntimeSnapshot(
+      microStep: parseMicroStep(_jsonString(json, 'microStep')),
+      microStepNumber: _jsonInt(json, 'microStepNumber'),
+      vpn: _jsonInt(json, 'vpn'),
+      pageOffset: _jsonInt(json, 'pageOffset'),
+      ppn: _jsonInt(json, 'ppn'),
+      physicalAddress: _jsonInt(json, 'physicalAddress'),
+      tlbEntry: _jsonInt(json, 'tlbEntry'),
+      cacheLine: _jsonInt(json, 'cacheLine'),
+      accessType: parseAccessType(json['accessType']),
+      invalidatedVPN: _jsonInt(json, 'invalidatedVPN'),
+      replacedPagePPN: _jsonInt(json, 'replacedPagePPN'),
+      replacedDirtyLinePPN: _jsonInt(json, 'replacedDirtyLinePPN'),
+      connections: parsedConnections,
+      sequence: parsedSequence,
+      sequencePointer: _jsonInt(json, 'sequencePointer'),
+      cacheBlocks: parsedCacheBlocks,
+      tlbEntries: parsedTlbEntries,
+      dynamicPages: parsedDynamicPages,
+      pageTable: parsedPageTable,
+    );
   }
 }
 

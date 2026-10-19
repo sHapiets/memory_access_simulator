@@ -4,12 +4,14 @@ class TapToShowInDialog extends StatefulWidget {
   const TapToShowInDialog({
     super.key,
     required this.child,
+    this.dialog,
     this.dialogWidth = 700,
     this.dialogHeight = 500,
     this.scaleToScreen = true,
   });
 
   final Widget child;
+  final Widget? dialog;
   final double dialogWidth;
   final double dialogHeight;
   final bool scaleToScreen;
@@ -37,7 +39,9 @@ class _TapToShowInDialogState extends State<TapToShowInDialog> {
           showDialog<void>(
             context: context,
             builder: (dialogContext) {
-              final dialog = Dialog(child: widget.child);
+              final dialog = Dialog(
+                child: (widget.dialog == null) ? widget.child : widget.dialog,
+              );
 
               if (!widget.scaleToScreen) {
                 return dialog;

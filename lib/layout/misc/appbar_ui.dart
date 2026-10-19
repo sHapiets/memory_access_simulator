@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
+import 'package:memory_access_simulator/core/service/session_file_service.dart';
 import 'package:memory_access_simulator/layout/misc/access_sequence_modifier_dialog.dart';
 import 'package:memory_access_simulator/layout/misc/configuration_dialog.dart';
 import 'package:memory_access_simulator/layout/pages/page_mode.dart';
@@ -150,6 +151,52 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
           tooltip: 'Reset components state and access statistics.',
           onPressed: () => Runtime.singleton.reset(),
         ),
+
+        _toolbarDivider(context),
+
+        _toolbarButton(
+          context,
+          icon: Icons.download_rounded,
+          tooltip:
+              'Download: Save the complete simulator session (.masim file).',
+          onPressed: () {
+            try {
+              SessionFileService.downloadSession(Runtime.singleton);
+            } catch (error) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to download session: $error')),
+              );
+            }
+          },
+        ),
+
+        _toolbarButton(
+          context,
+          icon: Icons.upload_file_rounded,
+          tooltip:
+              'Upload: Load a previously saved simulator session (.masim file).',
+          onPressed: () async {
+            try {
+              final loaded = await SessionFileService.loadSession(
+                Runtime.singleton,
+              );
+
+              if (!context.mounted || !loaded) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Session loaded successfully.')),
+              );
+            } catch (error) {
+              if (!context.mounted) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to load session: $error')),
+              );
+            }
+          },
+        ),
+
+        _toolbarDivider(context),
 
         /* 
         _toolbarButton(

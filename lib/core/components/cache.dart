@@ -105,21 +105,22 @@ class Cache {
       config.cacheSets,
     );
 
-    int replacedLinePPN = -1;
+    int replacedDirtyLinePPN = -1;
 
     if (blocks[lineNumber].dirty && blocks[lineNumber].valid) {
       // TODO: Writeback to DRAM Stats / Delay
       final int replacedLineIndex = lineNumber ~/ config.cacheSetSizeBlocks;
       int replacedLineBlockAddress =
           (blocks[lineNumber].tag << config.cacheIndexBits) + replacedLineIndex;
-      replacedLinePPN = replacedLineBlockAddress >> config.pageBlockOffsetBits;
+      replacedDirtyLinePPN =
+          replacedLineBlockAddress >> config.pageBlockOffsetBits;
     }
 
     blocks[lineNumber].tag = tag;
     blocks[lineNumber].valid = true;
     blocks[lineNumber].dirty = false;
 
-    return replacedLinePPN;
+    return replacedDirtyLinePPN;
   }
 
   void accessCacheLine(
