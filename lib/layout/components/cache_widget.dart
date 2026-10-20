@@ -3,6 +3,7 @@ import 'package:memory_access_simulator/core/components/cache.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/foundation/cache_block.dart';
+import 'package:memory_access_simulator/foundation/parser.dart';
 
 class CacheWidget extends StatefulWidget {
   const CacheWidget({super.key});
@@ -212,6 +213,7 @@ class _CacheLine extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final runtime = Runtime.singleton;
+    final config = Configuration.singleton;
 
     final bool valid = block.valid;
     final bool dirty = block.dirty;
@@ -219,6 +221,16 @@ class _CacheLine extends StatelessWidget {
         valid &&
         (lineNumber == runtime.getCacheLine) &&
         (runtime.connectPAtoCache.active || runtime.connectDRAMtoCache.active);
+
+    final lastRuntime = runtime.lastRuntimeSnapshot;
+    final wasValid =
+        (lastRuntime != null) && lastRuntime.cacheBlocks[lineNumber].valid;
+
+    final int lineIndex = lineNumber ~/ config.cacheSetSizeBlocks;
+    final int lineBlockAddress =
+        (block.tag << config.cacheIndexBits) + lineIndex;
+    final int linePPN = lineBlockAddress >> config.pageBlockOffsetBits;
+    final isLineReplaced = wasValid && (runtime.getReplacedPagePPN == linePPN);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -228,10 +240,14 @@ class _CacheLine extends StatelessWidget {
         border: Border.all(
           color: isLineAccessed
               ? colorScheme.primary.withValues(alpha: 0.35)
+              : isLineReplaced
+              ? colorScheme.tertiary.withValues(alpha: 0.35)
               : colorScheme.outline.withValues(alpha: 0.35),
         ),
         color: isLineAccessed
             ? theme.colorScheme.primary.withValues(alpha: 0.06)
+            : isLineReplaced
+            ? colorScheme.tertiary.withValues(alpha: 0.06)
             : theme.colorScheme.surface,
       ),
       child: Row(

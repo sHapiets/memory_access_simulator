@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/components/memory.dart';
+import 'package:memory_access_simulator/core/controller/micro_step.dart';
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 
 class PageTableWidget extends StatefulWidget {
@@ -132,6 +133,8 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                                 (runtime.getVPN == index) &&
                                 (runtime.connectVAtoPageTable.active ||
                                     runtime.connectMMUtoPageTable.active);
+                            final isEntryInvalidated =
+                                (runtime.getInvalidatedVPN == index);
 
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 2),
@@ -168,10 +171,18 @@ class _PageTableWidgetState extends State<PageTableWidget> {
                                             ? colors.primary.withValues(
                                                 alpha: 0.06,
                                               )
+                                            : isEntryInvalidated
+                                            ? colors.tertiary.withValues(
+                                                alpha: 0.06,
+                                              )
                                             : Colors.transparent,
                                         border: Border.all(
                                           color: isEntryAccessed
                                               ? colors.primary.withValues(
+                                                  alpha: 0.35,
+                                                )
+                                              : isEntryInvalidated
+                                              ? colors.tertiary.withValues(
                                                   alpha: 0.35,
                                                 )
                                               : colors.outline.withValues(

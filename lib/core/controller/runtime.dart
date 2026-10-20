@@ -91,6 +91,12 @@ class Runtime extends ChangeNotifier {
 
   int get historyPosition => _historyIndex;
 
+  _RuntimeSnapshot? get lastRuntimeSnapshot {
+    if (_historyIndex > 0) {
+      return _history[_historyIndex - 1];
+    }
+  }
+
   RuntimeChange lastChange = RuntimeChange.step;
 
   void _saveInitialSnapshot() {
@@ -259,6 +265,7 @@ class Runtime extends ChangeNotifier {
 
     _invalidatedVPN = -1;
     _replacedPagePPN = -1;
+    _replacedDirtyLinePPN = -1;
 
     _resetConnections();
 

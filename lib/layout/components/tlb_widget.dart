@@ -93,7 +93,10 @@ class _TLBWidgetState extends State<TLBWidget> {
                       itemBuilder: (context, index) {
                         return SizedBox(
                           height: 38,
-                          child: _TLBEntryRow(entry: tlb.entries[index]),
+                          child: _TLBEntryRow(
+                            entry: tlb.entries[index],
+                            entryNumber: index,
+                          ),
                         );
                       },
                     ),
@@ -172,9 +175,10 @@ class _HeaderCell extends StatelessWidget {
 // ============================================================
 
 class _TLBEntryRow extends StatelessWidget {
-  const _TLBEntryRow({required this.entry});
+  const _TLBEntryRow({required this.entry, required this.entryNumber});
 
   final TLBEntry entry;
+  final int entryNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +189,12 @@ class _TLBEntryRow extends StatelessWidget {
         (runtime.getVPN == entry.vpn) &&
         (runtime.connectVAtoTLB.active || runtime.connectPageTableToTLB.active);
 
+    final lastRuntime = runtime.lastRuntimeSnapshot;
+    final wasValid =
+        (lastRuntime != null) && lastRuntime.tlbEntries[entryNumber].valid;
+    final isEntryInvalidated =
+        wasValid && (runtime.getInvalidatedVPN == entry.vpn);
+
     final colors = theme.colorScheme;
 
     return Container(
@@ -192,11 +202,15 @@ class _TLBEntryRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEntryAccessed
             ? theme.colorScheme.primary.withValues(alpha: 0.06)
+            : isEntryInvalidated
+            ? theme.colorScheme.tertiary.withValues(alpha: 0.06)
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isEntryAccessed
               ? colors.primary.withValues(alpha: 0.35)
+              : isEntryInvalidated
+              ? colors.tertiary.withValues(alpha: 0.35)
               : colors.outline.withValues(alpha: 0.35),
         ),
       ),

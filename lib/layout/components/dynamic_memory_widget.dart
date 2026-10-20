@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:memory_access_simulator/core/configuration.dart';
+import 'package:memory_access_simulator/core/controller/micro_step.dart';
 
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 import 'package:memory_access_simulator/core/components/memory.dart';
@@ -104,19 +105,27 @@ class _PhysicalPage extends StatelessWidget {
     final runtime = Runtime.singleton;
     final isPageAccessed =
         (runtime.getPPN == ppn) &&
+        (runtime.microStep != MicroStep.pageFaultLoad) &&
         (runtime.connectPAtoDRAM.active ||
             runtime.connectDiskToDRAM.active ||
             runtime.connectDRAMtoDisk.active);
+    final isPageReplaced =
+        (runtime.getReplacedPagePPN == ppn) ||
+        (runtime.getReplacedDirtyLinePPN == ppn);
 
     return Container(
       decoration: BoxDecoration(
         color: isPageAccessed
             ? theme.colorScheme.primary.withValues(alpha: 0.08)
+            : isPageReplaced
+            ? theme.colorScheme.tertiary.withValues(alpha: 0.08)
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(9),
         border: Border.all(
           color: isPageAccessed
               ? colors.primary.withValues(alpha: 0.35)
+              : isPageReplaced
+              ? theme.colorScheme.tertiary.withValues(alpha: 0.35)
               : colors.outline.withValues(alpha: 0.35),
         ),
       ),
