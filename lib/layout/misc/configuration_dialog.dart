@@ -180,6 +180,7 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
 
     if (value == null) return 'Enter a valid number.';
     if (value <= 0) return 'Cache size must be greater than 0.';
+    if (!_isPowerOfTwo(value)) return 'Cache lines must be a power of 2.';
     if (value > 32) return 'Cache size cannot exceed 32 lines.';
 
     return null;
@@ -250,6 +251,40 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
     return null;
   }
 
+  String? _validateTagBits() {
+    final blockSize = _parse(blockSizeController);
+    final cacheSets = _parse(cacheSetsController);
+    final virtualPages = _parse(virtualPagesController);
+    final dynamicSizePages = _parse(dynamicSizePagesController);
+    final pageBytes = _parse(pageSizeBytesController);
+
+    if (blockSize == null ||
+        cacheSets == null ||
+        virtualPages == null ||
+        dynamicSizePages == null ||
+        pageBytes == null ||
+        _validateBlockSize() != null ||
+        _validateCacheSets() != null ||
+        _validateVirtualPages() != null ||
+        _validatePageSizeBytes() != null ||
+        _validateDynamicSizePages() != null) {
+      return 'Enter valid values to view the cache address breakdown.';
+    }
+
+    final offsetBits = (log(blockSize) / ln2).round();
+    final indexBits = (log(cacheSets) / ln2).round();
+    final ppnBits = _bitsForPages(dynamicSizePages)!;
+    final pageOffsetBits = (log(pageBytes) / ln2).round();
+    final addressBits = ppnBits + pageOffsetBits;
+    final tagBits = addressBits - (offsetBits + indexBits);
+
+    if (tagBits <= 0) {
+      return 'The selected configuration does not leave enough bits for the tag.';
+    }
+
+    return null;
+  }
+
   bool get _isValid {
     return _validateBlockSize() == null &&
         _validatePageSizeBytes() == null &&
@@ -257,7 +292,8 @@ class _ConfigurationDialogState extends State<ConfigurationDialog> {
         _validateCacheSets() == null &&
         _validateTlbSize() == null &&
         _validateDynamicSizePages() == null &&
-        _validateVirtualPages() == null;
+        _validateVirtualPages() == null &&
+        _validateTagBits() == null;
   }
 
   void _saveConfiguration() {
