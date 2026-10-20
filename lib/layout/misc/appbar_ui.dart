@@ -101,6 +101,41 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
+        _ToolbarPreset(
+          presets: {
+            '1 - Basic Example': 'lib/presets/demo1_basic.mas',
+            '2 - Direct-Mapped Cache': 'lib/presets/demo2_direct_mapped.mas',
+            '3 - Set-Associative Cache (4 sets, 2-way)':
+                'lib/presets/demo3_2_way_set_assoc.mas',
+            '4 - Fully Associative Cache': 'lib/presets/demo4_fully_assoc.mas',
+            '5 - Small Physical Memory': 'lib/presets/demo5_small_physical.mas',
+          },
+          onSelected: (filename) async {
+            try {
+              final loaded = await SessionFileService.loadSessionFromAssets(
+                Runtime.singleton,
+                filename,
+              );
+
+              if (!context.mounted || !loaded) return;
+
+              AppSnackbar.show(
+                context,
+                type: AppSnackbarType.success,
+                message: 'Session loaded successfully.',
+              );
+            } catch (error) {
+              if (!context.mounted) return;
+
+              AppSnackbar.show(
+                context,
+                type: AppSnackbarType.error,
+                message: 'Failed to load session: $error',
+              );
+            }
+          },
+        ),
+
         _toolbarButton(
           context,
           icon: Icons.tune_rounded,
@@ -343,6 +378,110 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
       child: Container(
         width: 1,
         color: Theme.of(context).colorScheme.outlineVariant,
+      ),
+    );
+  }
+}
+
+class _ToolbarPreset extends StatelessWidget {
+  const _ToolbarPreset({
+    super.key,
+    required this.presets,
+    required this.onSelected,
+    this.selectedPreset,
+    this.tooltip = 'Load preset',
+  });
+
+  /// Maps preset titles to filenames.
+  final Map<String, String> presets;
+
+  /// Called with the selected preset's filename.
+  final ValueChanged<String> onSelected;
+
+  /// Optional currently selected preset title.
+  final String? selectedPreset;
+
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final active = selectedPreset != null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Tooltip(
+        message: tooltip,
+        waitDuration: const Duration(milliseconds: 400),
+        child: Material(
+          color: active
+              ? colors.primary.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+          child: PopupMenuButton<String>(
+            tooltip: '',
+            onSelected: onSelected,
+            borderRadius: BorderRadius.circular(9),
+            color: colors.surface,
+            elevation: 8,
+            constraints: const BoxConstraints(minWidth: 180, maxWidth: 300),
+            itemBuilder: (context) => presets.entries.map((entry) {
+              return PopupMenuItem<String>(
+                value: entry.value,
+                child: Text(
+                  entry.key,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              );
+            }).toList(),
+            child: Container(
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 9),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: active
+                      ? colors.primary.withValues(alpha: 0.45)
+                      : colors.outlineVariant.withValues(alpha: 0.65),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.folder_open_rounded,
+                    size: 17,
+                    color: active ? colors.primary : colors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    selectedPreset ?? 'PRESETS',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: active ? colors.primary : colors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 17,
+                    color: active ? colors.primary : colors.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

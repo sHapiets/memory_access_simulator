@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'dart:html' as html;
 import 'package:memory_access_simulator/core/controller/runtime.dart';
 
@@ -50,6 +51,20 @@ class SessionFileService {
 
     runtime.importSessionJson(result);
     return true;
+  }
+
+  static Future<bool> loadSessionFromAssets(
+    Runtime runtime,
+    String filePath,
+  ) async {
+    try {
+      final jsonString = await rootBundle.loadString(filePath);
+      runtime.importSessionJson(jsonString);
+      return true;
+    } catch (e) {
+      // Optional: log the error or handle it in the UI.
+      rethrow;
+    }
   }
 
   static String _formattedTimestamp() {
