@@ -103,7 +103,7 @@ class AppbarUI extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         _ToolbarPreset(
           presets: {
-            '1 - Basic Example': 'lib/presets/demo1_basic.mas',
+            '1 - Basic': 'lib/presets/demo1_basic.mas',
             '2 - Direct-Mapped Cache': 'lib/presets/demo2_direct_mapped.mas',
             '3 - Set-Associative Cache (4 sets, 2-way)':
                 'lib/presets/demo3_2_way_set_assoc.mas',

@@ -22,7 +22,7 @@
     "accessType": "store",
     "invalidatedVPN": -1,
     "replacedPagePPN": -1,
-    "replacedDirtyLinePPN": 4,
+    "replacedDirtyLinePPN": -1,
     "connections": {
       "connectVAtoTLB": {
         "active": true,
@@ -51627,7 +51627,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -52306,7 +52306,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -52985,7 +52985,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -53664,7 +53664,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -54343,7 +54343,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -55022,7 +55022,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -55701,7 +55701,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -56380,7 +56380,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -57059,7 +57059,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -59096,7 +59096,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -59775,7 +59775,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -60454,7 +60454,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -61133,7 +61133,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -61812,7 +61812,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -62491,7 +62491,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -63170,7 +63170,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -63849,7 +63849,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -64528,7 +64528,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -66565,7 +66565,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -67244,7 +67244,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -67923,7 +67923,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -68602,7 +68602,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -69281,7 +69281,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -69960,7 +69960,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -70639,7 +70639,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -71318,7 +71318,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -71997,7 +71997,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -81503,7 +81503,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -82182,7 +82182,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -82861,7 +82861,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -83540,7 +83540,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -84219,7 +84219,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -84898,7 +84898,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -85577,7 +85577,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -86256,7 +86256,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -86935,7 +86935,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -88972,7 +88972,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -89651,7 +89651,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -90330,7 +90330,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -91009,7 +91009,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -91688,7 +91688,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -92367,7 +92367,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -93046,7 +93046,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -93725,7 +93725,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -94404,7 +94404,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -96441,7 +96441,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 4,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -97120,7 +97120,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 4,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -97799,7 +97799,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 4,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -98033,6 +98033,685 @@
         }
       ],
       "sequencePointer": 31,
+      "cacheBlocks": [
+        {
+          "valid": true,
+          "dirty": true,
+          "tag": 1,
+          "latestAccess": 7
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "tag": 0,
+          "latestAccess": 0
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 1,
+          "latestAccess": 9
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "tag": 0,
+          "latestAccess": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "tag": 5,
+          "latestAccess": 27
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "tag": 6,
+          "latestAccess": 31
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "tag": 5,
+          "latestAccess": 29
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 4,
+          "latestAccess": 24
+        }
+      ],
+      "tlbEntries": [
+        {
+          "vpn": 46,
+          "valid": true,
+          "ppn": 4,
+          "lastAccess": 24
+        },
+        {
+          "vpn": 25,
+          "valid": true,
+          "ppn": 5,
+          "lastAccess": 29
+        },
+        {
+          "vpn": 36,
+          "valid": true,
+          "ppn": 6,
+          "lastAccess": 31
+        },
+        {
+          "vpn": 10,
+          "valid": true,
+          "ppn": 3,
+          "lastAccess": 19
+        }
+      ],
+      "dynamicPages": [
+        {
+          "used": true,
+          "lastAccess": 3
+        },
+        {
+          "used": true,
+          "lastAccess": 8
+        },
+        {
+          "used": true,
+          "lastAccess": 14
+        },
+        {
+          "used": true,
+          "lastAccess": 18
+        },
+        {
+          "used": true,
+          "lastAccess": 23
+        },
+        {
+          "used": true,
+          "lastAccess": 28
+        },
+        {
+          "used": true,
+          "lastAccess": 30
+        },
+        {
+          "used": false,
+          "lastAccess": 0
+        }
+      ],
+      "pageTable": [
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 3
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 5
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 6
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 4
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 2
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        }
+      ]
+    },
+    {
+      "microStep": "tlb",
+      "microStepNumber": 1,
+      "vpn": 36,
+      "pageOffset": 80,
+      "ppn": -1,
+      "physicalAddress": -1,
+      "tlbEntry": 2,
+      "cacheLine": -1,
+      "accessType": "load",
+      "invalidatedVPN": -1,
+      "replacedPagePPN": -1,
+      "replacedDirtyLinePPN": -1,
+      "connections": {
+        "connectVAtoTLB": {
+          "active": true,
+          "microStepNumber": 1
+        },
+        "connectVAtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectPageTableToTLB": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectVAtoMMU": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDiskToDRAM": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDRAMtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectTLBtoPA": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectVAtoPA": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectPAtoCache": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectPAtoDRAM": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDRAMtoCache": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToDRAMFromLineEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToDRAMFromPageEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToAccessRegister": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectAccessRegisterToCache": {
+          "active": false,
+          "microStepNumber": -1
+        }
+      },
+      "sequence": [
+        {
+          "type": "load",
+          "address": 704
+        },
+        {
+          "type": "store",
+          "address": 712
+        },
+        {
+          "type": "load",
+          "address": 720
+        },
+        {
+          "type": "load",
+          "address": 736
+        },
+        {
+          "type": "store",
+          "address": 744
+        },
+        {
+          "type": "load",
+          "address": 4224
+        },
+        {
+          "type": "load",
+          "address": 4232
+        },
+        {
+          "type": "store",
+          "address": 4240
+        },
+        {
+          "type": "load",
+          "address": 4256
+        },
+        {
+          "type": "load",
+          "address": 4264
+        },
+        {
+          "type": "store",
+          "address": 7104
+        },
+        {
+          "type": "load",
+          "address": 7112
+        },
+        {
+          "type": "load",
+          "address": 7120
+        },
+        {
+          "type": "store",
+          "address": 7128
+        },
+        {
+          "type": "load",
+          "address": 7144
+        },
+        {
+          "type": "load",
+          "address": 1344
+        },
+        {
+          "type": "store",
+          "address": 1352
+        },
+        {
+          "type": "load",
+          "address": 1360
+        },
+        {
+          "type": "load",
+          "address": 1376
+        },
+        {
+          "type": "store",
+          "address": 1384
+        },
+        {
+          "type": "load",
+          "address": 5952
+        },
+        {
+          "type": "load",
+          "address": 5960
+        },
+        {
+          "type": "store",
+          "address": 5968
+        },
+        {
+          "type": "load",
+          "address": 5984
+        },
+        {
+          "type": "load",
+          "address": 5992
+        },
+        {
+          "type": "store",
+          "address": 3264
+        },
+        {
+          "type": "load",
+          "address": 3272
+        },
+        {
+          "type": "load",
+          "address": 3280
+        },
+        {
+          "type": "store",
+          "address": 3296
+        },
+        {
+          "type": "load",
+          "address": 3304
+        },
+        {
+          "type": "load",
+          "address": 4672
+        },
+        {
+          "type": "store",
+          "address": 4680
+        },
+        {
+          "type": "load",
+          "address": 4688
+        },
+        {
+          "type": "load",
+          "address": 4704
+        },
+        {
+          "type": "store",
+          "address": 4712
+        },
+        {
+          "type": "load",
+          "address": 2240
+        },
+        {
+          "type": "store",
+          "address": 2248
+        },
+        {
+          "type": "load",
+          "address": 2256
+        },
+        {
+          "type": "load",
+          "address": 2272
+        },
+        {
+          "type": "store",
+          "address": 2280
+        }
+      ],
+      "sequencePointer": 32,
       "cacheBlocks": [
         {
           "valid": true,

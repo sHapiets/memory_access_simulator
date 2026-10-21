@@ -25676,7 +25676,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -26179,7 +26179,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -26682,7 +26682,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -27185,7 +27185,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -27688,7 +27688,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -28191,7 +28191,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -29700,7 +29700,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -30203,7 +30203,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -30706,7 +30706,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -36742,7 +36742,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -37245,7 +37245,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -37748,7 +37748,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 3,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -48814,7 +48814,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -49317,7 +49317,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -49820,7 +49820,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -50323,7 +50323,7 @@
       "accessType": "load",
       "invalidatedVPN": 12,
       "replacedPagePPN": 2,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -50826,7 +50826,7 @@
       "accessType": "load",
       "invalidatedVPN": 12,
       "replacedPagePPN": 2,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -51329,7 +51329,7 @@
       "accessType": "load",
       "invalidatedVPN": 12,
       "replacedPagePPN": 2,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -51832,7 +51832,7 @@
       "accessType": "load",
       "invalidatedVPN": 12,
       "replacedPagePPN": 2,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -55856,7 +55856,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 1,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -56359,7 +56359,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 1,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -56862,7 +56862,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 1,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -74970,7 +74970,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -75473,7 +75473,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -75976,7 +75976,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -76479,7 +76479,7 @@
       "accessType": "store",
       "invalidatedVPN": 27,
       "replacedPagePPN": 1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -76982,7 +76982,7 @@
       "accessType": "store",
       "invalidatedVPN": 27,
       "replacedPagePPN": 1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -77485,7 +77485,7 @@
       "accessType": "store",
       "invalidatedVPN": 27,
       "replacedPagePPN": 1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -77988,7 +77988,7 @@
       "accessType": "store",
       "invalidatedVPN": 27,
       "replacedPagePPN": 1,
-      "replacedDirtyLinePPN": 2,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": false,
@@ -79497,7 +79497,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -80000,7 +80000,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -80503,7 +80503,7 @@
       "accessType": "load",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 0,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -86539,7 +86539,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 1,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -87042,7 +87042,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 1,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -87545,7 +87545,7 @@
       "accessType": "store",
       "invalidatedVPN": -1,
       "replacedPagePPN": -1,
-      "replacedDirtyLinePPN": 1,
+      "replacedDirtyLinePPN": -1,
       "connections": {
         "connectVAtoTLB": {
           "active": true,
@@ -89376,6 +89376,2018 @@
         {
           "used": true,
           "lastAccess": 26
+        },
+        {
+          "used": true,
+          "lastAccess": 19
+        }
+      ],
+      "pageTable": [
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 2
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 3
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 2
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 2
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 3
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        }
+      ]
+    },
+    {
+      "microStep": "cache",
+      "microStepNumber": 2,
+      "vpn": 8,
+      "pageOffset": 16,
+      "ppn": 2,
+      "physicalAddress": 80,
+      "tlbEntry": 2,
+      "cacheLine": -1,
+      "accessType": "load",
+      "invalidatedVPN": -1,
+      "replacedPagePPN": -1,
+      "replacedDirtyLinePPN": -1,
+      "connections": {
+        "connectVAtoTLB": {
+          "active": true,
+          "microStepNumber": 1
+        },
+        "connectVAtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectPageTableToTLB": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectVAtoMMU": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDiskToDRAM": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDRAMtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectTLBtoPA": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectVAtoPA": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectPAtoCache": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectPAtoDRAM": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDRAMtoCache": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToDRAMFromLineEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToDRAMFromPageEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToAccessRegister": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectAccessRegisterToCache": {
+          "active": false,
+          "microStepNumber": -1
+        }
+      },
+      "sequence": [
+        {
+          "type": "load",
+          "address": 64
+        },
+        {
+          "type": "load",
+          "address": 72
+        },
+        {
+          "type": "store",
+          "address": 80
+        },
+        {
+          "type": "load",
+          "address": 96
+        },
+        {
+          "type": "load",
+          "address": 104
+        },
+        {
+          "type": "store",
+          "address": 384
+        },
+        {
+          "type": "load",
+          "address": 392
+        },
+        {
+          "type": "load",
+          "address": 400
+        },
+        {
+          "type": "store",
+          "address": 416
+        },
+        {
+          "type": "load",
+          "address": 424
+        },
+        {
+          "type": "load",
+          "address": 832
+        },
+        {
+          "type": "store",
+          "address": 840
+        },
+        {
+          "type": "load",
+          "address": 848
+        },
+        {
+          "type": "load",
+          "address": 864
+        },
+        {
+          "type": "store",
+          "address": 872
+        },
+        {
+          "type": "load",
+          "address": 192
+        },
+        {
+          "type": "load",
+          "address": 200
+        },
+        {
+          "type": "store",
+          "address": 208
+        },
+        {
+          "type": "load",
+          "address": 224
+        },
+        {
+          "type": "load",
+          "address": 232
+        },
+        {
+          "type": "store",
+          "address": 640
+        },
+        {
+          "type": "load",
+          "address": 648
+        },
+        {
+          "type": "load",
+          "address": 656
+        },
+        {
+          "type": "store",
+          "address": 672
+        },
+        {
+          "type": "load",
+          "address": 680
+        },
+        {
+          "type": "load",
+          "address": 256
+        },
+        {
+          "type": "store",
+          "address": 264
+        },
+        {
+          "type": "load",
+          "address": 272
+        },
+        {
+          "type": "load",
+          "address": 288
+        },
+        {
+          "type": "store",
+          "address": 296
+        },
+        {
+          "type": "load",
+          "address": 960
+        },
+        {
+          "type": "load",
+          "address": 968
+        },
+        {
+          "type": "store",
+          "address": 976
+        },
+        {
+          "type": "load",
+          "address": 992
+        },
+        {
+          "type": "load",
+          "address": 1000
+        },
+        {
+          "type": "store",
+          "address": 512
+        },
+        {
+          "type": "load",
+          "address": 520
+        },
+        {
+          "type": "load",
+          "address": 528
+        },
+        {
+          "type": "store",
+          "address": 544
+        },
+        {
+          "type": "load",
+          "address": 552
+        }
+      ],
+      "sequencePointer": 27,
+      "cacheBlocks": [
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 2,
+          "latestAccess": 25
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "tag": 2,
+          "latestAccess": 26
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 0,
+          "latestAccess": 22
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "tag": 0,
+          "latestAccess": 0
+        }
+      ],
+      "tlbEntries": [
+        {
+          "vpn": 20,
+          "valid": true,
+          "ppn": 0,
+          "lastAccess": 22
+        },
+        {
+          "vpn": 21,
+          "valid": true,
+          "ppn": 1,
+          "lastAccess": 24
+        },
+        {
+          "vpn": 8,
+          "valid": true,
+          "ppn": 2,
+          "lastAccess": 27
+        },
+        {
+          "vpn": 7,
+          "valid": true,
+          "ppn": 3,
+          "lastAccess": 19
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        }
+      ],
+      "dynamicPages": [
+        {
+          "used": true,
+          "lastAccess": 22
+        },
+        {
+          "used": true,
+          "lastAccess": 24
+        },
+        {
+          "used": true,
+          "lastAccess": 26
+        },
+        {
+          "used": true,
+          "lastAccess": 19
+        }
+      ],
+      "pageTable": [
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 2
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 3
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 2
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 2
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 3
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        }
+      ]
+    },
+    {
+      "microStep": "dram",
+      "microStepNumber": 3,
+      "vpn": 8,
+      "pageOffset": 16,
+      "ppn": 2,
+      "physicalAddress": 80,
+      "tlbEntry": 2,
+      "cacheLine": -1,
+      "accessType": "load",
+      "invalidatedVPN": -1,
+      "replacedPagePPN": -1,
+      "replacedDirtyLinePPN": -1,
+      "connections": {
+        "connectVAtoTLB": {
+          "active": true,
+          "microStepNumber": 1
+        },
+        "connectVAtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectPageTableToTLB": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectVAtoMMU": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDiskToDRAM": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDRAMtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectTLBtoPA": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectVAtoPA": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectPAtoCache": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectPAtoDRAM": {
+          "active": true,
+          "microStepNumber": 3
+        },
+        "connectDRAMtoCache": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToDRAMFromLineEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToDRAMFromPageEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToAccessRegister": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectAccessRegisterToCache": {
+          "active": false,
+          "microStepNumber": -1
+        }
+      },
+      "sequence": [
+        {
+          "type": "load",
+          "address": 64
+        },
+        {
+          "type": "load",
+          "address": 72
+        },
+        {
+          "type": "store",
+          "address": 80
+        },
+        {
+          "type": "load",
+          "address": 96
+        },
+        {
+          "type": "load",
+          "address": 104
+        },
+        {
+          "type": "store",
+          "address": 384
+        },
+        {
+          "type": "load",
+          "address": 392
+        },
+        {
+          "type": "load",
+          "address": 400
+        },
+        {
+          "type": "store",
+          "address": 416
+        },
+        {
+          "type": "load",
+          "address": 424
+        },
+        {
+          "type": "load",
+          "address": 832
+        },
+        {
+          "type": "store",
+          "address": 840
+        },
+        {
+          "type": "load",
+          "address": 848
+        },
+        {
+          "type": "load",
+          "address": 864
+        },
+        {
+          "type": "store",
+          "address": 872
+        },
+        {
+          "type": "load",
+          "address": 192
+        },
+        {
+          "type": "load",
+          "address": 200
+        },
+        {
+          "type": "store",
+          "address": 208
+        },
+        {
+          "type": "load",
+          "address": 224
+        },
+        {
+          "type": "load",
+          "address": 232
+        },
+        {
+          "type": "store",
+          "address": 640
+        },
+        {
+          "type": "load",
+          "address": 648
+        },
+        {
+          "type": "load",
+          "address": 656
+        },
+        {
+          "type": "store",
+          "address": 672
+        },
+        {
+          "type": "load",
+          "address": 680
+        },
+        {
+          "type": "load",
+          "address": 256
+        },
+        {
+          "type": "store",
+          "address": 264
+        },
+        {
+          "type": "load",
+          "address": 272
+        },
+        {
+          "type": "load",
+          "address": 288
+        },
+        {
+          "type": "store",
+          "address": 296
+        },
+        {
+          "type": "load",
+          "address": 960
+        },
+        {
+          "type": "load",
+          "address": 968
+        },
+        {
+          "type": "store",
+          "address": 976
+        },
+        {
+          "type": "load",
+          "address": 992
+        },
+        {
+          "type": "load",
+          "address": 1000
+        },
+        {
+          "type": "store",
+          "address": 512
+        },
+        {
+          "type": "load",
+          "address": 520
+        },
+        {
+          "type": "load",
+          "address": 528
+        },
+        {
+          "type": "store",
+          "address": 544
+        },
+        {
+          "type": "load",
+          "address": 552
+        }
+      ],
+      "sequencePointer": 27,
+      "cacheBlocks": [
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 2,
+          "latestAccess": 25
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "tag": 2,
+          "latestAccess": 26
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 0,
+          "latestAccess": 22
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "tag": 0,
+          "latestAccess": 0
+        }
+      ],
+      "tlbEntries": [
+        {
+          "vpn": 20,
+          "valid": true,
+          "ppn": 0,
+          "lastAccess": 22
+        },
+        {
+          "vpn": 21,
+          "valid": true,
+          "ppn": 1,
+          "lastAccess": 24
+        },
+        {
+          "vpn": 8,
+          "valid": true,
+          "ppn": 2,
+          "lastAccess": 27
+        },
+        {
+          "vpn": 7,
+          "valid": true,
+          "ppn": 3,
+          "lastAccess": 19
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        }
+      ],
+      "dynamicPages": [
+        {
+          "used": true,
+          "lastAccess": 22
+        },
+        {
+          "used": true,
+          "lastAccess": 24
+        },
+        {
+          "used": true,
+          "lastAccess": 26
+        },
+        {
+          "used": true,
+          "lastAccess": 19
+        }
+      ],
+      "pageTable": [
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 2
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 3
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 2
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 2
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 3
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        }
+      ]
+    },
+    {
+      "microStep": "complete",
+      "microStepNumber": 4,
+      "vpn": 8,
+      "pageOffset": 16,
+      "ppn": 2,
+      "physicalAddress": 80,
+      "tlbEntry": 2,
+      "cacheLine": 2,
+      "accessType": "load",
+      "invalidatedVPN": -1,
+      "replacedPagePPN": -1,
+      "replacedDirtyLinePPN": -1,
+      "connections": {
+        "connectVAtoTLB": {
+          "active": true,
+          "microStepNumber": 1
+        },
+        "connectVAtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectPageTableToTLB": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectVAtoMMU": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDiskToDRAM": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDRAMtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectTLBtoPA": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectVAtoPA": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectPAtoCache": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectPAtoDRAM": {
+          "active": true,
+          "microStepNumber": 3
+        },
+        "connectDRAMtoCache": {
+          "active": true,
+          "microStepNumber": 4
+        },
+        "connectCacheToDRAMFromLineEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToDRAMFromPageEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToAccessRegister": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectAccessRegisterToCache": {
+          "active": false,
+          "microStepNumber": -1
+        }
+      },
+      "sequence": [
+        {
+          "type": "load",
+          "address": 64
+        },
+        {
+          "type": "load",
+          "address": 72
+        },
+        {
+          "type": "store",
+          "address": 80
+        },
+        {
+          "type": "load",
+          "address": 96
+        },
+        {
+          "type": "load",
+          "address": 104
+        },
+        {
+          "type": "store",
+          "address": 384
+        },
+        {
+          "type": "load",
+          "address": 392
+        },
+        {
+          "type": "load",
+          "address": 400
+        },
+        {
+          "type": "store",
+          "address": 416
+        },
+        {
+          "type": "load",
+          "address": 424
+        },
+        {
+          "type": "load",
+          "address": 832
+        },
+        {
+          "type": "store",
+          "address": 840
+        },
+        {
+          "type": "load",
+          "address": 848
+        },
+        {
+          "type": "load",
+          "address": 864
+        },
+        {
+          "type": "store",
+          "address": 872
+        },
+        {
+          "type": "load",
+          "address": 192
+        },
+        {
+          "type": "load",
+          "address": 200
+        },
+        {
+          "type": "store",
+          "address": 208
+        },
+        {
+          "type": "load",
+          "address": 224
+        },
+        {
+          "type": "load",
+          "address": 232
+        },
+        {
+          "type": "store",
+          "address": 640
+        },
+        {
+          "type": "load",
+          "address": 648
+        },
+        {
+          "type": "load",
+          "address": 656
+        },
+        {
+          "type": "store",
+          "address": 672
+        },
+        {
+          "type": "load",
+          "address": 680
+        },
+        {
+          "type": "load",
+          "address": 256
+        },
+        {
+          "type": "store",
+          "address": 264
+        },
+        {
+          "type": "load",
+          "address": 272
+        },
+        {
+          "type": "load",
+          "address": 288
+        },
+        {
+          "type": "store",
+          "address": 296
+        },
+        {
+          "type": "load",
+          "address": 960
+        },
+        {
+          "type": "load",
+          "address": 968
+        },
+        {
+          "type": "store",
+          "address": 976
+        },
+        {
+          "type": "load",
+          "address": 992
+        },
+        {
+          "type": "load",
+          "address": 1000
+        },
+        {
+          "type": "store",
+          "address": 512
+        },
+        {
+          "type": "load",
+          "address": 520
+        },
+        {
+          "type": "load",
+          "address": 528
+        },
+        {
+          "type": "store",
+          "address": 544
+        },
+        {
+          "type": "load",
+          "address": 552
+        }
+      ],
+      "sequencePointer": 27,
+      "cacheBlocks": [
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 2,
+          "latestAccess": 25
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "tag": 2,
+          "latestAccess": 26
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 2,
+          "latestAccess": 27
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "tag": 0,
+          "latestAccess": 0
+        }
+      ],
+      "tlbEntries": [
+        {
+          "vpn": 20,
+          "valid": true,
+          "ppn": 0,
+          "lastAccess": 22
+        },
+        {
+          "vpn": 21,
+          "valid": true,
+          "ppn": 1,
+          "lastAccess": 24
+        },
+        {
+          "vpn": 8,
+          "valid": true,
+          "ppn": 2,
+          "lastAccess": 27
+        },
+        {
+          "vpn": 7,
+          "valid": true,
+          "ppn": 3,
+          "lastAccess": 19
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        }
+      ],
+      "dynamicPages": [
+        {
+          "used": true,
+          "lastAccess": 22
+        },
+        {
+          "used": true,
+          "lastAccess": 24
+        },
+        {
+          "used": true,
+          "lastAccess": 27
+        },
+        {
+          "used": true,
+          "lastAccess": 19
+        }
+      ],
+      "pageTable": [
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 2
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 3
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "ppn": 2
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 2
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 3
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": true,
+          "ppn": 1
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "ppn": 0
+        }
+      ]
+    },
+    {
+      "microStep": "initializeGetTranslation",
+      "microStepNumber": 5,
+      "vpn": 8,
+      "pageOffset": 16,
+      "ppn": 2,
+      "physicalAddress": 80,
+      "tlbEntry": 2,
+      "cacheLine": 2,
+      "accessType": "load",
+      "invalidatedVPN": -1,
+      "replacedPagePPN": -1,
+      "replacedDirtyLinePPN": -1,
+      "connections": {
+        "connectVAtoTLB": {
+          "active": true,
+          "microStepNumber": 1
+        },
+        "connectVAtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectPageTableToTLB": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectVAtoMMU": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDiskToDRAM": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectDRAMtoDisk": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectMMUtoPageTable": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectTLBtoPA": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectVAtoPA": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectPAtoCache": {
+          "active": true,
+          "microStepNumber": 2
+        },
+        "connectPAtoDRAM": {
+          "active": true,
+          "microStepNumber": 3
+        },
+        "connectDRAMtoCache": {
+          "active": true,
+          "microStepNumber": 4
+        },
+        "connectCacheToDRAMFromLineEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToDRAMFromPageEviction": {
+          "active": false,
+          "microStepNumber": -1
+        },
+        "connectCacheToAccessRegister": {
+          "active": true,
+          "microStepNumber": 5
+        },
+        "connectAccessRegisterToCache": {
+          "active": false,
+          "microStepNumber": -1
+        }
+      },
+      "sequence": [
+        {
+          "type": "load",
+          "address": 64
+        },
+        {
+          "type": "load",
+          "address": 72
+        },
+        {
+          "type": "store",
+          "address": 80
+        },
+        {
+          "type": "load",
+          "address": 96
+        },
+        {
+          "type": "load",
+          "address": 104
+        },
+        {
+          "type": "store",
+          "address": 384
+        },
+        {
+          "type": "load",
+          "address": 392
+        },
+        {
+          "type": "load",
+          "address": 400
+        },
+        {
+          "type": "store",
+          "address": 416
+        },
+        {
+          "type": "load",
+          "address": 424
+        },
+        {
+          "type": "load",
+          "address": 832
+        },
+        {
+          "type": "store",
+          "address": 840
+        },
+        {
+          "type": "load",
+          "address": 848
+        },
+        {
+          "type": "load",
+          "address": 864
+        },
+        {
+          "type": "store",
+          "address": 872
+        },
+        {
+          "type": "load",
+          "address": 192
+        },
+        {
+          "type": "load",
+          "address": 200
+        },
+        {
+          "type": "store",
+          "address": 208
+        },
+        {
+          "type": "load",
+          "address": 224
+        },
+        {
+          "type": "load",
+          "address": 232
+        },
+        {
+          "type": "store",
+          "address": 640
+        },
+        {
+          "type": "load",
+          "address": 648
+        },
+        {
+          "type": "load",
+          "address": 656
+        },
+        {
+          "type": "store",
+          "address": 672
+        },
+        {
+          "type": "load",
+          "address": 680
+        },
+        {
+          "type": "load",
+          "address": 256
+        },
+        {
+          "type": "store",
+          "address": 264
+        },
+        {
+          "type": "load",
+          "address": 272
+        },
+        {
+          "type": "load",
+          "address": 288
+        },
+        {
+          "type": "store",
+          "address": 296
+        },
+        {
+          "type": "load",
+          "address": 960
+        },
+        {
+          "type": "load",
+          "address": 968
+        },
+        {
+          "type": "store",
+          "address": 976
+        },
+        {
+          "type": "load",
+          "address": 992
+        },
+        {
+          "type": "load",
+          "address": 1000
+        },
+        {
+          "type": "store",
+          "address": 512
+        },
+        {
+          "type": "load",
+          "address": 520
+        },
+        {
+          "type": "load",
+          "address": 528
+        },
+        {
+          "type": "store",
+          "address": 544
+        },
+        {
+          "type": "load",
+          "address": 552
+        }
+      ],
+      "sequencePointer": 27,
+      "cacheBlocks": [
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 2,
+          "latestAccess": 25
+        },
+        {
+          "valid": true,
+          "dirty": true,
+          "tag": 2,
+          "latestAccess": 26
+        },
+        {
+          "valid": true,
+          "dirty": false,
+          "tag": 2,
+          "latestAccess": 27
+        },
+        {
+          "valid": false,
+          "dirty": false,
+          "tag": 0,
+          "latestAccess": 0
+        }
+      ],
+      "tlbEntries": [
+        {
+          "vpn": 20,
+          "valid": true,
+          "ppn": 0,
+          "lastAccess": 22
+        },
+        {
+          "vpn": 21,
+          "valid": true,
+          "ppn": 1,
+          "lastAccess": 24
+        },
+        {
+          "vpn": 8,
+          "valid": true,
+          "ppn": 2,
+          "lastAccess": 27
+        },
+        {
+          "vpn": 7,
+          "valid": true,
+          "ppn": 3,
+          "lastAccess": 19
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        },
+        {
+          "vpn": 0,
+          "valid": false,
+          "ppn": 0,
+          "lastAccess": 0
+        }
+      ],
+      "dynamicPages": [
+        {
+          "used": true,
+          "lastAccess": 22
+        },
+        {
+          "used": true,
+          "lastAccess": 24
+        },
+        {
+          "used": true,
+          "lastAccess": 27
         },
         {
           "used": true,
